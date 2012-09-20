@@ -1,0 +1,27 @@
+{{extend 'layout.html'}}
+
+
+<h3>{{=T(request.vars.buildname)}}</h3>
+<table id='unittable' border='1'>
+{{for index in range(len(unitlist)):}}
+<tr>
+<td><img src={{=T(unitlist[index][0]['link'])}}></td>
+<td><p>{{=T(unitlist[index][0]['name'])}}</p></td>
+<td>{{=T(supplylist[index])}}</td>	
+</tr>
+{{pass}}
+
+</table>
+{{=form}}
+{{=A(T("Done!"), _href=URL('Starcraft2','default','index'))}}
+<hr>
+<h3>Starcraft News</h3>
+<br>
+<table border='5px'>
+{{for rss in feed.find_all('item'):}}
+	<tr>
+		<td>{{=T(rss.title.contents[0])}}</td>
+		<td>{{=A(T(rss.link.contents[0]),_href=rss.link.contents[0])}}</td>
+	</tr>
+{{pass}}	
+</table>

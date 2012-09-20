@@ -1,0 +1,35 @@
+{{extend 'layout.html'}}
+
+
+
+
+{{for index in range(len(buildUnits)):}}
+<h3>{{=T(buildNames[index])}}</h3><a href="{{=URL('delete', args=buildIDs[index])}}">  Delete</a>
+<table border='1px'>
+{{for index2 in range(len(buildUnits[index])):}}
+{{print(db(db.Unit.name==buildUnits[index][index2]).select().as_list())}}
+<tr>
+<td><img src={{=T(db(db.Unit.name==buildUnits[index][index2]).select().as_list()[0]['link'])}}></td>
+<td><p>{{=T(buildUnits[index][index2])}}</p></td>
+<td>{{=T(buildSupplies[index][index2])}}</td>
+	
+	
+</tr>
+{{pass}}
+</table>
+<hr>
+{{pass}}
+
+{{=A(T("Go Home"), _href=URL('Starcraft2','default','index'))}}
+
+<hr>
+<h3>Starcraft News</h3>
+<br>
+<table border='5px'>
+{{for rss in feed.find_all('item'):}}
+	<tr>
+		<td>{{=T(rss.title.contents[0])}}</td>
+		<td>{{=A(T(rss.link.contents[0]),_href=rss.link.contents[0])}}</td>
+	</tr>
+{{pass}}	
+</table>

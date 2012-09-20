@@ -1,0 +1,25 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,True}}
+{{extend 'layout.html'}}
+
+{{=FORM('Pick a Race',DIV('Terran', INPUT(_type='radio', _name='race', _value='terran',value='terran')),DIV('Zerg',INPUT(_type='radio', _name='race', _value='zerg')),DIV('Protoss',INPUT(_type='radio', _name='race', _value='protoss')),INPUT(_type='text',_name='buildname',value='Type your build name here!'),INPUT(_type='submit'),_action=URL('build'),hidden=dict(unit='||'))}}
+
+
+{{block right_sidebar}}
+{{=A(T("Administrative Interface"), _href=URL('admin','default','index'), _class='button',
+     _style='margin-top: 1em;')}}
+<ul>
+  <li>{{=A(T("My Builds"), _href=URL('Starcraft2','default','mybuild'))}}</li>
+
+</ul>
+{{end}}
+<hr>
+<h3>Starcraft News</h3>
+<br>
+<table border='5px'>
+{{for rss in feed.find_all('item'):}}
+	<tr>
+		<td>{{=T(rss.title.contents[0])}}</td>
+		<td>{{=A(T(rss.link.contents[0]),_href=rss.link.contents[0])}}</td>
+	</tr>
+{{pass}}	
+</table>

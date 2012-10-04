@@ -11,7 +11,7 @@
 
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
-    db = DAL('mysql://gerisc01:2009champs@10.24.47.225/finholt_test')
+    db = DAL('sqlite://storage.sqlite')
 else:
     ## connect to Google BigTable (optional 'google:datastore://namespace')
     db = DAL('google:datastore')
@@ -79,4 +79,3 @@ use_janrain(auth,filename='private/janrain.key')
 ## >>> for row in rows: print row.id, row.myfield
 #########################################################################
 
-db.define_tabel('Testing123',Field('test_field','string'))

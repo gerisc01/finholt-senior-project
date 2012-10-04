@@ -8,7 +8,6 @@
 ## - download is for downloading files uploaded in the db (does streaming)
 ## - call exposes all registered services (none by default)
 #########################################################################
-import time
 
 def index():
     """
@@ -16,8 +15,7 @@ def index():
     rendered by views/default/index.html or views/generic.html
     """
     response.flash = "Welcome to web2py!"
-    db.Testing123.insert(test_field=str(time.time()))
-    return dict(message=T('So I heard you like web development...'))
+    return dict(message=T('Hello World'))
 
 def user():
     """
@@ -70,3 +68,4 @@ def data():
       LOAD('default','data.load',args='tables',ajax=True,user_signature=True)
     """
     return dict(form=crud())
+

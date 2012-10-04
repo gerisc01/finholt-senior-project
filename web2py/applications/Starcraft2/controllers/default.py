@@ -122,9 +122,6 @@ d['99'] = []
 
 @auth.requires_login()
 def index():
-	
-
-	
 	table = db(db.Unit)
 	if len(table.select())<1:
 		

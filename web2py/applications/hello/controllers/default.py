@@ -14,7 +14,7 @@ def index():
     example action using the internationalization operator T and flash
     rendered by views/default/index.html or views/generic.html
     """
-    response.flash = "Welcome to web2py!"
+    response.flash = "Welcome to awesome web2py!"
     return dict(message=T('So I heard you like web development...'))
 
 def user():
@@ -68,4 +68,3 @@ def data():
       LOAD('default','data.load',args='tables',ajax=True,user_signature=True)
     """
     return dict(form=crud())
-

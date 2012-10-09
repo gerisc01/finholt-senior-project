@@ -53,3 +53,11 @@ CREATE TABLE auth_cas(
     renew CHAR(1)
 );
 success!
+timestamp: 2012-10-06T11:49:37.203000
+CREATE TABLE Project(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name CHAR(512),
+    OpenDate DATE,
+    ClosedDate DATE
+);
+success!

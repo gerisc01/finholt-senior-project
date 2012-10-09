@@ -1,9 +1,10 @@
-{{left_sidebar_enabled,right_sidebar_enabled=False,True}}
+{{left_sidebar_enabled,right_sidebar_enabled=True,False}}
 {{extend 'layout.html'}}
 
 {{if 'message' in globals():}}
 <h3>{{=message}}</h3>
 
+<h4>{{=T('Ha ha ha')}}</h4>
 <h4/>{{=T('How did you get here?')}}</h4>
 <ol>
   <li>{{=T('You are successfully running web2py')}}</li>
@@ -19,9 +20,14 @@
 {{=BEAUTIFY(response._vars)}}
 {{pass}}
 
-{{block right_sidebar}}
+{{block left_sidebar}}
 {{=A(T("Administrative Interface"), _href=URL('admin','default','index'), _class='button',
      _style='margin-top: 1em;')}}
+{{for row in db().select(db.Project.ALL):}}
+{{=T(row.name)}}
+{{=T(row.openDate.isoformat())}}
+{{=T(row.closedDate.isoformat())}}
+{{pass}}
 <h6>{{=T("Don't know what to do?")}}</h6>
 <ul>
   <li>{{=A(T("Online examples"), _href=URL('examples','default','index'))}}</li>
@@ -29,4 +35,3 @@
   <li><a href="http://web2py.com/book">{{=T('Documentation')}}</a></li>
 </ul>
 {{end}}
-

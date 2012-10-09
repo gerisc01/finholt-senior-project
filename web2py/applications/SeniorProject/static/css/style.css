@@ -1,0 +1,42 @@
+#projectsidebar{
+width:150px;
+height:300px;
+border:2px solid gray;
+display: inline;
+float:left;
+}
+
+#header{
+background-color: #002f6d;
+
+}
+
+#footer{
+
+	margin: 15px;
+	text-align: center;
+	color:gray;
+	clear:both;
+
+}
+#projecttabs li{
+	padding:10px;
+	border-top: 2px solid gray;
+	border-left: 2px solid gray;
+	border-right: 2px solid gray;
+	display:inline;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+
+
+}
+#projecttabs{
+	margin-left:115px;
+	margin-bottom:2px;
+}
+#content{
+	display:inline;
+	width:65%;
+	float:left;
+	padding:10px;
+}

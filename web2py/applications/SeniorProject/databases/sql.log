@@ -53,3 +53,19 @@ CREATE TABLE auth_cas(
     renew CHAR(1)
 );
 success!
+timestamp: 2012-10-09T15:41:04.491209
+CREATE TABLE Project(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name CHAR(512),
+    openDate DATE,
+    closedDate DATE
+);
+success!
+timestamp: 2012-10-09T15:41:04.494261
+CREATE TABLE CCD(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ccdNum CHAR(512),
+    projectNum CHAR(512),
+    file CHAR(512)
+);
+success!

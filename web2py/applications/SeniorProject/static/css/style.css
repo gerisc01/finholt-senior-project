@@ -40,3 +40,15 @@ background-color: #002f6d;
 	float:left;
 	padding:10px;
 }
+#adminsidebar{
+	display:inline;
+	float:right;
+	border:2px solid gray;
+	width:150px;
+	height:300px;
+	margin:5px;
+
+}
+#adminsidebar li{
+
+}

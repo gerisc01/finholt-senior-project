@@ -15,7 +15,7 @@ def index():
     rendered by views/default/index.html or views/generic.html
     """
     response.flash = "Welcome to web2py!"
-    return dict(message=T('Hello World'))
+    return dict(form = SQLFORM(db.CCD,labels={'ccdNum':'CCD #:','projectNum':"Project #:"}))
 
 def user():
     """
@@ -68,4 +68,7 @@ def data():
       LOAD('default','data.load',args='tables',ajax=True,user_signature=True)
     """
     return dict(form=crud())
+
+def createproject():
+    return dict(form=SQLFORM(db.Project))
 

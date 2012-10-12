@@ -79,3 +79,5 @@ use_janrain(auth,filename='private/janrain.key')
 ## >>> for row in rows: print row.id, row.myfield
 #########################################################################
 
+db.define_table('Project',Field('name','string'),Field('openDate','date'),Field('closedDate','date'))
+db.define_table("CCD",Field('ccdNum','string'),Field('projectNum','string'),Field('file','upload'))

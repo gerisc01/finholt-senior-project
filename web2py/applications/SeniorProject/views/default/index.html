@@ -11,35 +11,22 @@
   <script src="{{=URL('static','js/jquery.ui.accordion.js')}}"></script> 
   <script src="{{=URL('static','js/jquery-ui-1.9.0.custom.min.js')}}"></script> 
   <script src="{{=URL('static','jqTree/tree.jquery.js')}}"></script>
-
 <script type="text/javascript">
 $(document).ready(function(){
 
-//$( "#projectsidebar" ).accordion({  //Sidebar setup
-  //    collapsible: true
-//    });
+
 
 $("#CCD").click(function(){
 
-$("#content").html('{{=form}}')
-
+$("#content").html('{{=ccdForm}}')
 })
 
-var data = [
-    {
-        label: '<a href="http://www.google.com">Project 1</a>',
-        children: [
-            { label: '<a href="http://www.google.com">RFIs</a>' },
-            { label: 'Submittals' }
-        ]
-    },
-    {
-        label: 'Project 2',
-        children: [
-            { label: 'Submittals' }
-        ]
-    }
-];
+var data = [];
+
+
+{{for index  in range(len(projects)):}}
+  data.push({label:"Project "+{{=T(str(projects[index].id))}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},{label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittals',projectNum=projects[index].id))}}'>Submittals</a>"},{label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].id))}}'>CCDs</a>"}] });
+  {{pass}} 
 
 $(function() {
     $('#projectsidebar').tree({
@@ -66,7 +53,7 @@ $(function() {
         <li>Upload Photo</li>
     </ul>
     <hr>
-    <div id="projectsidebar"/>
+    <div id="projectsidebar">
     
 
     </div>
@@ -74,12 +61,13 @@ $(function() {
       "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.""Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.""Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 
     </div>
-    <div id="adminsidebar"/>
+    <div id="adminsidebar">
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
     </ul>
 
     </div>
+    
 
     <div id="footer">This website brought to you by the Supreme Leader and Minion #2 (Scott)</div>
 </body>

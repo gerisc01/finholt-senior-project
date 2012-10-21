@@ -8,6 +8,9 @@
 ## - download is for downloading files uploaded in the db (does streaming)
 ## - call exposes all registered services (none by default)
 #########################################################################
+ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #:','projectNum': "Project #:"})
+
+projects = db(db.Project).select()
 
 def index():
     """
@@ -15,7 +18,14 @@ def index():
     rendered by views/default/index.html or views/generic.html
     """
     response.flash = "Welcome to web2py!"
-    return dict(form = SQLFORM(db.CCD,labels={'ccdNum':'CCD #:','projectNum':"Project #:"}))
+    if ccdForm.process().accepted:
+        response.flash = 'form accepted'
+    elif ccdForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+
+    return dict(ccdForm=ccdForm,projects=projects)
 
 def user():
     """
@@ -70,5 +80,36 @@ def data():
     return dict(form=crud())
 
 def createproject():
-    return dict(form=SQLFORM(db.Project))
+    form = SQLFORM(db.Project)
+    if form.process().accepted:
+       response.flash = 'form accepted'
+    elif form.errors:
+       response.flash = 'form has errors'
+    else:
+       response.flash = 'please fill out the form'
+    return dict(form=form)
+
+def formtable():
+    formType = request.vars.formType
+    if ccdForm.process().accepted:
+        response.flash = 'form accepted'
+    elif ccdForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'    
+    table = None
+    image = None
+    if formType == "CCD":
+        rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()
+        myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc: IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
+        table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"},extracolumns=myextracolumns)
+    return dict(formType=formType,
+                ccdForm=ccdForm,
+                projects=projects,
+                table= table,
+                image=image)
+
+
+
+
 

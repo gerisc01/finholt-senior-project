@@ -23,9 +23,6 @@ $("#content").html('{{=ccdForm}}')
 
 $("#RFI").click(function(){
 $("#content").html('{{=rfiForm}}')
-$("#RFI_dateSent").datepicker({"dateFormat": "yy-mm-dd"})
-$("#RFI_dateRec").datepicker({"dateFormat": "yy-mm-dd"})
-$("#RFI_responseDate").datepicker({"dateFormat": "yy-mm-dd"})
 })
 
 $("#Submittal").click(function(){
@@ -34,17 +31,14 @@ $("#content").html('{{=submittalForm}}')
 
 $("#ProposalRequest").click(function(){
 $("#content").html('{{=proposalRequestForm}}')
-$("#ProposalRequest_propDate").datepicker({"dateFormat": "yy-mm-dd"})
 })
 
 $("#Proposal").click(function(){
 $("#content").html('{{=proposalForm}}')
-$("#Proposal_propDate").datepicker({"dateFormat": "yy-mm-dd"})
 })
 
 $("#MeetingMinutes").click(function(){
 $("#content").html('{{=meetingMinutesForm}}')
-$("#MeetingMinutes_meetDate").datepicker({"dateFormat": "yy-mm-dd"})
 })
 
 

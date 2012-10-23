@@ -5,6 +5,7 @@
 <title>Senior Project</title>
 <link rel="stylesheet" href="{{=URL('static','css/style.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
   <script src="{{=URL('static','js/jquery.js')}}"></script> 
@@ -15,12 +16,34 @@
 $(document).ready(function(){
 
 $("#CCD").click(function(){
-
 $("#content").html('{{=ccdForm}}')
 })
 
+$("#RFI").click(function(){
+$("#content").html('{{=rfiForm}}')
+$("#RFI_dateSent").datepicker({"dateFormat": "yy-mm-dd"})
+$("#RFI_dateRec").datepicker({"dateFormat": "yy-mm-dd"})
+$("#RFI_responseDate").datepicker({"dateFormat": "yy-mm-dd"})
+})
 
-alert('{{=rfiForm}}')
+$("#Submittal").click(function(){
+$("#content").html('{{=submittalForm}}')
+})
+
+$("#ProposalRequest").click(function(){
+$("#content").html('{{=proposalRequestForm}}')
+$("#ProposalRequest_propDate").datepicker({"dateFormat": "yy-mm-dd"})
+})
+
+$("#Proposal").click(function(){
+$("#content").html('{{=proposalForm}}')
+$("#Proposal_propDate").datepicker({"dateFormat": "yy-mm-dd"})
+})
+
+$("#MeetingMinutes").click(function(){
+$("#content").html('{{=meetingMinutesForm}}')
+$("#MeetingMinutes_meetDate").datepicker({"dateFormat": "yy-mm-dd"})
+})
 
 
 var data = [];
@@ -55,13 +78,13 @@ $(function() {
 
     <ul id = "projecttabs">
         <li>Calendar</li>
-        <li id="CCD">Upload CCD</li>
-        <li id="photo">Upload Photo</li>
+        <li id="CCD">Upload CCD</li>       
         <li id="RFI">Generate RFI</li>
-        <li id="Submittals">Upload Submittal</li>
-        <li id="ProposalRequest">Generate Proposal</li>
+        <li id="Submittal">Upload Submittal</li>
+        <li id="ProposalRequest">Generate Proposal Request</li>
         <li id="Proposal">Upload Proposal</li>
         <li id="MeetingMinutes">Meeting Minutes</li>
+        <li id="Photo">Upload Photo</li>
     </ul>
     <hr>
     <div id="projectsidebar">

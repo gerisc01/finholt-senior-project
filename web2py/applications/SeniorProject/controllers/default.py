@@ -10,9 +10,9 @@
 #########################################################################
 ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
 
-rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #', 'requestBy':'Request by', 'dateSent':'Date sent', 'reqRefTo':'Request referred to', 'dateRec':'Date received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response date'})
+rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #', 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'})
 
-submittalForm = SQLFORM(db.Submittal, labels={'statusFlag':'Status flag', 'assignedTo':'Assigned to'})
+submittalForm = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'assignedTo':'Assigned to'})
 
 proposalRequestForm = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'})
 
@@ -23,7 +23,7 @@ meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date
 
 projects = db(db.Project).select()
 
-footer =DIV("This website brought to you by the Supreme Leader and Minion #2 (Scott)", _id="footer")
+footer = DIV("This website brought to you by the Supreme Leader and Minion #2 (Scott)", _id="footer")
 
 def index():
     """
@@ -37,10 +37,49 @@ def index():
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill out the form'
+        
+    if rfiForm.process().accepted:
+        response.flash = 'form accepted'
+    elif rfiForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if submittalForm.process().accepted:
+        response.flash = 'form accepted'
+    elif submittalForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if proposalRequestForm.process().accepted:
+        response.flash = 'form accepted'
+    elif proposalRequestForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if proposalForm.process().accepted:
+        response.flash = 'form accepted'
+    elif proposalForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+    
+    if meetingMinutesForm.process().accepted:
+        response.flash = 'form accepted'
+    elif meetingMinutesForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
     
     return dict(ccdForm=ccdForm,
                 projects=projects,
-                rfiForm=submittalForm,
+                rfiForm=rfiForm,
+                submittalForm=submittalForm,
+                proposalRequestForm=proposalRequestForm,
+                proposalForm=proposalForm,
+                meetingMinutesForm=meetingMinutesForm,
                 footer=footer)
 
 def user():
@@ -120,9 +159,13 @@ def formtable():
         myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc: IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
         table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"},extracolumns=myextracolumns)
     return dict(formType=formType,
-                ccdForm=ccdForm,
+                ccdForm=ccdForm,                
+                rfiForm=rfiForm,
+                submittalForm=submittalForm,
+                proposalRequestForm=proposalRequestForm,
+                proposalForm=proposalForm,
+                meetingMinutesForm=meetingMinutesForm,
                 projects=projects,
                 table= table,
                 image=image,
-                rfiForm=rfiForm
                 footer=footer)

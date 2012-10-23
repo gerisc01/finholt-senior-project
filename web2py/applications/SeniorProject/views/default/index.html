@@ -20,6 +20,9 @@ $("#content").html('{{=ccdForm}}')
 })
 
 
+alert('{{=rfiForm}}')
+
+
 var data = [];
 
 
@@ -51,10 +54,9 @@ $(function() {
     </div>
 
     <ul id = "projecttabs">
-        <li>Add Form</li>
         <li>Calendar</li>
         <li id="CCD">Upload CCD</li>
-        <li>Upload Photo</li>
+        <li id="photo">Upload Photo</li>
         <li id="RFI">Generate RFI</li>
         <li id="Submittals">Upload Submittal</li>
         <li id="ProposalRequest">Generate Proposal</li>
@@ -78,7 +80,7 @@ $(function() {
     </div>
     
 
-    <div id="footer">This website brought to you by the Supreme Leader and Minion #2 (Scott)</div>
+    {{=footer}}
 </body>
 
 

@@ -10,7 +10,7 @@
 #########################################################################
 ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
 
-rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #', 'requestBy':'Request by', 'dateSent':'Date sent', 'reqRefTo':'Request referred to', 'dateRec':'Date received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response date'})
+rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #', 'requestBy':'Request by', 'dateSent':'Date sent', 'reqRefTo':'Request referred to', 'dateRec':'Date received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response date'})
 
 submittalForm = SQLFORM(db.Submittal, labels={'statusFlag':'Status flag', 'assignedTo':'Assigned to'})
 
@@ -22,6 +22,8 @@ meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date
 
 
 projects = db(db.Project).select()
+
+footer =DIV("This website brought to you by the Supreme Leader and Minion #2 (Scott)", _id="footer")
 
 def index():
     """
@@ -36,7 +38,10 @@ def index():
     else:
         response.flash = 'please fill out the form'
     
-    return dict(ccdForm=ccdForm,projects=projects)
+    return dict(ccdForm=ccdForm,
+                projects=projects,
+                rfiForm=submittalForm,
+                footer=footer)
 
 def user():
     """
@@ -118,4 +123,6 @@ def formtable():
                 ccdForm=ccdForm,
                 projects=projects,
                 table= table,
-                image=image)
+                image=image,
+                rfiForm=rfiForm
+                footer=footer)

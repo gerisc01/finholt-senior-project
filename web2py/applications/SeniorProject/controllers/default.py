@@ -8,7 +8,18 @@
 ## - download is for downloading files uploaded in the db (does streaming)
 ## - call exposes all registered services (none by default)
 #########################################################################
-ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #:','projectNum': "Project #:"})
+ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
+
+rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #', 'requestBy':'Request by', 'dateSent':'Date sent', 'reqRefTo':'Request referred to', 'dateRec':'Date received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response date'})
+
+submittalForm = SQLFORM(db.Submittal, labels={'statusFlag':'Status flag', 'assignedTo':'Assigned to'})
+
+proposalRequestForm = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'})
+
+proposalForm = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'propDate':'Proposal Date'})
+
+meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
+
 
 projects = db(db.Project).select()
 
@@ -17,14 +28,14 @@ def index():
     example action using the internationalization operator T and flash
     rendered by views/default/index.html or views/generic.html
     """
-    response.flash = "Welcome to web2py!"
+    
     if ccdForm.process().accepted:
         response.flash = 'form accepted'
     elif ccdForm.errors:
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill out the form'
-
+    
     return dict(ccdForm=ccdForm,projects=projects)
 
 def user():
@@ -108,8 +119,3 @@ def formtable():
                 projects=projects,
                 table= table,
                 image=image)
-
-
-
-
-

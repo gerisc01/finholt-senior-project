@@ -69,3 +69,106 @@ CREATE TABLE CCD(
     file CHAR(512)
 );
 success!
+timestamp: 2012-10-22T18:16:56.375000
+CREATE TABLE Submittals(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    statusFlag CHAR(512),
+    assignedTo CHAR(512),
+    submittal CHAR(512)
+);
+success!
+timestamp: 2012-10-22T18:16:56.551000
+CREATE TABLE RFI(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    rfiNum CHAR(512),
+    requestBy CHAR(512),
+    dateSent DATE,
+    reqRefTo CHAR(512),
+    dateRec DATE,
+    drawingNum INTEGER,
+    detailNum INTEGER,
+    specSection INTEGER,
+    sheetName CHAR(512),
+    grids CHAR(512),
+    sectionPage INTEGER,
+    description TEXT,
+    suggestion TEXT,
+    reply TEXT,
+    responseBy CHAR(512),
+    responseDate DATE,
+    autoGenBlurb TEXT,
+    statusFlag CHAR(512)
+);
+success!
+timestamp: 2012-10-22T18:16:56.861000
+CREATE TABLE ProposalRequest(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reqNum CHAR(512),
+    amendNum CHAR(512),
+    projectNum CHAR(512),
+    subject TEXT,
+    propDate DATE,
+    to CHAR(512),
+    cc TEXT,
+    staticBlurb TEXT,
+    description TEXT
+);
+timestamp: 2012-10-22T18:18:55.041000
+CREATE TABLE ProposalRequest(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reqNum CHAR(512),
+    amendNum CHAR(512),
+    projectNum CHAR(512),
+    subject TEXT,
+    propDate DATE,
+    to CHAR(512),
+    cc CHAR(512),
+    staticBlurb TEXT,
+    description TEXT
+);
+timestamp: 2012-10-22T18:19:18.006000
+CREATE TABLE ProposalRequest(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reqNum CHAR(512),
+    amendNum CHAR(512),
+    projectNum CHAR(512),
+    subject TEXT,
+    propDate DATE,
+    toSomething CHAR(512),
+    cc TEXT,
+    staticBlurb TEXT,
+    description TEXT
+);
+success!
+timestamp: 2012-10-22T18:19:18.180000
+CREATE TABLE Proposal(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reqNum INTEGER,
+    propDate DATE,
+    file CHAR(512)
+);
+success!
+timestamp: 2012-10-22T18:19:18.286000
+CREATE TABLE MeetingMinutes(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    meetDate DATE,
+    file CHAR(512)
+);
+success!
+timestamp: 2012-10-22T18:32:06.952000
+ALTER TABLE ProposalRequest ADD sentto CHAR(512);
+timestamp: 2012-10-22T19:12:04.614000
+CREATE TABLE ProjectUser(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userRole CHAR(512),
+    projectId CHAR(512)
+);
+success!
+timestamp: 2012-10-22T19:13:18.262000
+CREATE TABLE Submittal(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    statusFlag CHAR(512),
+    assignedTo CHAR(512),
+    submittal CHAR(512)
+);
+success!

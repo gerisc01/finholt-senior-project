@@ -14,18 +14,22 @@
 <script type="text/javascript">
 $(document).ready(function(){
 
-
-
 $("#CCD").click(function(){
 
 $("#content").html('{{=ccdForm}}')
 })
 
+
 var data = [];
 
 
 {{for index  in range(len(projects)):}}
-  data.push({label:"Project "+{{=T(str(projects[index].id))}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},{label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittals',projectNum=projects[index].id))}}'>Submittals</a>"},{label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].id))}}'>CCDs</a>"}] });
+  data.push({label:"Project "+{{=T(str(projects[index].id))}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].id))}}'>Submittals</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].id))}}'>CCDs</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].id))}}'>Proposal Requests</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=projects[index].id))}}'>Proposals</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"}  ]});
   {{pass}} 
 
 $(function() {
@@ -51,6 +55,11 @@ $(function() {
         <li>Calendar</li>
         <li id="CCD">Upload CCD</li>
         <li>Upload Photo</li>
+        <li id="RFI">Generate RFI</li>
+        <li id="Submittals">Upload Submittal</li>
+        <li id="ProposalRequest">Generate Proposal</li>
+        <li id="Proposal">Upload Proposal</li>
+        <li id="MeetingMinutes">Meeting Minutes</li>
     </ul>
     <hr>
     <div id="projectsidebar">

@@ -10,9 +10,9 @@
 #########################################################################
 ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
 
-rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #', 'requestBy':'Request by', 'dateSent':'Date sent', 'reqRefTo':'Request referred to', 'dateRec':'Date received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response date'})
+rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #', 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, field={'rfiNum', 'requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'})
 
-submittalForm = SQLFORM(db.Submittal, labels={'statusFlag':'Status flag', 'assignedTo':'Assigned to'})
+submittalForm = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'assignedTo':'Assigned to'})
 
 proposalRequestForm = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'})
 

@@ -8,14 +8,79 @@
 ## - download is for downloading files uploaded in the db (does streaming)
 ## - call exposes all registered services (none by default)
 #########################################################################
+ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
+
+rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #', 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum', 'requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
+
+submittalForm = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'assignedTo':'Assigned to'})
+
+proposalRequestForm = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'})
+
+proposalForm = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'propDate':'Proposal Date'})
+
+meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
+
+
+projects = db(db.Project).select()
+
+footer = DIV("This website brought to you by the Supreme Leader and Minion #2 (Scott)", _id="footer")
 
 def index():
     """
     example action using the internationalization operator T and flash
     rendered by views/default/index.html or views/generic.html
     """
-    response.flash = "Welcome to web2py!"
-    return dict(form = SQLFORM(db.CCD,labels={'ccdNum':'CCD #:','projectNum':"Project #:"}))
+    
+    if ccdForm.process().accepted:
+        response.flash = 'form accepted'
+    elif ccdForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if rfiForm.process().accepted:
+        response.flash = 'form accepted'
+    elif rfiForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if submittalForm.process().accepted:
+        response.flash = 'form accepted'
+    elif submittalForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if proposalRequestForm.process().accepted:
+        response.flash = 'form accepted'
+    elif proposalRequestForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if proposalForm.process().accepted:
+        response.flash = 'form accepted'
+    elif proposalForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+    
+    if meetingMinutesForm.process().accepted:
+        response.flash = 'form accepted'
+    elif meetingMinutesForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+    
+    return dict(ccdForm=ccdForm,
+                projects=projects,
+                rfiForm=rfiForm,
+                submittalForm=submittalForm,
+                proposalRequestForm=proposalRequestForm,
+                proposalForm=proposalForm,
+                meetingMinutesForm=meetingMinutesForm,
+                footer=footer)
 
 def user():
     """
@@ -70,5 +135,37 @@ def data():
     return dict(form=crud())
 
 def createproject():
-    return dict(form=SQLFORM(db.Project))
+    form = SQLFORM(db.Project)
+    if form.process().accepted:
+       response.flash = 'form accepted'
+    elif form.errors:
+       response.flash = 'form has errors'
+    else:
+       response.flash = 'please fill out the form'
+    return dict(form=form)
 
+def formtable():
+    formType = request.vars.formType
+    if ccdForm.process().accepted:
+        response.flash = 'form accepted'
+    elif ccdForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'    
+    table = None
+    image = None
+    if formType == "CCD":
+        rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()
+        myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc: IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
+        table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"},extracolumns=myextracolumns)
+    return dict(formType=formType,
+                ccdForm=ccdForm,                
+                rfiForm=rfiForm,
+                submittalForm=submittalForm,
+                proposalRequestForm=proposalRequestForm,
+                proposalForm=proposalForm,
+                meetingMinutesForm=meetingMinutesForm,
+                projects=projects,
+                table= table,
+                image=image,
+                footer=footer)

@@ -172,3 +172,5 @@ CREATE TABLE Submittal(
     submittal CHAR(512)
 );
 success!
+timestamp: 2012-11-08T15:17:08.753000
+ALTER TABLE Project ADD projnum INTEGER;

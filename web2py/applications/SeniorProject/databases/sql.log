@@ -174,3 +174,5 @@ CREATE TABLE Submittal(
 success!
 timestamp: 2012-11-08T15:17:08.753000
 ALTER TABLE Project ADD projnum INTEGER;
+timestamp: 2012-11-10T10:19:17.197000
+ALTER TABLE Project ADD archived CHAR(1);

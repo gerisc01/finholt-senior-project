@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Create a Project</title>
+    <title>Manage a Project</title>
 <link rel="stylesheet" href="{{=URL('static','css/style.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
@@ -43,6 +43,8 @@ $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
         <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
+        <li><a href="{{=URL('default','archiveprojects')}}">Archive Projects</a></li>
+        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
     </ul>
 
     </div>

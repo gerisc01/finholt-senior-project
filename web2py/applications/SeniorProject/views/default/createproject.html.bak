@@ -36,7 +36,7 @@ $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
     </div>
     <ul id = "projecttabs">
     <div id="hometab" align="right">
-      <li id="home">Home</li>
+      <li id="home"><a href="{{=URL('default','index')}}">Home</li>
     </div>
     </ul>
     <hr>

@@ -43,6 +43,32 @@ from gluon.tools import Auth, Crud, Service, PluginManager, prettydate
 auth = Auth(db, hmac_key=Auth.get_or_create_key())
 crud, service, plugins = Crud(db), Service(), PluginManager()
 
+db.define_table(
+    auth.settings.table_user_name,
+    Field('first_name', label='First Name', length=128, default=''),
+    Field('last_name', label='Last Name', length=128, default=''),
+    Field('email', label='Email',length=128, default='', unique=True),
+    Field('password', 'password', length=512,            
+          readable=False, label='Password'),
+    Field('phone',label="Phone Number"),
+    Field('registration_key', length=512,                # required
+          writable=False, readable=False, default=''),
+    Field('reset_password_key', length=512,              # required
+          writable=False, readable=False, default=''),
+    Field('registration_id', length=512,                 # required
+          writable=False, readable=False, default=''),
+    Field('role', length=512, label="Role"))
+
+custom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table
+custom_auth_table.first_name.requires = \
+  IS_NOT_EMPTY(error_message=auth.messages.is_empty)
+custom_auth_table.last_name.requires = \
+  IS_NOT_EMPTY(error_message=auth.messages.is_empty)
+custom_auth_table.password.requires = [IS_STRONG(), CRYPT()]
+custom_auth_table.email.requires = [
+  IS_EMAIL(error_message=auth.messages.invalid_email),
+  IS_NOT_IN_DB(db, custom_auth_table.email)]
+
 ## create all tables needed by auth if not custom tables
 auth.define_tables()
 
@@ -87,12 +113,12 @@ db.define_table("ProjectUser", Field('userRole','string'), Field('projectId','st
 
 db.define_table("CCD", Field('ccdNum','string'), Field('projectNum','string'), Field('file','upload'))
 
-db.define_table("Submittal", Field('statusFlag','string'), Field('assignedTo','string'), Field('submittal','upload'))
+db.define_table("Submittal", Field('statusFlag','string'), Field('projectNum','string'), Field('assignedTo','string'), Field('submittal','upload'))
 
-db.define_table("RFI", Field('rfiNum','string'), Field('requestBy','string'), Field('dateSent','date'), Field('reqRefTo','string'), Field('dateRec','date'), Field('drawingNum','integer'), Field('detailNum','integer'), Field('specSection','integer'), Field('sheetName','string'), Field('grids','string'), Field('sectionPage','integer'), Field('description','text'), Field('suggestion','text'), Field('reply','text'), Field('responseBy','string'), Field('responseDate','date'), Field('statusFlag','string'))
+db.define_table("RFI", Field('rfiNum','string'), Field('requestBy','string'), Field('dateSent','date'), Field('reqRefTo','string'), Field('dateRec','date'), Field('drawingNum','integer'), Field('detailNum','integer'), Field('specSection','integer'), Field('sheetName','string'), Field('grids','string'), Field('sectionPage','integer'), Field('description','text'), Field('suggestion','text'), Field('reply','text'), Field('responseBy','string'), Field('responseDate','date'), Field('statusFlag','string'),Field('projectNum','string'))
 
 db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','string'), Field('projectNum','string'), Field('subject','text'), Field('propDate','date'), Field('sentTo','string'), Field('cc','string'), Field('description','text'))
 
-db.define_table("Proposal", Field('reqNum','integer'), Field('propDate','date'), Field('file','upload'))
+db.define_table("Proposal", Field('reqNum','integer'), Field('propDate','date'), Field('file','upload'),Field('projectNum','string'))
 
 db.define_table("MeetingMinutes", Field('meetDate','date'), Field('file','upload'))

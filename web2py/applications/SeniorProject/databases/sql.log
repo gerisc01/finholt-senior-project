@@ -172,3 +172,13 @@ CREATE TABLE Submittal(
     submittal CHAR(512)
 );
 success!
+timestamp: 2012-10-29T15:08:27.447151
+ALTER TABLE Proposal ADD projectnum CHAR(512);
+timestamp: 2012-10-29T15:15:11.188168
+ALTER TABLE RFI ADD projectnum CHAR(512);
+timestamp: 2012-10-29T16:11:09.822421
+ALTER TABLE Submittal ADD projectnum CHAR(512);
+timestamp: 2012-11-13T11:13:54.218848
+ALTER TABLE auth_user ADD phone CHAR(512);
+timestamp: 2012-11-13T12:04:52.728753
+ALTER TABLE auth_user ADD role CHAR(512);

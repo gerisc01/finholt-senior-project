@@ -1,4 +1,8 @@
-{{extend 'layout.html'}}
+<html>
+<head>
+  <link rel="stylesheet" href="{{=URL('static','css/style.css')}}" type="text/css" media="all" />
+</head>
+<body>
 <h2>{{=T( request.args(0).replace('_',' ').capitalize() )}}</h2>
 <div id="web2py_user_form">
   {{=form}}
@@ -17,3 +21,5 @@
       jQuery("#web2py_user_form input:visible:enabled:first").focus();
       //--></script>
 
+</body>
+</html>

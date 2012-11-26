@@ -1,6 +1,6 @@
 #projectsidebar{
 width:150px;
-height:300px;
+min-height:300px;
 border:2px solid gray;
 display: inline;
 float:left;
@@ -51,4 +51,8 @@ background-color: #002f6d;
 }
 #adminsidebar li{
 
+}
+body{
+
+	background-color: white
 }

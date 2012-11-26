@@ -13,6 +13,7 @@ ul.jqtree-tree ul {
     display: block;
     margin-left: 12px;
     margin-right: 0;
+    position:relative;
 }
 
 ul.jqtree-tree li.jqtree-closed > ul {

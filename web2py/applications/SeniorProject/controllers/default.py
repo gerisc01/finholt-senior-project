@@ -10,7 +10,7 @@
 #########################################################################
 ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
 
-rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #', 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum', 'requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
+rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
 
 submittalForm = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'assignedTo':'Assigned to'})
 
@@ -25,6 +25,7 @@ projects = db(db.Project).select()
 
 footer = DIV("This website brought to you by the Supreme Leader and Minion #2 (Scott)", _id="footer")
 
+@auth.requires_login()
 def index():
     """
     example action using the internationalization operator T and flash
@@ -134,6 +135,10 @@ def data():
     """
     return dict(form=crud())
 
+#def register():
+ #   return dict(form=auth.register())
+
+
 def createproject():
     form = SQLFORM(db.Project)
     if form.process().accepted:
@@ -154,10 +159,28 @@ def formtable():
         response.flash = 'please fill out the form'    
     table = None
     image = None
+    fullTable = True
     if formType == "CCD":
         rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()
         myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc: IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
         table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"},extracolumns=myextracolumns)
+    elif formType == "RFI":
+        rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
+        table = SQLTABLE(rows,_width="800px")
+    elif formType == "Submittal":
+        rows = db(db.Submittal.projectNum == str(request.vars.projectNum)).select()
+        table = SQLTABLE(rows)
+    elif formType == "ProposalRequest":
+        rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
+        table = SQLTABLE(rows)
+    elif formType == "Proposal":
+        rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()
+        table = SQLTABLE(rows)
+
+    if len(rows)==0:
+        table = "No entries found"
+        fullTable = False
+
     return dict(formType=formType,
                 ccdForm=ccdForm,                
                 rfiForm=rfiForm,
@@ -168,4 +191,5 @@ def formtable():
                 projects=projects,
                 table= table,
                 image=image,
-                footer=footer)
+                footer=footer,
+                fullTable=fullTable)

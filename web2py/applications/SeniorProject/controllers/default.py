@@ -23,6 +23,7 @@ meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date
 
 projects = db(db.Project).select()
 
+
 footer = DIV("This website brought to you by the Supreme Leader and Minion #2 (Scott)", _id="footer")
 
 @auth.requires_login()
@@ -148,6 +149,27 @@ def createproject():
     else:
        response.flash = 'please fill out the form'
     return dict(form=form)
+    
+def manageprojects():
+    table = None
+    rows = db().select(db.Project.ALL)
+    #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
+    table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
+    return dict(table=table)
+    
+def archiveprojects():
+    table = None
+    rows = db(db.Project.archived == True).select()
+    #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
+    table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
+    return dict(table=table)
+    
+def manageusers():
+    table = None
+    #rows = db().select(db.Users.ALL)
+    #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
+    #table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
+    return dict(table=table)
 
 def formtable():
     formType = request.vars.formType

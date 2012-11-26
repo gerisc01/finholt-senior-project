@@ -79,7 +79,7 @@ use_janrain(auth,filename='private/janrain.key')
 ## >>> for row in rows: print row.id, row.myfield
 #########################################################################
 
-db.define_table("Project", Field('name','string'), Field('openDate','date'), Field('closedDate','date'))
+db.define_table("Project", Field('name','string'), Field('openDate','date'), Field('closedDate','date'), Field('projNum', 'integer'), Field('archived','boolean'))
 
 db.define_table("ProjectUser", Field('userRole','string'), Field('projectId','string'))
 
@@ -89,9 +89,9 @@ db.define_table("CCD", Field('ccdNum','string'), Field('projectNum','string'), F
 
 db.define_table("Submittal", Field('statusFlag','string'), Field('assignedTo','string'), Field('submittal','upload'))
 
-db.define_table("RFI", Field('rfiNum','string'), Field('requestBy','string'), Field('dateSent','date'), Field('reqRefTo','string'), Field('dateRec','date'), Field('drawingNum','integer'), Field('detailNum','integer'), Field('specSection','integer'), Field('sheetName','string'), Field('grids','string'), Field('sectionPage','integer'), Field('description','text'), Field('suggestion','text'), Field('reply','text'), Field('responseBy','string'), Field('responseDate','date'), Field('autoGenBlurb','text'), Field('statusFlag','string'))
+db.define_table("RFI", Field('rfiNum','string'), Field('requestBy','string'), Field('dateSent','date'), Field('reqRefTo','string'), Field('dateRec','date'), Field('drawingNum','integer'), Field('detailNum','integer'), Field('specSection','integer'), Field('sheetName','string'), Field('grids','string'), Field('sectionPage','integer'), Field('description','text'), Field('suggestion','text'), Field('reply','text'), Field('responseBy','string'), Field('responseDate','date'), Field('statusFlag','string'))
 
-db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','string'), Field('projectNum','string'), Field('subject','text'), Field('propDate','date'), Field('sentTo','string'), Field('cc','string'), Field('staticBlurb','text'), Field('description','text'))
+db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','string'), Field('projectNum','string'), Field('subject','text'), Field('propDate','date'), Field('sentTo','string'), Field('cc','string'), Field('description','text'))
 
 db.define_table("Proposal", Field('reqNum','integer'), Field('propDate','date'), Field('file','upload'))
 

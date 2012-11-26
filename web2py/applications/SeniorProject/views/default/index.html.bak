@@ -98,6 +98,9 @@ $(function() {
     <div id="adminsidebar">
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
+        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
+        <li><a href="{{=URL('default','archiveprojects')}}">Archive Projects</a></li>
+        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
     </ul>
 
     </div>

@@ -172,6 +172,7 @@ CREATE TABLE Submittal(
     submittal CHAR(512)
 );
 success!
+<<<<<<< HEAD
 timestamp: 2012-10-29T15:08:27.447151
 ALTER TABLE Proposal ADD projectnum CHAR(512);
 timestamp: 2012-10-29T15:15:11.188168
@@ -182,3 +183,9 @@ timestamp: 2012-11-13T11:13:54.218848
 ALTER TABLE auth_user ADD phone CHAR(512);
 timestamp: 2012-11-13T12:04:52.728753
 ALTER TABLE auth_user ADD role CHAR(512);
+=======
+timestamp: 2012-11-08T15:17:08.753000
+ALTER TABLE Project ADD projnum INTEGER;
+timestamp: 2012-11-10T10:19:17.197000
+ALTER TABLE Project ADD archived CHAR(1);
+>>>>>>> ff4dc5da6d3614125eea949561d08bec5d763d18

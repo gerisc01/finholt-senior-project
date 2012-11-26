@@ -105,7 +105,7 @@ use_janrain(auth,filename='private/janrain.key')
 ## >>> for row in rows: print row.id, row.myfield
 #########################################################################
 
-db.define_table("Project", Field('name','string'), Field('openDate','date'), Field('closedDate','date'))
+db.define_table("Project", Field('name','string'), Field('openDate','date'), Field('closedDate','date'), Field('projNum', 'integer'), Field('archived','boolean',readable=False, writable=False, default=False))
 
 db.define_table("ProjectUser", Field('userRole','string'), Field('projectId','string'))
 

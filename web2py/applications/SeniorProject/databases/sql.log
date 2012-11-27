@@ -189,3 +189,168 @@ ALTER TABLE Project ADD projnum INTEGER;
 timestamp: 2012-11-10T10:19:17.197000
 ALTER TABLE Project ADD archived CHAR(1);
 >>>>>>> ff4dc5da6d3614125eea949561d08bec5d763d18
+timestamp: 2012-11-26T14:09:28.212768
+CREATE TABLE Project(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name CHAR(512),
+    openDate DATE,
+    closedDate DATE,
+    projNum INTEGER,
+    archived CHAR(1)
+);
+timestamp: 2012-11-26T14:10:53.051647
+CREATE TABLE auth_user(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    first_name CHAR(128),
+    last_name CHAR(128),
+    email CHAR(128) UNIQUE,
+    password CHAR(512),
+    phone CHAR(512),
+    registration_key CHAR(512),
+    reset_password_key CHAR(512),
+    registration_id CHAR(512),
+    role CHAR(512)
+);
+timestamp: 2012-11-26T14:13:55.262150
+CREATE TABLE auth_user(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    first_name CHAR(128),
+    last_name CHAR(128),
+    email CHAR(128) UNIQUE,
+    password CHAR(512),
+    phone CHAR(512),
+    registration_key CHAR(512),
+    reset_password_key CHAR(512),
+    registration_id CHAR(512),
+    role CHAR(512)
+);
+success!
+timestamp: 2012-11-26T14:13:55.264461
+CREATE TABLE auth_group(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    role CHAR(512),
+    description TEXT
+);
+success!
+timestamp: 2012-11-26T14:13:55.266510
+CREATE TABLE auth_membership(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES auth_user(id) ON DELETE CASCADE,
+    group_id INTEGER REFERENCES auth_group(id) ON DELETE CASCADE
+);
+success!
+timestamp: 2012-11-26T14:13:55.269744
+CREATE TABLE auth_permission(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    group_id INTEGER REFERENCES auth_group(id) ON DELETE CASCADE,
+    name CHAR(512),
+    table_name CHAR(512),
+    record_id INTEGER
+);
+success!
+timestamp: 2012-11-26T14:13:55.273664
+CREATE TABLE auth_event(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    time_stamp TIMESTAMP,
+    client_ip CHAR(512),
+    user_id INTEGER REFERENCES auth_user(id) ON DELETE CASCADE,
+    origin CHAR(512),
+    description TEXT
+);
+success!
+timestamp: 2012-11-26T14:13:55.276220
+CREATE TABLE auth_cas(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES auth_user(id) ON DELETE CASCADE,
+    created_on TIMESTAMP,
+    service CHAR(512),
+    ticket CHAR(512),
+    renew CHAR(1)
+);
+success!
+timestamp: 2012-11-26T14:13:55.278458
+CREATE TABLE Project(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name CHAR(512),
+    openDate DATE,
+    closedDate DATE,
+    projNum INTEGER,
+    archived CHAR(1)
+);
+success!
+timestamp: 2012-11-26T14:13:55.280899
+CREATE TABLE ProjectUser(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    userRole CHAR(512),
+    projectId CHAR(512)
+);
+success!
+timestamp: 2012-11-26T14:13:55.282800
+CREATE TABLE CCD(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ccdNum CHAR(512),
+    projectNum CHAR(512),
+    file CHAR(512)
+);
+success!
+timestamp: 2012-11-26T14:13:55.286451
+CREATE TABLE Submittal(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    statusFlag CHAR(512),
+    projectNum CHAR(512),
+    assignedTo CHAR(512),
+    submittal CHAR(512)
+);
+success!
+timestamp: 2012-11-26T14:13:55.290972
+CREATE TABLE RFI(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    rfiNum CHAR(512),
+    requestBy CHAR(512),
+    dateSent DATE,
+    reqRefTo CHAR(512),
+    dateRec DATE,
+    drawingNum INTEGER,
+    detailNum INTEGER,
+    specSection INTEGER,
+    sheetName CHAR(512),
+    grids CHAR(512),
+    sectionPage INTEGER,
+    description TEXT,
+    suggestion TEXT,
+    reply TEXT,
+    responseBy CHAR(512),
+    responseDate DATE,
+    statusFlag CHAR(512),
+    projectNum CHAR(512)
+);
+success!
+timestamp: 2012-11-26T14:13:55.294695
+CREATE TABLE ProposalRequest(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reqNum CHAR(512),
+    amendNum CHAR(512),
+    projectNum CHAR(512),
+    subject TEXT,
+    propDate DATE,
+    sentTo CHAR(512),
+    cc CHAR(512),
+    description TEXT
+);
+success!
+timestamp: 2012-11-26T14:13:55.298177
+CREATE TABLE Proposal(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reqNum INTEGER,
+    propDate DATE,
+    file CHAR(512),
+    projectNum CHAR(512)
+);
+success!
+timestamp: 2012-11-26T14:13:55.300937
+CREATE TABLE MeetingMinutes(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    meetDate DATE,
+    file CHAR(512)
+);
+success!

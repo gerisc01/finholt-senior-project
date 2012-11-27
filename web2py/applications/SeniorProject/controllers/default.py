@@ -136,8 +136,14 @@ def data():
     """
     return dict(form=crud())
 
-#def register():
- #   return dict(form=auth.register())
+def register():
+    admin_auth = session.auth
+    auth.is_logged_in = lambda: False
+    def post_register(form):
+        session.auth = admin_auth
+        auth.user = session.auth.user
+    auth.settings.register_onaccept = post_register
+    return dict(form=auth.register())
 
 
 def createproject():

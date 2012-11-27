@@ -1,5 +1,5 @@
 (dp1
-S'assignedto'
+S'assignedTo'
 p2
 (dp3
 S'type'
@@ -24,7 +24,7 @@ I5
 sg7
 S'CHAR(512)'
 p12
-ssS'projectnum'
+ssS'projectNum'
 p13
 (dp14
 g4
@@ -38,21 +38,20 @@ ssS'id'
 p16
 (dp17
 g4
-S'id'
-p18
+g16
 sg6
 I1
 sg7
 S'INTEGER PRIMARY KEY AUTOINCREMENT'
+p18
+ssS'statusFlag'
 p19
-ssS'statusflag'
-p20
-(dp21
+(dp20
 g4
 g5
 sg6
 I2
 sg7
 S'CHAR(512)'
-p22
+p21
 ss.

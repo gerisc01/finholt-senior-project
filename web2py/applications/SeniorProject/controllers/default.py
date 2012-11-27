@@ -145,7 +145,13 @@ def register():
     auth.settings.register_onaccept = post_register
     return dict(form=auth.register())
 
-
+def deleteusers():
+     rows=db(db.auth_user.id>0).select() 
+     db.auth_user.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='check%i'%id)) 
+     table=FORM(SQLTABLE(rows),INPUT(_type='submit')) 
+     if table.accepts(request.vars): 
+           pass # or so something not sure what you want to do 
+     return dict(table=table) 
 def createproject():
     form = SQLFORM(db.Project)
     if form.process().accepted:

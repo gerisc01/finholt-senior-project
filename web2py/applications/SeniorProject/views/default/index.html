@@ -57,7 +57,6 @@ var data = [];
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=projects[index].id))}}'>Proposals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"}  ]});
   {{pass}} 
-
 $(function() {
     $('#projectsidebar').tree({
         data: data,

@@ -23,6 +23,9 @@ $("#content").html('{{=ccdForm}}')
 
 $("#RFI").click(function(){
 $("#content").html('{{=rfiForm}}')
+$("#RFI_dateSent").datepicker({"dateFormat": "yy-mm-dd"})
+$("#RFI_dateRec").datepicker({"dateFormat": "yy-mm-dd"})
+$("#RFI_responseDate").datepicker({"dateFormat": "yy-mm-dd"})
 })
 
 $("#Submittal").click(function(){
@@ -31,14 +34,17 @@ $("#content").html('{{=submittalForm}}')
 
 $("#ProposalRequest").click(function(){
 $("#content").html('{{=proposalRequestForm}}')
+$("#ProposalRequest_propDate").datepicker({"dateFormat": "yy-mm-dd"})
 })
 
 $("#Proposal").click(function(){
 $("#content").html('{{=proposalForm}}')
+$("#Proposal_propDate").datepicker({"dateFormat": "yy-mm-dd"})
 })
 
 $("#MeetingMinutes").click(function(){
 $("#content").html('{{=meetingMinutesForm}}')
+$("#MeetingMinutes_meetDate").datepicker({"dateFormat": "yy-mm-dd"})
 })
 
 
@@ -46,7 +52,7 @@ var data = [];
 
 
 {{for index  in range(len(projects)):}}
-  data.push({label:"Project "+{{=T(str(projects[index].id))}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},
+  data.push({label:"Project "+"{{=T(projects[index].name)}}", children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].id))}}'>Submittals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].id))}}'>CCDs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].id))}}'>Proposal Requests</a>"},
@@ -66,7 +72,11 @@ $(function() {
 
 $("#content").append('{{=table}}');
 
-$("#content table").dataTable();
+{{if fullTable==True:}}
+$("#content table").dataTable(
+  );
+{{pass}}
+
 
 });
 </script>
@@ -100,6 +110,9 @@ $("#content table").dataTable();
     <div id="adminsidebar">
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
+        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
+        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
+        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
     </ul>
 
     </div>

@@ -35,15 +35,17 @@ $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
       <img src="{{=URL('static','images/stock.jpeg')}}"/>
     </div>
     
-    <div id ="tablearea">
-        {{=table}}
+    <div id ="userFunctions">
+      
+        <a href="{{=URL('user',args='register')}}">Create User</a>
+        <a href="{{=URL('default','deleteusers')}}">Delete Users</a>
     </div>
 
     <div id="adminsidebar"/>
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
         <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
-        <li><a href="{{=URL('default','archiveprojects')}}">Archive Projects</a></li>
+        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
         <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
     </ul>
 

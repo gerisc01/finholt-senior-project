@@ -52,7 +52,7 @@ var data = [];
 
 
 {{for index  in range(len(projects)):}}
-  data.push({label:"Project "+"{{=T(projects[index].name)}}", children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},
+  data.push({label:"Project "+"{{=T(projects[index].name)}}",id:{{=int(projects[index].id)}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].id))}}'>Submittals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].id))}}'>CCDs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].id))}}'>Proposal Requests</a>"},
@@ -60,7 +60,7 @@ var data = [];
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"} ]});
   {{pass}} 
 
-
+;
 
 
 $(function() {
@@ -68,6 +68,8 @@ $(function() {
         data: data,
         autoEscape:false
     });
+    var node = $('#projectsidebar').tree('getNodeById', {{=int(request.vars.projectNum[-1])}});
+$('#projectsidebar').tree('openNode', node);
 });
 
 $("#content").append('{{=table}}');
@@ -110,17 +112,9 @@ $("#content table").dataTable(
     <div id="adminsidebar">
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
-        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
-        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
-        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
     </ul>
 
     </div>
     
 
     {{=footer}}
-</body>
-
-
-
-  </html>

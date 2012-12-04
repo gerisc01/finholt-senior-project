@@ -1,3 +1,92 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Senior Project</title>
+<link rel="stylesheet" href="{{=URL('static','css/style.css')}}" type="text/css" media="all" />
+<link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
+
+<link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
+
+  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
+  <script src="{{=URL('static','js/jquery.js')}}"></script> 
+  <script src="{{=URL('static','js/jquery.ui.accordion.js')}}"></script> 
+  <script src="{{=URL('static','js/jquery.datatables.js')}}"></script> 
+  <script src="{{=URL('static','js/jquery-ui-1.9.0.custom.min.js')}}"></script> 
+  <script src="{{=URL('static','jqTree/tree.jquery.js')}}"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+
+
+
+$("#CCD").click(function(){
+
+$("#content").html('{{=ccdForm}}')
+
+})
+
+var data = [];
+
+
+{{for index  in range(len(projects)):}}
+  data.push({label:"Project "+{{=T(str(projects[index].id))}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},{label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].id))}}'>Submittals</a>"},{label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].id))}}'>CCDs</a>"}] });
+  {{pass}} 
+
+
+
+
+$(function() {
+    $('#projectsidebar').tree({
+        data: data,
+        autoEscape:false
+    });
+});
+alert('{{=formType}}');
+$("#content").append('{{=table}}');
+
+$("#content table").dataTable();
+
+});
+</script>
+
+</head>
+
+<body>
+
+    <div id="header">
+      <img src="{{=URL('static','images/stock.jpeg')}}"/>
+    </div>
+
+    <ul id = "projecttabs">
+        <li>Add Form</li>
+        <li>Calendar</li>
+        <li id="CCD">Upload CCD</li>
+        <li>Upload Photo</li>
+    </ul>
+    <hr>
+    <div id="projectsidebar">
+    
+
+    </div>
+    <div id="content">
+      
+    </div>
+    <div id="adminsidebar">
+    <ul>
+        <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
+    </ul>
+
+    </div>
+    
+
+    {{=footer}}
+</body>
+
+
+
+  </html>
+=======
 <!DOCTYPE html>
 <html>
 
@@ -52,7 +141,7 @@ var data = [];
 
 
 {{for index  in range(len(projects)):}}
-  data.push({label:"Project "+"{{=T(projects[index].name)}}",id:{{=int(projects[index].id)}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},
+  data.push({label:"Project "+{{=T(str(projects[index].id))}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].id))}}'>Submittals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].id))}}'>CCDs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].id))}}'>Proposal Requests</a>"},
@@ -60,7 +149,7 @@ var data = [];
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"} ]});
   {{pass}} 
 
-;
+
 
 
 $(function() {
@@ -68,17 +157,11 @@ $(function() {
         data: data,
         autoEscape:false
     });
-    var node = $('#projectsidebar').tree('getNodeById', {{=int(request.vars.projectNum[-1])}});
-$('#projectsidebar').tree('openNode', node);
 });
 
 $("#content").append('{{=table}}');
 
-{{if fullTable==True:}}
-$("#content table").dataTable(
-  );
-{{pass}}
-
+$("#content table").dataTable();
 
 });
 </script>
@@ -112,12 +195,15 @@ $("#content table").dataTable(
     <div id="adminsidebar">
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
-        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
-        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
-        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
     </ul>
 
     </div>
     
 
     {{=footer}}
+</body>
+
+
+
+  </html>
+>>>>>>> 247dc8f33dc85fc048893b0241f8cf4ee9049558

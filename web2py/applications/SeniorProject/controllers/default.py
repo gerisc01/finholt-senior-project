@@ -24,7 +24,7 @@ meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date
 projects = db(db.Project).select()
 
 header = DIV(A(IMG(_src=URL('static','images/stock.jpeg'))), _id="header")
-footer = DIV("This website brought to you by the Supreme Leader and Minion #2 (Scott)", _id="footer")
+footer = DIV("This website brought to you by the Supreme Leader, Minion #3 (Alysse), Minion #2 (Scott), and the Sick One (Erik)", _id="footer")
 
 auth.requires_login()
 def index():

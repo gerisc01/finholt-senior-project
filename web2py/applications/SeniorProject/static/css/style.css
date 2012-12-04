@@ -53,15 +53,16 @@ background-color: #002f6d;
 }
 #content{
 	display:inline;
-	width:65%;
+	width:1030px;
 	float:left;
+	min-height:500px;
 	padding:10px;
 }
 #adminsidebar{
+	float:left;
 	display:inline;
-	float:right;
 	border:2px solid gray;
-	width:150px;
+	width:175px;
 	height:300px;
 	margin:5px;
 

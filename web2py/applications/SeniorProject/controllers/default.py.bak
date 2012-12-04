@@ -12,11 +12,11 @@ ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
 
 rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
 
-submittalForm = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'assignedTo':'Assigned to'})
+submittalForm = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'assignedTo':'Assigned to'})
 
 proposalRequestForm = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'})
 
-proposalForm = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'propDate':'Proposal Date'})
+proposalForm = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
 
 meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
 
@@ -155,7 +155,7 @@ def deleteusers():
      return dict(table=table, footer=footer, header=header)
      
 def createproject():
-    form = SQLFORM(db.Project)
+    form = SQLFORM(db.Project, labels={'openDate':'Open Date'})
     if form.process().accepted:
        response.flash = 'form accepted'
     elif form.errors:

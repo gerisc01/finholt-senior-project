@@ -155,7 +155,7 @@ def deleteusers():
      return dict(table=table, footer=footer, header=header)
      
 def createproject():
-    form = SQLFORM(db.Project)
+    form = SQLFORM(db.Project, labels={'openDate':'Open Date', 'closedDate':'Closed Date', 'projNum':'Project Number'})
     if form.process().accepted:
        response.flash = 'form accepted'
     elif form.errors:

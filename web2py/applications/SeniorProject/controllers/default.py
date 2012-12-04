@@ -190,7 +190,42 @@ def formtable():
     elif ccdForm.errors:
         response.flash = 'form has errors'
     else:
-        response.flash = 'please fill out the form'    
+        response.flash = 'please fill out the form'
+        
+    if rfiForm.process().accepted:
+        response.flash = 'form accepted'
+    elif rfiForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if submittalForm.process().accepted:
+        response.flash = 'form accepted'
+    elif submittalForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if proposalRequestForm.process().accepted:
+        response.flash = 'form accepted'
+    elif proposalRequestForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if proposalForm.process().accepted:
+        response.flash = 'form accepted'
+    elif proposalForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+    
+    if meetingMinutesForm.process().accepted:
+        response.flash = 'form accepted'
+    elif meetingMinutesForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
     table = None
     image = None
     fullTable = True

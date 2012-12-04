@@ -57,6 +57,7 @@ var data = [];
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=projects[index].id))}}'>Proposals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"}  ]});
   {{pass}} 
+
 $(function() {
     $('#projectsidebar').tree({
         data: data,
@@ -74,7 +75,7 @@ $(function() {
     <div id="header">
       <img src="{{=URL('static','images/stock.jpeg')}}"/>
     </div>
-
+    <div id="wrapper">
     <ul id = "projecttabs">
         <li>Calendar</li>
         <li id="CCD">Upload CCD</li>       
@@ -103,7 +104,7 @@ $(function() {
     </ul>
 
     </div>
-    
+    </div>
 
     {{=footer}}
 </body>

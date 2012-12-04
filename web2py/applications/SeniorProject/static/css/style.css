@@ -1,9 +1,21 @@
+body{
+min-width: 1200px;
+background: rgb(240,249,255); /* Old browsers */
+background: -moz-linear-gradient(top, rgba(240,249,255,1) 0%, rgba(203,235,255,1) 47%, rgba(161,219,255,1) 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(240,249,255,1)), color-stop(47%,rgba(203,235,255,1)), color-stop(100%,rgba(161,219,255,1))); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top, rgba(240,249,255,1) 0%,rgba(203,235,255,1) 47%,rgba(161,219,255,1) 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top, rgba(240,249,255,1) 0%,rgba(203,235,255,1) 47%,rgba(161,219,255,1) 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top, rgba(240,249,255,1) 0%,rgba(203,235,255,1) 47%,rgba(161,219,255,1) 100%); /* IE10+ */
+background: linear-gradient(to bottom, rgba(240,249,255,1) 0%,rgba(203,235,255,1) 47%,rgba(161,219,255,1) 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f0f9ff', endColorstr='#a1dbff',GradientType=0 ); /* IE6-9 */
+}
 #projectsidebar{
 width:150px;
 min-height:300px;
 border:2px solid gray;
 display: inline;
 float:left;
+
 }
 
 #header{
@@ -30,9 +42,14 @@ background-color: #002f6d;
 
 
 }
+#projecttabs li:hover{
+
+	background-color: #8EEBEC;
+}
 #projecttabs{
 	margin-left:115px;
 	margin-bottom:2px;
+	min-width:800px;
 }
 #content{
 	display:inline;
@@ -52,7 +69,27 @@ background-color: #002f6d;
 #adminsidebar li{
 
 }
-body{
+#projectForm{
+	display: inline-block;
+	float: left;
 
-	background-color: white
+}
+#tablearea{
+	display: inline-block;
+	float: left;
+	width: 900px;
+}
+table{
+	border:2px solid black;
+	width:100%;
+}
+tr.odd {
+	background-color: white;
+}
+tr.even{
+
+	background-color: #5CB3FF;
+}
+html{
+	height:100%;
 }

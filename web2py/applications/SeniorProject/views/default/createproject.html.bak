@@ -20,7 +20,6 @@ $(document).ready(function(){
 //$( "#projectsidebar" ).accordion({  //Sidebar setup
   //    collapsible: true
 //    });
-//$("#Project_projNum").attr({title:"Project Number"}); want to change display field name
 $("#Project_openDate").datepicker({"dateFormat": "yy-mm-dd"});
 $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
 
@@ -34,28 +33,21 @@ $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
     <div id="header">
       <img src="{{=URL('static','images/stock.jpeg')}}"/>
     </div>
-    <ul id = "projecttabs">
-    <div id="hometab" align="right">
-      <li id="home"><a href="{{=URL('default','index')}}">Home</li>
-    </div>
-    </ul>
-    <hr>
-    <br>      
+    
     <div id ="projectForm">
         {{=form}}
     </div>
 
-    <div id="adminsidebar"/>
+    <div id="adminsidebar">
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
         <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
-        <li><a href="{{=URL('default','archiveprojects')}}">Archive Projects</a></li>
+        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
         <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
     </ul>
-
     </div>
 
-    <div id="footer">This website brought to you by the Supreme Leader and Minion #2 (Scott)</div>
+    {{=footer}}
 </body>
 
 

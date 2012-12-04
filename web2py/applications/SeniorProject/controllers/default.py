@@ -23,10 +23,10 @@ meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date
 
 projects = db(db.Project).select()
 
-
+header = DIV(A(IMG(_src=URL('static','images/stock.jpeg'))), _id="header")
 footer = DIV("This website brought to you by the Supreme Leader and Minion #2 (Scott)", _id="footer")
 
-@auth.requires_login()
+auth.requires_login()
 def index():
     """
     example action using the internationalization operator T and flash
@@ -82,6 +82,7 @@ def index():
                 proposalRequestForm=proposalRequestForm,
                 proposalForm=proposalForm,
                 meetingMinutesForm=meetingMinutesForm,
+                header=header,
                 footer=footer)
 
 def user():
@@ -151,7 +152,8 @@ def deleteusers():
      table=FORM(SQLTABLE(rows),INPUT(_type='submit')) 
      if table.accepts(request.vars): 
            pass # or so something not sure what you want to do 
-     return dict(table=table) 
+     return dict(table=table, footer=footer, header=header)
+     
 def createproject():
     form = SQLFORM(db.Project)
     if form.process().accepted:
@@ -160,28 +162,28 @@ def createproject():
        response.flash = 'form has errors'
     else:
        response.flash = 'please fill out the form'
-    return dict(form=form)
+    return dict(form=form, footer=footer, header=header)
     
 def manageprojects():
     table = None
     rows = db().select(db.Project.ALL)
     #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
     table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
-    return dict(table=table)
+    return dict(table=table, footer=footer, header=header)
     
 def archiveprojects():
     table = None
     rows = db(db.Project.archived == True).select()
     #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
     table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
-    return dict(table=table)
+    return dict(table=table, footer=footer, header=header)
     
 def manageusers():
     table = None
     #rows = db().select(db.Users.ALL)
     #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
     #table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
-    return dict(table=table)
+    return dict(table=table, footer=footer, header=header)
 
 def formtable():
     formType = request.vars.formType
@@ -232,22 +234,31 @@ def formtable():
     if formType == "CCD":
         rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()
         myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc: IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
-        table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"},extracolumns=myextracolumns)
+        table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"})
     elif formType == "RFI":
         rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
-        table = SQLTABLE(rows,_width="800px")
+        table = SQLTABLE(rows,_width="800px",       
+            columns=["RFI.rfiNum","RFI.dateSent","RFI.reqRefTo","RFI.dateRec","RFI.responseBy","RFI.responseDate","RFI.statusFlag"],headers=
+            {"RFI.rfiNum":"RFI #","RFI.dateSent":"Date Sent","RFI.reqRefTo":"Request Referred To","RFI.dateRec":"Date Received","RFI.responseDate":"Response Date","RFI.responseBy":"Response By","RFI.statusFlag":"Status Flag"})
     elif formType == "Submittal":
         rows = db(db.Submittal.projectNum == str(request.vars.projectNum)).select()
-        table = SQLTABLE(rows)
+        table = SQLTABLE(rows, columns=["Submittal.assignedTo","Submittal.statusFlag","Submittal.submittal"],
+         headers={"Submittal.assignedTo":"Assigned To","Submittal.statusFlag":"Status Flag","Submittal.submittal":"Submitted File"})
     elif formType == "ProposalRequest":
         rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
-        table = SQLTABLE(rows)
+        table = SQLTABLE(rows, columns=["ProposalRequest.reqNum","ProposalRequest.amendNum","ProposalRequest.sentTo","ProposalRequest.propDate"],
+         headers={"ProposalRequest.reqNum":"Request Number","ProposalRequest.amendNum":"Amendment Number","ProposalRequest.sentTo":"Sent To","ProposalRequest.propDate":"Proposal Request Date"})
     elif formType == "Proposal":
         rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()
-        table = SQLTABLE(rows)
+        table = SQLTABLE(rows, columns=["Proposal.reqNum","Proposal.propDate","Proposal.file"],
+        headers={"Proposal.reqNum":"Proposal Number","Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"})
+    elif formType == "MeetingMinutes":
+        rows = db().select(db.MeetingMinutes.ALL)
+        table = SQLTABLE(rows, columns=["MeetingMinutes.meetDate","MeetingMinutes.file"],
+        headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"})
 
     if len(rows)==0:
-        table = "No entries found"
+        table = "There are no documents uploaded for this project section as of yet."
         fullTable = False
 
     return dict(formType=formType,
@@ -261,4 +272,5 @@ def formtable():
                 table= table,
                 image=image,
                 footer=footer,
+                header=header,
                 fullTable=fullTable)

@@ -50,14 +50,13 @@ var data = [];
 
 
 {{for index  in range(len(projects)):}}
-  data.push({label:"Project "+{{=T(str(projects[index].id))}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},
+  data.push({label:"Project "+"{{=T(projects[index].name)}}", children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].id))}}'>RFIs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].id))}}'>Submittals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].id))}}'>CCDs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].id))}}'>Proposal Requests</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=projects[index].id))}}'>Proposals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"}  ]});
   {{pass}} 
-
 $(function() {
     $('#projectsidebar').tree({
         data: data,
@@ -92,14 +91,13 @@ $(function() {
 
     </div>
     <div id="content">
-      "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.""Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.""Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-
+      Welcome to Finholt Construction! We make all your building dreams come true :)
     </div>
     <div id="adminsidebar">
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
         <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
-        <li><a href="{{=URL('default','archiveprojects')}}">Archive Projects</a></li>
+        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
         <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
     </ul>
 

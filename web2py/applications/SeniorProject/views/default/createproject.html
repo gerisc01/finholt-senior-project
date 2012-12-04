@@ -30,9 +30,7 @@ $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
 
 <body>
 
-    <div id="header">
-      <img src="{{=URL('static','images/stock.jpeg')}}"/>
-    </div>
+    {{=header}}
     
     <div id ="projectForm">
         {{=form}}
@@ -41,10 +39,13 @@ $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
     <div id="adminsidebar">
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
+        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
+        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
+        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
     </ul>
     </div>
 
-    <div id="footer">This website brought to you by the Supreme Leader and Minion #2 (Scott)</div>
+    {{=footer}}
 </body>
 
 

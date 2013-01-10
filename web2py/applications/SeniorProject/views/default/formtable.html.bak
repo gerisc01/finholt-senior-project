@@ -87,9 +87,7 @@ $("#content table").dataTable(
 
 <body>
 
-    <div id="header">
-      <img src="{{=URL('static','images/stock.jpeg')}}"/>
-    </div>
+   {{=header}}
 
     <ul id = "projecttabs">
         <li>Calendar</li>
@@ -112,6 +110,9 @@ $("#content table").dataTable(
     <div id="adminsidebar">
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
+        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
+        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
+        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
     </ul>
 
     </div>

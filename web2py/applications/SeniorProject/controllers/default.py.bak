@@ -20,6 +20,9 @@ proposalForm = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'projectNum':'
 
 meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
 
+record = 1 #db.auth_user(request.args(0))
+myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['email','phone','password'])
+
 
 projects = db(db.Project).select()
 
@@ -74,6 +77,14 @@ def index():
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill out the form'
+        
+    if myProfileForm.process().accepted:
+        response.flash = 'form accepted'
+    elif myProfileForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
     
     return dict(ccdForm=ccdForm,
                 projects=projects,
@@ -82,6 +93,7 @@ def index():
                 proposalRequestForm=proposalRequestForm,
                 proposalForm=proposalForm,
                 meetingMinutesForm=meetingMinutesForm,
+                myProfileForm=myProfileForm,
                 header=header,
                 footer=footer)
 
@@ -228,6 +240,13 @@ def formtable():
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill out the form'
+    if myProfileForm.process().accepted:
+        response.flash = 'form accepted'
+    elif myProfileForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
     table = None
     image = None
     fullTable = True
@@ -268,6 +287,7 @@ def formtable():
                 proposalRequestForm=proposalRequestForm,
                 proposalForm=proposalForm,
                 meetingMinutesForm=meetingMinutesForm,
+                myProfileForm=myProfileForm,
                 projects=projects,
                 table= table,
                 image=image,

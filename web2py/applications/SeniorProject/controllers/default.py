@@ -8,7 +8,6 @@
 ## - download is for downloading files uploaded in the db (does streaming)
 ## - call exposes all registered services (none by default)
 #########################################################################
-
 ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
 
 rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
@@ -20,6 +19,9 @@ proposalRequestForm = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 
 proposalForm = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
 
 meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
+
+record = 1 #db.auth_user(request.args(0))
+myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['email','phone'])
 
 
 projects = db(db.Project).select()
@@ -75,6 +77,14 @@ def index():
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill out the form'
+        
+    if myProfileForm.process().accepted:
+        response.flash = 'form accepted'
+    elif myProfileForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
     
     return dict(ccdForm=ccdForm,
                 projects=projects,
@@ -83,6 +93,7 @@ def index():
                 proposalRequestForm=proposalRequestForm,
                 proposalForm=proposalForm,
                 meetingMinutesForm=meetingMinutesForm,
+                myProfileForm=myProfileForm,
                 header=header,
                 footer=footer)
 
@@ -229,6 +240,13 @@ def formtable():
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill out the form'
+    if myProfileForm.process().accepted:
+        response.flash = 'form accepted'
+    elif myProfileForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
     table = None
     image = None
     fullTable = True
@@ -277,6 +295,7 @@ def formtable():
                 proposalRequestForm=proposalRequestForm,
                 proposalForm=proposalForm,
                 meetingMinutesForm=meetingMinutesForm,
+                myProfileForm=myProfileForm,
                 projects=projects,
                 table= table,
                 image=image,

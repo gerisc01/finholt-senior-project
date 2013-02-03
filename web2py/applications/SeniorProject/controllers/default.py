@@ -8,6 +8,7 @@
 ## - download is for downloading files uploaded in the db (does streaming)
 ## - call exposes all registered services (none by default)
 #########################################################################
+
 ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
 
 rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
@@ -19,9 +20,6 @@ proposalRequestForm = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 
 proposalForm = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
 
 meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
-
-record = 1 #db.auth_user(request.args(0))
-myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['email','phone'])
 
 
 projects = db(db.Project).select()
@@ -77,14 +75,6 @@ def index():
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill out the form'
-        
-    if myProfileForm.process().accepted:
-        response.flash = 'form accepted'
-    elif myProfileForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
     
     return dict(ccdForm=ccdForm,
                 projects=projects,
@@ -93,7 +83,6 @@ def index():
                 proposalRequestForm=proposalRequestForm,
                 proposalForm=proposalForm,
                 meetingMinutesForm=meetingMinutesForm,
-                myProfileForm=myProfileForm,
                 header=header,
                 footer=footer)
 
@@ -240,20 +229,15 @@ def formtable():
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill out the form'
-    if myProfileForm.process().accepted:
-        response.flash = 'form accepted'
-    elif myProfileForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
     table = None
     image = None
     fullTable = True
     if formType == "CCD":
         rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()
+        for row in rows:
+            row.file = str(URL('default','download',args=row.file))[1:]
         myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc: IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
-        table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"})
+        table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"},upload="http://127.0.0.1:8000")
     elif formType == "RFI":
         rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
         table = SQLTABLE(rows,_width="800px",       
@@ -261,20 +245,26 @@ def formtable():
             {"RFI.rfiNum":"RFI #","RFI.dateSent":"Date Sent","RFI.reqRefTo":"Request Referred To","RFI.dateRec":"Date Received","RFI.responseDate":"Response Date","RFI.responseBy":"Response By","RFI.statusFlag":"Status Flag"})
     elif formType == "Submittal":
         rows = db(db.Submittal.projectNum == str(request.vars.projectNum)).select()
+        for row in rows:
+            row.submittal = str(URL('default','download',args=row.submittal))[1:]
         table = SQLTABLE(rows, columns=["Submittal.assignedTo","Submittal.statusFlag","Submittal.submittal"],
-         headers={"Submittal.assignedTo":"Assigned To","Submittal.statusFlag":"Status Flag","Submittal.submittal":"Submitted File"})
+         headers={"Submittal.assignedTo":"Assigned To","Submittal.statusFlag":"Status Flag","Submittal.submittal":"Submitted File"},upload="http://127.0.0.1:8000")
     elif formType == "ProposalRequest":
         rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
         table = SQLTABLE(rows, columns=["ProposalRequest.reqNum","ProposalRequest.amendNum","ProposalRequest.sentTo","ProposalRequest.propDate"],
          headers={"ProposalRequest.reqNum":"Request Number","ProposalRequest.amendNum":"Amendment Number","ProposalRequest.sentTo":"Sent To","ProposalRequest.propDate":"Proposal Request Date"})
     elif formType == "Proposal":
         rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()
+        for row in rows:
+            row.file = str(URL('default','download',args=row.file))[1:]
         table = SQLTABLE(rows, columns=["Proposal.reqNum","Proposal.propDate","Proposal.file"],
-        headers={"Proposal.reqNum":"Proposal Number","Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"})
+        headers={"Proposal.reqNum":"Proposal Number","Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"},upload="http://127.0.0.1:8000")
     elif formType == "MeetingMinutes":
         rows = db().select(db.MeetingMinutes.ALL)
+        for row in rows:
+            row.file = str(URL('default','download',args=row.file))[1:]
         table = SQLTABLE(rows, columns=["MeetingMinutes.meetDate","MeetingMinutes.file"],
-        headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"})
+        headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"},upload="http://127.0.0.1:8000")
 
     if len(rows)==0:
         table = "There are no documents uploaded for this project section as of yet."
@@ -287,7 +277,6 @@ def formtable():
                 proposalRequestForm=proposalRequestForm,
                 proposalForm=proposalForm,
                 meetingMinutesForm=meetingMinutesForm,
-                myProfileForm=myProfileForm,
                 projects=projects,
                 table= table,
                 image=image,

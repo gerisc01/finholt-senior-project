@@ -79,9 +79,15 @@ mail.settings.sender = 'you@gmail.com'
 mail.settings.login = 'username:password'
 
 ## configure auth policy
+generalAuth = auth.id_group(role="General");
+if auth.id_group(role="General")<=0:
+    generalAuth = auth.add_group(role="General")
+if auth.id_group(role="Admin")<=0:
+    adminAuth = auth.add_group(role="Admin")
 auth.settings.registration_requires_verification = False
 auth.settings.registration_requires_approval = False
 auth.settings.reset_password_requires_verification = True
+##auth.settings.everybody_group_id = 5
 
 ## if you need to use OpenID, Facebook, MySpace, Twitter, Linkedin, etc.
 ## register with janrain.com, write your domain:api_key in private/janrain.key

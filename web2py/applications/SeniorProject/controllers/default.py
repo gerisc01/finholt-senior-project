@@ -29,7 +29,7 @@ projects = db(db.Project).select()
 header = DIV(A(IMG(_src=URL('static','images/stock.jpeg')), _href=URL('default','index')), _id="header")
 footer = DIV("This website brought to you by the Supreme Leader, Minion #3 (Alysse), Minion #2 (Scott), and the Sick One (Erik)", _id="footer")
 
-auth.requires_login()
+@auth.requires_login()
 def index():
     """
     example action using the internationalization operator T and flash
@@ -149,23 +149,42 @@ def data():
     """
     return dict(form=crud())
 
+@auth.requires_membership('Admin')
 def register():
-    admin_auth = session.auth
-    auth.is_logged_in = lambda: False
-    def post_register(form):
-        session.auth = admin_auth
-        auth.user = session.auth.user
-    auth.settings.register_onaccept = post_register
-    return dict(form=auth.register())
+    form = SQLFORM(db.auth_user)
+    if form.validate():
+        admin_user = auth.user
+        auth.get_or_create_user(form.vars)
+        auth.add_membership(auth.id_group(role="General"),auth.user_id) 
+        auth.user = admin_user
+        redirect(URL('default','manageusers'))
+    return dict(form=form,header=header)
+    #admin_auth = session.auth
+    #auth.is_logged_in = lambda: False
+    #def post_register(form):
+    #    auth.add_membership(auth.id_group(role="General"),auth.user_id) 
 
+     #   session.auth = admin_auth
+     #   auth.user = session.auth.user
+    #auth.settings.register_onaccept = post_register
+    #return dict(form=auth.register())
+
+@auth.requires_login()
+@auth.requires_membership('Admin')
 def deleteusers():
      rows=db(db.auth_user.id>0).select() 
-     db.auth_user.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='check%i'%id)) 
+     db.auth_user.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
      table=FORM(SQLTABLE(rows),INPUT(_type='submit')) 
      if table.accepts(request.vars): 
-           pass # or so something not sure what you want to do 
+        for item in request.vars.keys():
+            if item.isdigit():
+                db(db.auth_user.id == int(item)).delete()
+        redirect(URL('default','deleteusers'))
+            # or so something not sure what you want to do 
      return dict(table=table, footer=footer, header=header)
-     
+ 
+@auth.requires_login()    
+@auth.requires_membership('Admin')
 def createproject():
     form = SQLFORM(db.Project, labels={'openDate':'Open Date', 'closedDate':'Closed Date', 'projNum':'Project Number'})
     if form.process().accepted:
@@ -175,7 +194,9 @@ def createproject():
     else:
        response.flash = 'please fill out the form'
     return dict(form=form, footer=footer, header=header)
-    
+
+@auth.requires_login()   
+@auth.requires_membership('Admin')
 def manageprojects():
     table = None
     rows = db().select(db.Project.ALL)
@@ -183,13 +204,20 @@ def manageprojects():
     table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
     return dict(table=table, footer=footer, header=header)
     
+@auth.requires_login()
+@auth.requires_membership('Admin')
+
 def archiveprojects():
     table = None
     rows = db(db.Project.archived == True).select()
     #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
     table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
     return dict(table=table, footer=footer, header=header)
-    
+
+
+@auth.requires_login()
+@auth.requires_membership('Admin')
+
 def manageusers():
     table = None
     #rows = db().select(db.Users.ALL)
@@ -197,6 +225,7 @@ def manageusers():
     #table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
     return dict(table=table, footer=footer, header=header)
 
+@auth.requires_login()
 def formtable():
     formType = request.vars.formType
     if ccdForm.process().accepted:

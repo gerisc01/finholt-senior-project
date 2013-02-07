@@ -180,11 +180,7 @@ def changepermissions():
             if item.isdigit():
                 if not auth.has_membership(user_id=int(item), role=request.vars[item]):
                     auth.del_membership(auth.id_group(role=getOtherRoles(request.vars[item])),int(item))
-                    auth.add_membership(auth.id_group(role=request.vars[item]),int(item))
-
-
-                #import tkMessageBox 
-                #tkMessageBox.showinfo(title="Greetings", message=str(request.vars))  
+                    auth.add_membership(auth.id_group(role=request.vars[item]),int(item)) 
 
         redirect(URL('default','manageusers'))
      return dict(table=table, footer=footer, header=header)

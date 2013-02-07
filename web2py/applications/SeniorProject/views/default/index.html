@@ -68,6 +68,14 @@ $(function() {
         autoEscape:false
     });
 });
+$('#projectsidebar').bind(
+    'tree.click',
+    function(event) {
+        // The clicked node is 'event.node'
+        var node = event.node;
+        $('#projectsidebar').tree('toggle', node);
+    }
+);
 
 });
 

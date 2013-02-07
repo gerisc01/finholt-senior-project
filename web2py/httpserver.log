@@ -14910,3 +14910,6 @@
 127.0.0.1, 2013-02-07 14:59:36, GET, /favicon.ico, HTTP/1.1, 400, 0.000482
 127.0.0.1, 2013-02-07 14:59:37, GET, /SeniorProject/default/changepermissions, HTTP/1.1, 200, 0.058160
 127.0.0.1, 2013-02-07 14:59:37, GET, /favicon.ico, HTTP/1.1, 400, 0.000506
+127.0.0.1, 2013-02-07 15:03:54, GET, /SeniorProject/default/index, HTTP/1.1, 200, 0.052988
+127.0.0.1, 2013-02-07 15:03:54, GET, /SeniorProject/static/jqTree/jqtree-icons.png, HTTP/1.1, 304, 0.007303
+127.0.0.1, 2013-02-07 15:03:54, GET, /favicon.ico, HTTP/1.1, 400, 0.000515

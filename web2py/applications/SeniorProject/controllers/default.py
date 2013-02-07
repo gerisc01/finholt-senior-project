@@ -171,6 +171,26 @@ def register():
 
 @auth.requires_login()
 @auth.requires_membership('Admin')
+def changepermissions():
+     rows=db(db.auth_user.id>0).select() 
+     db.auth_user.id.represent=lambda id: DIV(id,SELECT(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role), XML(getOtherRoles(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role))), _name='%i'%id)) # INPUT (_type='checkbox',_name='%i'%id)) 
+     table=FORM(SQLTABLE(rows),INPUT(_type='submit')) 
+     if table.accepts(request.vars): 
+        for item in request.vars.keys():
+            if item.isdigit():
+                if not auth.has_membership(user_id=int(item), role=request.vars[item]):
+                    auth.del_membership(auth.id_group(role=getOtherRoles(request.vars[item])),int(item))
+                    auth.add_membership(auth.id_group(role=request.vars[item]),int(item))
+
+
+                #import tkMessageBox 
+                #tkMessageBox.showinfo(title="Greetings", message=str(request.vars))  
+
+        redirect(URL('default','manageusers'))
+     return dict(table=table, footer=footer, header=header)
+
+@auth.requires_login()
+@auth.requires_membership('Admin')
 def deleteusers():
      rows=db(db.auth_user.id>0).select() 
      db.auth_user.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
@@ -331,3 +351,9 @@ def formtable():
                 footer=footer,
                 header=header,
                 fullTable=fullTable)
+
+def getOtherRoles(currentRole):
+    if currentRole == "General":
+        return "Admin"
+    else:
+        return "General"

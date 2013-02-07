@@ -15,6 +15,7 @@
 <script type="text/javascript">
 $(document).ready(function(){
 
+
 $("#CCD").click(function(){
 $("#content").html('{{=ccdForm}}')
 })
@@ -47,7 +48,7 @@ $("#MeetingMinutes_meetDate").datepicker({"dateFormat": "yy-mm-dd"})
 
 $("#MyProfile").click(function(){
 $("#content").html('{{=myProfileForm}}')
-$("#MyProfile_email")= db(db.auth_user.id == 1).select()
+$("#content").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
 })
 
 
@@ -68,8 +69,17 @@ $(function() {
         autoEscape:false
     });
 });
+$('#projectsidebar').bind(
+    'tree.click',
+    function(event) {
+        // The clicked node is 'event.node'
+        var node = event.node;
+        $('#projectsidebar').tree('toggle', node);
+    }
+);
 
 });
+
 </script>
 
 </head>
@@ -80,13 +90,6 @@ $(function() {
 
     <ul id = "projecttabs">
         <li>Calendar</li>
-        <li id="CCD">Upload CCD</li>       
-        <li id="RFI">Generate RFI</li>
-        <li id="Submittal">Upload Submittal</li>
-        <li id="ProposalRequest">Generate Proposal Request</li>
-        <li id="Proposal">Upload Proposal</li>
-        <li id="MeetingMinutes">Meeting Minutes</li>
-        <li id="Photo">Upload Photo</li>
         <li id="MyProfile">My Profile</li>
     </ul>
     <hr>
@@ -97,16 +100,19 @@ $(function() {
     <div id="content">
       Welcome to Finholt Construction! We make all your building dreams come true :)
     </div>
+    {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
     <div id="adminsidebar">
+    
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
         <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
         <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
         <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
     </ul>
+    
 
     </div>
-    
+    {{pass}}
 
     {{=footer}}
 </body>

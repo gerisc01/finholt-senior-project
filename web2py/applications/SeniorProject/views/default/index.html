@@ -48,6 +48,7 @@ $("#MeetingMinutes_meetDate").datepicker({"dateFormat": "yy-mm-dd"})
 
 $("#MyProfile").click(function(){
 $("#content").html('{{=myProfileForm}}')
+$("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
 })
 
 

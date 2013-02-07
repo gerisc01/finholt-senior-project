@@ -20,14 +20,14 @@ proposalForm = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'projectNum':'
 
 meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
 
-record = 1 #db.auth_user(request.args(0))
-myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['email','phone'])
+record = auth.user.id     #Gets the info for the current user
+myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
 
 
 projects = db(db.Project).select()
 
 header = DIV(A(IMG(_src=URL('static','images/stock.jpeg')), _href=URL('default','index')), _id="header")
-footer = DIV("This website brought to you by the Supreme Leader, Minion #3 (Alysse), Minion #2 (Scott), and the Sick One (Erik)", _id="footer")
+footer = DIV("This website brought to you by the Supreme Leader, Minion #3 (Alysse), Minion #2 (Scott), and the No-Longer-Sick One (Erik)", _id="footer")
 
 @auth.requires_login()
 def index():
@@ -84,8 +84,7 @@ def index():
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill out the form'
-        
-    
+       
     return dict(ccdForm=ccdForm,
                 projects=projects,
                 rfiForm=rfiForm,

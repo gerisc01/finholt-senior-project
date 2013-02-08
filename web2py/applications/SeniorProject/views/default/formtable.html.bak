@@ -47,6 +47,15 @@ $("#content").html('{{=meetingMinutesForm}}')
 $("#MeetingMinutes_meetDate").datepicker({"dateFormat": "yy-mm-dd"})
 })
 
+$("#Photo").click(function(){
+$("#content").html('{{=photoForm}}')
+})
+
+$("#MyProfile").click(function(){
+$("#content").html('{{=myProfileForm}}')
+$("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
+})
+
 
 var data = [];
 
@@ -57,7 +66,8 @@ var data = [];
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].projNum))}}'>CCDs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].projNum))}}'>Proposal Requests</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=projects[index].projNum))}}'>Proposals</a>"},
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"} ]});
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"} 
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].id))}}'>Photos</a>"} ]});
   {{pass}} 
 
 ;
@@ -97,7 +107,7 @@ $("#content table").dataTable(
         <li id="ProposalRequest">Generate Proposal Request</li>
         <li id="Proposal">Upload Proposal</li>
         <li id="MeetingMinutes">Meeting Minutes</li>
-        <li>Upload Photo</li>
+        <li id="Photo">Upload Photo</li>
         <li id="MyProfile">My Profile</li>
     </ul>
     <hr>

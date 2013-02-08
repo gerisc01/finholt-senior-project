@@ -20,8 +20,13 @@ proposalForm = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'projectNum':'
 
 meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
 
-record = auth.user.id     #Gets the info for the current user
-myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
+photoForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})  #WILL NEED TO CHANGE TO BE A PHOTO FORM
+
+if auth.user != None:
+    record = auth.user.id     #Gets the info for the current user
+    myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
+else: 
+    myProfileForm = SQLFORM(db.auth_user, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
 
 
 projects = db(db.Project).select()
@@ -78,6 +83,13 @@ def index():
     else:
         response.flash = 'please fill out the form'
         
+    if photoForm.process().accepted:
+        response.flash = 'form accepted'
+    elif photoForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
     if myProfileForm.process().accepted:
         response.flash = 'form accepted'
     elif myProfileForm.errors:
@@ -92,6 +104,7 @@ def index():
                 proposalRequestForm=proposalRequestForm,
                 proposalForm=proposalForm,
                 meetingMinutesForm=meetingMinutesForm,
+                photoForm=photoForm,
                 myProfileForm=myProfileForm,
                 header=header,
                 footer=footer)
@@ -284,6 +297,14 @@ def formtable():
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill out the form'
+        
+    if photoForm.process().accepted:
+        response.flash = 'form accepted'
+    elif photoForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
     if myProfileForm.process().accepted:
         response.flash = 'form accepted'
     elif myProfileForm.errors:
@@ -327,6 +348,12 @@ def formtable():
             row.file = str(URL('default','download',args=row.file))[1:]
         table = SQLTABLE(rows, columns=["MeetingMinutes.meetDate","MeetingMinutes.file"],
         headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"},upload="http://127.0.0.1:8000")
+    elif formType == "Photo":                          #WILL NEED TO CHANGE TO SHOW PHOTOS!!!!
+        rows = db().select(db.MeetingMinutes.ALL)
+        for row in rows:
+            row.file = str(URL('default','download',args=row.file))[1:]
+        table = SQLTABLE(rows, columns=["MeetingMinutes.meetDate","MeetingMinutes.file"],
+        headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"},upload="http://127.0.0.1:8000")
 
     if len(rows)==0:
         table = "There are no documents uploaded for this project section as of yet."
@@ -339,6 +366,7 @@ def formtable():
                 proposalRequestForm=proposalRequestForm,
                 proposalForm=proposalForm,
                 meetingMinutesForm=meetingMinutesForm,
+                photoForm=photoForm,
                 myProfileForm=myProfileForm,
                 projects=projects,
                 table= table,

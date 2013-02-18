@@ -1,0 +1,89 @@
+html{
+background:#CAC37F;
+}
+
+#ulprojecttabs{
+text-align:center;
+}
+
+#projectsidebar{
+border-right:5px solid #7F1719;
+width:150px;
+min-height:300px;
+display: inline;
+float:left;
+
+}
+
+#header{
+text-align:center;
+}
+
+#footer{
+    margin: 15px;
+    text-align: center;
+    color:gray;
+    clear:both;
+}
+#projecttabs li{
+    padding:10px;
+    border-top: 2px solid gray;
+    border-left: 2px solid gray;
+    border-right: 2px solid gray;
+    display:inline;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+#projecttabs li:hover{
+
+    background-color: #DEE79C;
+}
+#projecttabs{
+    margin-bottom:2px;
+    min-width:800px;
+    text-align:center;
+}
+#content{
+    max-width:800px;
+    padding:20px;
+    float:left;
+}
+#adminsidebar{
+    display:inline;
+    float:right;
+    border-left:5px solid #7F1719;
+    width:150px;
+    height:300px;
+    margin:5px;
+
+}
+#adminsidebar li{
+
+}
+#projectForm{
+    display: inline-block;
+    float: left;
+
+}
+#tablearea{
+    display: inline-block;
+    float: left;
+    width: 900px;
+}
+table{
+    border:2px solid black;
+    width:60%;
+}
+tr.odd {
+    background-color: white;
+}
+tr.even{
+
+    background-color: #5CB3FF;
+}
+html{
+    height:100%;
+}
+a:link {color:#7F1719;}
+a:visited {color:#7F1719;}
+a:hover {color:#7F1719;font-size:105%;}

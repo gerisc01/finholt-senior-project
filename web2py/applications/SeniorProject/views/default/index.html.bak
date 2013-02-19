@@ -3,7 +3,7 @@
 
 <head>
 <title>Senior Project</title>
-<link rel="stylesheet" href="{{=URL('static','css/style.css')}}" type="text/css" media="all" />
+<link rel="stylesheet" href="{{=URL('static','css/redstyle.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 
@@ -66,7 +66,7 @@ var data = [];
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].projNum))}}'>Proposal Requests</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=projects[index].projNum))}}'>Proposals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"},
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].id))}}'>Photos</a>"}}  ]});
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].id))}}'>Photos</a>"}  ]});
   {{pass}} 
 $(function() {
     $('#projectsidebar').tree({

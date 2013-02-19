@@ -31,8 +31,10 @@ else:
 
 projects = db(db.Project).select()
 
-header = DIV(A(IMG(_src=URL('static','images/stock.jpeg')), _href=URL('default','index')), _id="header")
+header = DIV(A(IMG(_src=URL('static','images/redbannertext.jpg')), _href=URL('default','index')), _id="header")
 footer = DIV("This website brought to you by the Supreme Leader, Minion #3 (Alysse), Minion #2 (Scott), and the No-Longer-Sick One (Erik)", _id="footer")
+css = "/SeniorProject/static/css/redstyle.css"
+
 
 @auth.requires_login()
 def index():
@@ -107,7 +109,8 @@ def index():
                 photoForm=photoForm,
                 myProfileForm=myProfileForm,
                 header=header,
-                footer=footer)
+                footer=footer,
+                css=css)
 
 def user():
     """
@@ -123,7 +126,7 @@ def user():
         @auth.requires_permission('read','table name',record_id)
     to decorate functions that need access control
     """
-    return dict(form=auth())
+    return dict(form=auth(), header=header, footer=footer, css=css)
 
 
 def download():
@@ -159,7 +162,7 @@ def data():
     or with the signed load operator
       LOAD('default','data.load',args='tables',ajax=True,user_signature=True)
     """
-    return dict(form=crud())
+    return dict(form=crud(), css=css)
 
 @auth.requires_membership('Admin')
 def register():
@@ -170,7 +173,7 @@ def register():
         auth.add_membership(auth.id_group(role="General"),auth.user_id) 
         auth.user = admin_user
         redirect(URL('default','manageusers'))
-    return dict(form=form,header=header)
+    return dict(form=form, header=header, footer=footer, css=css)
     #admin_auth = session.auth
     #auth.is_logged_in = lambda: False
     #def post_register(form):
@@ -184,9 +187,11 @@ def register():
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def changepermissions():
-     rows=db(db.auth_user.id>0).select() 
+     rows=db(db.auth_user.id>0).select()
+
      db.auth_user.id.represent=lambda id: DIV(id,SELECT(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role), XML(getOtherRoles(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role))), _name='%i'%id)) # INPUT (_type='checkbox',_name='%i'%id)) 
-     table=FORM(SQLTABLE(rows),INPUT(_type='submit')) 
+     table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Permissions","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),
+INPUT(_type='submit'))
      if table.accepts(request.vars): 
         for item in request.vars.keys():
             if item.isdigit():
@@ -195,21 +200,21 @@ def changepermissions():
                     auth.add_membership(auth.id_group(role=request.vars[item]),int(item)) 
 
         redirect(URL('default','manageusers'))
-     return dict(table=table, footer=footer, header=header)
+     return dict(table=table, footer=footer, header=header, css=css)
 
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def deleteusers():
      rows=db(db.auth_user.id>0).select() 
      db.auth_user.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
-     table=FORM(SQLTABLE(rows),INPUT(_type='submit')) 
+     table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
      if table.accepts(request.vars): 
         for item in request.vars.keys():
             if item.isdigit():
                 db(db.auth_user.id == int(item)).delete()
         redirect(URL('default','deleteusers'))
             # or so something not sure what you want to do 
-     return dict(table=table, footer=footer, header=header)
+     return dict(table=table, footer=footer, header=header,css=css)
  
 @auth.requires_login()    
 @auth.requires_membership('Admin')
@@ -221,16 +226,16 @@ def createproject():
        response.flash = 'form has errors'
     else:
        response.flash = 'please fill out the form'
-    return dict(form=form, footer=footer, header=header)
+    return dict(form=form, footer=footer, header=header, css=css)
 
 @auth.requires_login()   
 @auth.requires_membership('Admin')
 def manageprojects():
     table = None
     rows = db().select(db.Project.ALL)
-    #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
-    table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
-    return dict(table=table, footer=footer, header=header)
+    
+    table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Archived Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
+    return dict(table=table, footer=footer, header=header, css=css)
     
 @auth.requires_login()
 @auth.requires_membership('Admin')
@@ -240,7 +245,7 @@ def archiveprojects():
     rows = db(db.Project.archived == True).select()
     #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
     table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
-    return dict(table=table, footer=footer, header=header)
+    return dict(table=table, footer=footer, header=header, css=css)
 
 
 @auth.requires_login()
@@ -251,7 +256,7 @@ def manageusers():
     #rows = db().select(db.Users.ALL)
     #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
     #table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
-    return dict(table=table, footer=footer, header=header)
+    return dict(table=table, footer=footer, header=header, css=css)
 
 @auth.requires_login()
 def formtable():
@@ -373,6 +378,7 @@ def formtable():
                 image=image,
                 footer=footer,
                 header=header,
+                css=css,
                 fullTable=fullTable)
 
 def getOtherRoles(currentRole):

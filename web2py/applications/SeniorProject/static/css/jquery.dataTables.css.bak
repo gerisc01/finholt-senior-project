@@ -31,7 +31,7 @@ table.dataTable td.dataTables_empty {
 }
 
 table.dataTable tr.odd { background-color: #c1cdc1; }
-table.dataTable tr.even { background-color: #FFFFFF; }
+table.dataTable tr.even { background-color: #000000; }
 
 table.dataTable tr.odd td.sorting_1 { background-color: #D3D6FF; }
 table.dataTable tr.odd td.sorting_2 { background-color: #DADCFF; }

@@ -1,5 +1,5 @@
 html{
-background:#CAC37F;
+background:#AAB6A2;
 }
 
 #ulprojecttabs{
@@ -7,7 +7,7 @@ text-align:center;
 }
 
 #projectsidebar{
-border-right:5px solid #7F1719;
+border-right:5px solid #104E8B;
 width:150px;
 min-height:300px;
 display: inline;
@@ -36,7 +36,7 @@ text-align:center;
 }
 #projecttabs li:hover{
 
-    background-color: #DEE79C;
+    background-color: #5CACEE;
 }
 #projecttabs{
     margin-bottom:2px;
@@ -51,7 +51,7 @@ text-align:center;
 #adminsidebar{
     display:inline;
     float:right;
-    border-left:5px solid #7F1719;
+    border-left:5px solid #104E8B;
     width:150px;
     height:300px;
     margin:5px;
@@ -84,6 +84,6 @@ tr.even{
 html{
     height:100%;
 }
-a:link {color:#7F1719;}
-a:visited {color:#7F1719;}
-a:hover {color:#7F1719;font-size:105%;}
+a:link {color:#104E8B;}
+a:visited {color:#104E8B;}
+a:hover {color:#104E8B;font-size:105%;}

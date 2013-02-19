@@ -3,7 +3,7 @@
 
 <head>
     <title>Manage a Project</title>
-<link rel="stylesheet" href="{{=URL('static','css/redstyle.css')}}" type="text/css" media="all" />
+<link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 <link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
@@ -18,10 +18,6 @@
 <script type="text/javascript">
 $(document).ready(function(){
 
-//$( "#projectsidebar" ).accordion({  //Sidebar setup
-  //    collapsible: true
-//    });
-//$("#Project_projNum").attr({title:"Project Number"}); want to change display field name
 $("#Project_openDate").datepicker({"dateFormat": "yy-mm-dd"});
 $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
 $("#tablearea table").dataTable();
@@ -34,7 +30,6 @@ $("#tablearea table").dataTable();
 
     {{=header}} 
     
-    <div>
     <div id ="tablearea">
         {{=table}}
     </div>
@@ -48,10 +43,7 @@ $("#tablearea table").dataTable();
     </ul>
 
     </div>
-    </div>
-    <div id="footer">This website brought to you by the Supreme Leader and Minion #2 (Scott)</div>
+    {{=footer}}
 </body>
 
-
-
-  </html>
+</html>

@@ -3,7 +3,7 @@
 
 <head>
     <title>Create a Project</title>
-<link rel="stylesheet" href="{{=URL('static','css/redstyle.css')}}" type="text/css" media="all" />
+<link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 
@@ -17,9 +17,6 @@
 <script type="text/javascript">
 $(document).ready(function(){
 
-//$( "#projectsidebar" ).accordion({  //Sidebar setup
-  //    collapsible: true
-//    });
 $("#Project_openDate").datepicker({"dateFormat": "yy-mm-dd"});
 $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
 
@@ -48,6 +45,4 @@ $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
     {{=footer}}
 </body>
 
-
-
-  </html>
+</html>

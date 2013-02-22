@@ -82,6 +82,15 @@ $(function() {
 $('#projectsidebar').tree('openNode', node);
 });
 
+$('#projectsidebar').bind(
+    'tree.click',
+    function(event) {
+        // The clicked node is 'event.node'
+        var node = event.node;
+        $('#projectsidebar').tree('toggle', node);
+    }
+);
+
 $("#content").append('{{=table}}');
 
 {{if fullTable==True:}}
@@ -91,6 +100,8 @@ $("#content table").dataTable(
 
 
 });
+
+
 </script>
 
 </head>

@@ -31,9 +31,9 @@ else:
 
 projects = db(db.Project).select()
 
-header = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg')), _href=URL('default','index')), _id="header")
+header = DIV(A(IMG(_src=URL('static','images/redbannertext.jpg')), _href=URL('default','index')), _id="header")
 footer = DIV("This website brought to you by the Supreme Leader, Minion #3 (Alysse), Minion #2 (Scott), and the No-Longer-Sick One (Erik)", _id="footer")
-css = "/SeniorProject/static/css/bluestyle.css"
+css = "/SeniorProject/static/css/redstyle.css"
 
 
 @auth.requires_login()
@@ -187,17 +187,19 @@ def register():
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def changepermissions():
-     rows=db(db.auth_user.id>0).select()
-
-     db.auth_user.id.represent=lambda id: DIV(id,SELECT(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role), XML(getOtherRoles(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role))), _name='%i'%id)) # INPUT (_type='checkbox',_name='%i'%id)) 
-     table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Permissions","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),
-INPUT(_type='submit'))
+     rows=db(db.auth_user.id>0).select() 
+     #db.auth_user.id.represent=lambda id: DIV(id,SELECT(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role), XML(getOtherRoles(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role))), _name='%i'%id)) # INPUT (_type='checkbox',_name='%i'%id)) 
+     db.auth_user.id.represent=lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id) # INPUT (_type='checkbox',_name='%i'%id)) 
+     table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
      if table.accepts(request.vars): 
         for item in request.vars.keys():
             if item.isdigit():
                 if not auth.has_membership(user_id=int(item), role=request.vars[item]):
-                    auth.del_membership(auth.id_group(role=getOtherRoles(request.vars[item])),int(item))
+                    if auth.has_membership(user_id=int(item), role=getUserRole(int(item))): #in case they are in their individual user group. We shoudl only delete them from the group we are in if they are switching from General to Admin or vice versa.
+                        
+                        auth.del_membership(auth.id_group(role=getUserRole(int(item))),int(item))
                     auth.add_membership(auth.id_group(role=request.vars[item]),int(item)) 
+                    
 
         redirect(URL('default','manageusers'))
      return dict(table=table, footer=footer, header=header, css=css)
@@ -232,10 +234,16 @@ def createproject():
 @auth.requires_membership('Admin')
 def manageprojects():
     table = None
-    rows = db().select(db.Project.ALL)
-    
-    table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Archived Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
-    return dict(table=table, footer=footer, header=header, css=css)
+    rows = db(db.Project.archived == False).select()
+    db.Project.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
+    #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
+    table = FORM(SQLTABLE(rows,columns=["Project.id","Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}),INPUT(_type='submit'))
+    if table.accepts(request.vars):
+        for pID in request.vars.keys():
+            if pID.isdigit():
+                db(db.Project.id ==int(pID)).update(archived=True)
+        redirect(URL('default','manageprojects'))
+    return dict(table=table, footer=footer, header=header,css=css)
     
 @auth.requires_login()
 @auth.requires_membership('Admin')
@@ -381,8 +389,13 @@ def formtable():
                 css=css,
                 fullTable=fullTable)
 
-def getOtherRoles(currentRole):
-    if currentRole == "General":
+def getOtherRoles(id):
+    if auth.has_membership(user_id=id, role="Admin"):
+        return "General"
+    else:
+        return "Admin"
+def getUserRole(id):
+    if auth.has_membership(user_id=id, role="Admin"):
         return "Admin"
     else:
         return "General"

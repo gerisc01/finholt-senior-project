@@ -8,7 +8,7 @@ text-align:center;
 
 #projectsidebar{
 border-right:5px solid #7F1719;
-width:150px;
+width:160px;
 min-height:300px;
 display: inline;
 float:left;
@@ -22,8 +22,8 @@ text-align:center;
 #footer{
     margin: 15px;
     text-align: center;
-    color:gray;
-    clear:both;
+    clear: both;
+    background-color: #7C7634;
 }
 #projecttabs li{
     padding:10px;
@@ -35,7 +35,6 @@ text-align:center;
     border-top-right-radius: 5px;
 }
 #projecttabs li:hover{
-
     background-color: #DEE79C;
 }
 #projecttabs{
@@ -52,7 +51,7 @@ text-align:center;
     display:inline;
     float:right;
     border-left:5px solid #7F1719;
-    width:150px;
+    width:160px;
     height:300px;
     margin:5px;
 

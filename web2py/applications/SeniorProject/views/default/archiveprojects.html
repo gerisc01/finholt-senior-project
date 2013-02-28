@@ -26,22 +26,13 @@ $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
 </head>
 
 <body>
-
     {{=header}}
     
     <div id ="tablearea">
         {{=table}}
     </div>
 
-    <div id="adminsidebar"/>
-    <ul>
-        <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
-        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
-        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
-        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
-    </ul>
-
-    </div>
+    {{include "adminSidebar.html"}}
 
     {{=footer}}
 </body>

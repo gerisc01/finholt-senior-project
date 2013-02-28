@@ -31,10 +31,9 @@ else:
 
 projects = db(db.Project).select()
 
-header = DIV(A(IMG(_src=URL('static','images/redbannertext.jpg')), _href=URL('default','index')), _id="header")
-footer = DIV("This website brought to you by the Supreme Leader, Minion #3 (Alysse), Minion #2 (Scott), and the No-Longer-Sick One (Erik)", _id="footer")
-css = "/SeniorProject/static/css/redstyle.css"
-
+header = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg')), _href=URL('default','index')), _id="header")
+footer = DIV(A("Home Page", _href=URL('default','index')), _id="footer")
+css = "/SeniorProject/static/css/bluestyle.css"
 
 @auth.requires_login()
 def index():
@@ -162,7 +161,7 @@ def data():
     or with the signed load operator
       LOAD('default','data.load',args='tables',ajax=True,user_signature=True)
     """
-    return dict(form=crud(), css=css)
+    return dict(form=crud(), css=css, footer=footer)
 
 @auth.requires_membership('Admin')
 def register():

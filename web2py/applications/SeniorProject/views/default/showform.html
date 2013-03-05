@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Senior Project</title>
+<link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
+<link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
+<link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
+  {{include 'web2py_ajax.html'}}
+  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
+  <script src="{{=URL('static','js/jquery.js')}}"></script> 
+  <script src="{{=URL('static','js/jquery.ui.accordion.js')}}"></script> 
+  <script src="{{=URL('static','js/jquery.datatables.js')}}"></script> 
+  <script src="{{=URL('static','js/jquery-ui-1.9.0.custom.min.js')}}"></script> 
+  <script src="{{=URL('static','jqTree/tree.jquery.js')}}"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+
+
+if ("{{=displayForm}}"=="RFI"){
+/*$("#RFI_dateSent").datepicker({"dateFormat": "yy-mm-dd"})
+$("#RFI_dateRec").datepicker({"dateFormat": "yy-mm-dd"})
+$("#RFI_responseDate").datepicker({"dateFormat": "yy-mm-dd"})*/
+$("#RFI_rfiNum").blur(function(){
+
+  if (["x","y","x"].indexOf($("#RFI_rfiNum").val()) ==-1){
+    alert("Please change this field to read either 'x' or 'y' or 'z'");}})
+
+
+/*.autocomplete({
+    minLength:0,
+    source: ["one","two","three"]
+    });
+$("#RFI_rfiNum").on("click", function(){ $("#RFI_rfiNum").autocomplete("search"); });​*/
+
+}
+else if ("{{=displayForm}}"=="ProposalRequest"){
+$("#ProposalRequest_propDate").datepicker({"dateFormat": "yy-mm-dd"})
+}
+else if ("{{=displayForm}}"=="Proposal"){
+$("#Proposal_propDate").datepicker({"dateFormat": "yy-mm-dd"})
+}
+else if("{{=displayForm}}"=="MeetingMinutes"){
+$("#MeetingMinutes_meetDate").datepicker({"dateFormat": "yy-mm-dd"})
+}
+
+
+
+$("#MyProfile").click(function(){
+$("#content").html('{{=myProfileForm}}')
+$("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
+})
+
+
+var data = [];
+
+
+{{for index  in range(len(projects)):}}
+  data.push({label:"Project "+"{{=T(projects[index].name)}}",id:{{=int(projects[index].id)}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].projNum))}}'>RFIs</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].projNum))}}'>Submittals</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].projNum))}}'>CCDs</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].projNum))}}'>Proposal Requests</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=projects[index].projNum))}}'>Proposals</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"}, 
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].id))}}'>Photos</a>"} ]});
+  {{pass}} 
+
+;
+
+
+$(function() {
+    $('#projectsidebar').tree({
+        data: data,
+        autoEscape:false
+    });
+    var node = $('#projectsidebar').tree('getNodeById', {{=int(request.vars.projectNum[-1])}});
+$('#projectsidebar').tree('openNode', node);
+});
+
+$('#projectsidebar').bind(
+    'tree.click',
+    function(event) {
+        // The clicked node is 'event.node'
+        var node = event.node;
+        $('#projectsidebar').tree('toggle', node);
+    }
+);
+
+
+});
+
+
+</script>
+
+</head>
+
+<body>
+  <div class="flash">{{=response.flash or ''}}</div>
+   {{=header}}
+
+    <ul id = "projecttabs">
+        <li>Calendar</li>
+        <li id="CCD"><a href='{{=URL('default','showform',vars=dict(displayForm='CCD',projectNum=request.vars.projectNum))}}'>Upload CCD</a></li>
+        <li id="RFI"><a href='{{=URL('default','showform',vars=dict(displayForm='RFI',projectNum=request.vars.projectNum))}}'>Generate RFI</a></li>
+        <li id="Submittal"><a href='{{=URL('default','showform',vars=dict(displayForm='Submittal',projectNum=request.vars.projectNum))}}'>Upload Submittal</a></li>
+        <li id="ProposalRequest"><a href='{{=URL('default','showform',vars=dict(displayForm='ProposalRequest',projectNum=request.vars.projectNum))}}'>Generate Proposal Request</a></li>
+        <li id="Proposal"><a href='{{=URL('default','showform',vars=dict(displayForm='Proposal',projectNum=request.vars.projectNum))}}'>Upload Proposal</a></li>
+        <li id="MeetingMinutes"><a href='{{=URL('default','showform',vars=dict(displayForm='MeetingMinutes',projectNum=request.vars.projectNum))}}'>Meeting Minutes</a></li>
+        <li id="Photo"><a href='{{=URL('default','showform',vars=dict(displayForm='Photo',projectNum=request.vars.projectNum))}}'>Upload Photo</a></li>
+        <li id="MyProfile">My Profile</li>
+    </ul>
+    <hr>
+    <div id="projectsidebar">
+    
+
+    </div>
+    <div id="content">
+      {{=form}}
+    </div>
+    <div id="adminsidebar">
+    <ul>
+        <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
+        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
+        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
+        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
+    </ul>
+
+    </div>
+    
+
+    {{=footer}}
+</body>
+</html>

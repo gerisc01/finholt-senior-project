@@ -36,77 +36,19 @@ footer = DIV("This website brought to you by the Supreme Leader, Minion #3 (Alys
 css = "/SeniorProject/static/css/redstyle.css"
 
 
+
 @auth.requires_login()
 def index():
     """
     example action using the internationalization operator T and flash
-    rendered by views/default/index.html or views/generic.html
+    rendered by views/fault/index.html or views/generic.html
     """
     
-    if ccdForm.process().accepted:
-        response.flash = 'form accepted'
-    elif ccdForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if rfiForm.process().accepted:
-        response.flash = 'form accepted'
-    elif rfiForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if submittalForm.process().accepted:
-        response.flash = 'form accepted'
-    elif submittalForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if proposalRequestForm.process().accepted:
-        response.flash = 'form accepted'
-    elif proposalRequestForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if proposalForm.process().accepted:
-        response.flash = 'form accepted'
-    elif proposalForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
     
-    if meetingMinutesForm.process().accepted:
-        response.flash = 'form accepted'
-    elif meetingMinutesForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if photoForm.process().accepted:
-        response.flash = 'form accepted'
-    elif photoForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if myProfileForm.process().accepted:
-        response.flash = 'form accepted'
-    elif myProfileForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-       
-    return dict(ccdForm=ccdForm,
+
+    response.flash = "Erik Smellz"
+    return dict(
                 projects=projects,
-                rfiForm=rfiForm,
-                submittalForm=submittalForm,
-                proposalRequestForm=proposalRequestForm,
-                proposalForm=proposalForm,
-                meetingMinutesForm=meetingMinutesForm,
-                photoForm=photoForm,
                 myProfileForm=myProfileForm,
                 header=header,
                 footer=footer,
@@ -266,65 +208,41 @@ def manageusers():
     #table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
     return dict(table=table, footer=footer, header=header, css=css)
 
+def showform():
+    displayForm = request.vars.displayForm
+    form = None
+    if displayForm == "CCD":
+        form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
+    elif displayForm == "RFI":
+        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
+    elif displayForm == "Submittal":
+        form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'assignedTo':'Assigned to'})
+    elif displayForm == "ProposalRequest":
+        form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'})
+    elif displayForm == "Proposal":
+        form = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
+    elif displayForm == "MeetingMinutes":
+        form = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
+    elif displayForm == "Photo":                          #WILL NEED TO CHANGE TO SHOW PHOTOS!!!!
+        form = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'}) 
+    if form != None:
+        if form.process().accepted:
+            response.flash = T('form accepted')
+        elif form.errors:
+            response.flash = 'form has errors'
+        else:
+            response.flash = 'please fill out the form'
+    return dict(displayForm=displayForm,
+                form=form,
+                myProfileForm=myProfileForm,
+                projects=projects,
+                footer=footer,
+                header=header,
+                css=css)
+
 @auth.requires_login()
 def formtable():
     formType = request.vars.formType
-    if ccdForm.process().accepted:
-        response.flash = 'form accepted'
-    elif ccdForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if rfiForm.process().accepted:
-        response.flash = 'form accepted'
-    elif rfiForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if submittalForm.process().accepted:
-        response.flash = 'form accepted'
-    elif submittalForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if proposalRequestForm.process().accepted:
-        response.flash = 'form accepted'
-    elif proposalRequestForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if proposalForm.process().accepted:
-        response.flash = 'form accepted'
-    elif proposalForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-    
-    if meetingMinutesForm.process().accepted:
-        response.flash = 'form accepted'
-    elif meetingMinutesForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if photoForm.process().accepted:
-        response.flash = 'form accepted'
-    elif photoForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
-    if myProfileForm.process().accepted:
-        response.flash = 'form accepted'
-    elif myProfileForm.errors:
-        response.flash = 'form has errors'
-    else:
-        response.flash = 'please fill out the form'
-        
     table = None
     image = None
     fullTable = True
@@ -373,13 +291,6 @@ def formtable():
         fullTable = False
 
     return dict(formType=formType,
-                ccdForm=ccdForm,                
-                rfiForm=rfiForm,
-                submittalForm=submittalForm,
-                proposalRequestForm=proposalRequestForm,
-                proposalForm=proposalForm,
-                meetingMinutesForm=meetingMinutesForm,
-                photoForm=photoForm,
                 myProfileForm=myProfileForm,
                 projects=projects,
                 table= table,

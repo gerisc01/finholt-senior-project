@@ -17,39 +17,7 @@
 <script type="text/javascript">
 $(document).ready(function(){
 
-$("#CCD").click(function(){
-$("#content").html('{{=ccdForm}}')
-})
 
-$("#RFI").click(function(){
-$("#content").html('{{=rfiForm}}')
-$("#RFI_dateSent").datepicker({"dateFormat": "yy-mm-dd"})
-$("#RFI_dateRec").datepicker({"dateFormat": "yy-mm-dd"})
-$("#RFI_responseDate").datepicker({"dateFormat": "yy-mm-dd"})
-})
-
-$("#Submittal").click(function(){
-$("#content").html('{{=submittalForm}}')
-})
-
-$("#ProposalRequest").click(function(){
-$("#content").html('{{=proposalRequestForm}}')
-$("#ProposalRequest_propDate").datepicker({"dateFormat": "yy-mm-dd"})
-})
-
-$("#Proposal").click(function(){
-$("#content").html('{{=proposalForm}}')
-$("#Proposal_propDate").datepicker({"dateFormat": "yy-mm-dd"})
-})
-
-$("#MeetingMinutes").click(function(){
-$("#content").html('{{=meetingMinutesForm}}')
-$("#MeetingMinutes_meetDate").datepicker({"dateFormat": "yy-mm-dd"})
-})
-
-$("#Photo").click(function(){
-$("#content").html('{{=photoForm}}')
-})
 
 $("#MyProfile").click(function(){
 $("#content").html('{{=myProfileForm}}')
@@ -98,6 +66,7 @@ $("#content table").dataTable(
   );
 {{pass}}
 
+alert("{{=response.flash or ''}}");
 
 });
 
@@ -107,18 +76,18 @@ $("#content table").dataTable(
 </head>
 
 <body>
-
+<div class="flash">{{=response.flash or ''}}</div>
    {{=header}}
 
     <ul id = "projecttabs">
         <li>Calendar</li>
-        <li id="CCD">Upload CCD</li>
-        <li id="RFI">Generate RFI</li>
-        <li id="Submittal">Upload Submittal</li>
-        <li id="ProposalRequest">Generate Proposal Request</li>
-        <li id="Proposal">Upload Proposal</li>
-        <li id="MeetingMinutes">Meeting Minutes</li>
-        <li id="Photo">Upload Photo</li>
+        <li id="CCD"><a href='{{=URL('default','showform',vars=dict(displayForm='CCD',projectNum=request.vars.projectNum))}}'>Upload CCD</a></li>
+        <li id="RFI"><a href='{{=URL('default','showform',vars=dict(displayForm='RFI',projectNum=request.vars.projectNum))}}'>Generate RFI</a></li>
+        <li id="Submittal"><a href='{{=URL('default','showform',vars=dict(displayForm='Submittal',projectNum=request.vars.projectNum))}}'>Upload Submittal</a></li>
+        <li id="ProposalRequest"><a href='{{=URL('default','showform',vars=dict(displayForm='ProposalRequest',projectNum=request.vars.projectNum))}}'>Generate Proposal Request</a></li>
+        <li id="Proposal"><a href='{{=URL('default','showform',vars=dict(displayForm='Proposal',projectNum=request.vars.projectNum))}}'>Upload Proposal</a></li>
+        <li id="MeetingMinutes"><a href='{{=URL('default','showform',vars=dict(displayForm='MeetingMinutes',projectNum=request.vars.projectNum))}}'>Meeting Minutes</a></li>
+        <li id="Photo"><a href='{{=URL('default','showform',vars=dict(displayForm='Photo',projectNum=request.vars.projectNum))}}'>Upload Photo</a></li>
         <li id="MyProfile">My Profile</li>
     </ul>
     <hr>
@@ -141,4 +110,5 @@ $("#content table").dataTable(
     
 
     {{=footer}}
+</body>
 </html>

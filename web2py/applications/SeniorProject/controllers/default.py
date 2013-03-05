@@ -354,9 +354,8 @@ def formtable():
     
     elif formType == "Photo":    
         rows = db(db.Photos.projectNum == str(request.vars.projectNum)).select()
-        #for row in rows:
-            #row.flickrURL = DIV(A(IMG(_src=row.flickrURL), _href=row.flickrURL))
-        table = SQLTABLE(rows, columns=["Photos.title","Photos.description","Photos.flickrURL"], headers={"Photos.title":"Title", "Photos.description":"Description","Photos.flickrURL":"url"})
+        db.Photos.flickrURL.represent=lambda flickrURL: A("View Photo", _href=flickrURL, _target="_blank")
+        table = SQLTABLE(rows, columns=["Photos.title","Photos.description","Photos.flickrURL"], headers={"Photos.title":"Title", "Photos.description":"Description","Photos.flickrURL":"Photo"})
 
     if len(rows)==0:
         table = "There are no documents uploaded for this project section as of yet."

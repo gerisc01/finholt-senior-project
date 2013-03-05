@@ -8,6 +8,41 @@
 ## - download is for downloading files uploaded in the db (does streaming)
 ## - call exposes all registered services (none by default)
 #########################################################################
+
+#import oauth
+#import httplib2 
+#import urllib2
+import flickrapi
+import ctypes
+
+
+#Flickr API keys
+KEY = '614fd86a34a00d38293c7e803d14c3ab'
+SECRET_KEY = 'ad86826c3187eb4d'
+USER_ID = '93142072@N05'
+
+
+if not db(db.PhotoToken).isempty():
+    tok = (db.PhotoToken(db.PhotoToken.id>0)).token
+    flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY, token = tok)     #create a flickr object
+else:
+    flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY)
+
+if not db(db.PhotoToken).isempty():
+    # We have a token, but it might not be valid
+    try:
+        flickr.auth_checkToken()
+    except flickrapi.FlickrError:
+        db(db.PhotoToken.id > 0).delete()
+if db(db.PhotoToken).isempty():                #we don't have the token yet
+    if request.vars.frob:                      #if the frob is in the request 
+        db.PhotoToken[0] = {"token" : flickr.get_token(request.vars.frob)}    #insert a new row into the database with the token
+    else:
+        url = flickr.web_login_url('write')    #get the url to go to in order to authenticate
+        redirect(url)                          #redirect to that website
+
+
+    
 ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
 
 rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
@@ -20,7 +55,9 @@ proposalForm = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'projectNum':'
 
 meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
 
-photoForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})  #WILL NEED TO CHANGE TO BE A PHOTO FORM
+photoForm = SQLFORM(db.Photos, labels={'projectNum':'Project Number', 'title':'Title', 'description':'Description', 'photo':'Photo'}, fields = ['projectNum','title','description','photo'])
+
+
 
 if auth.user != None:
     record = auth.user.id     #Gets the info for the current user
@@ -29,11 +66,42 @@ else:
     myProfileForm = SQLFORM(db.auth_user, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
 
 
-projects = db(db.Project).select()
+projects = db(db.Project.archived == False).select()
 
 header = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg')), _href=URL('default','index')), _id="header")
 footer = DIV(A("Home Page", _href=URL('default','index')), _id="footer")
 css = "/SeniorProject/static/css/bluestyle.css"
+
+def uploadPhotoToFlickr(photoForm):
+    #MessageBox = ctypes.windll.user32.MessageBoxA
+    #MessageBox(None, str(photoForm.vars), 'Title', 0)
+    
+    #Get the info from the submitted photo form
+    photoWeb2pyId = photoForm.vars.id
+    projNum = photoForm.vars.projectNum
+    title = photoForm.vars.title
+    descr = photoForm.vars.description
+    name = "applications/SeniorProject/uploads/" + photoForm.vars.photo
+    
+    #Upload the photo to flickr and get the id of the photo in order to construct the url of the photo
+    idElement = flickr.upload(filename=name, title=title, description=descr)
+    id = idElement.find('photoid').text
+    flickrUrl =  "http://www.flickr.com/photos/"+USER_ID+"/"+str(id)+"/"  
+    '''
+    root = flickr.photos_getInfo(api_key=KEY, photo_id=str(id), secret=SECRET_KEY)
+    infoElement = root.find('photo')
+    farmId = infoElement.attrib["id"]
+    serverId = infoElement.attrib["server"]
+    thumbnail = "http://farm"+str(farmId)+".staticflickr.com/"+str(serverId)+"/"+str(id)+"_"+str(SECRET_KEY)+"_t.jpg"
+    MessageBox = ctypes.windll.user32.MessageBoxA
+    MessageBox(None, thumbnail, 'Title', 0)
+    '''
+    #Delete the corresponding row in our database (because we don't want to store the actual photo here)
+    db(db.Photos.id == photoWeb2pyId).delete()
+    
+    #Create a new row in our database with all the same info as the deleted row, but without the photo file
+    db.Photos.insert(projectNum=projNum, flickrURL=flickrUrl, title=title, description=descr)
+
 
 @auth.requires_login()
 def index():
@@ -85,6 +153,7 @@ def index():
         response.flash = 'please fill out the form'
         
     if photoForm.process().accepted:
+        uploadPhotoToFlickr(photoForm)
         response.flash = 'form accepted'
     elif photoForm.errors:
         response.flash = 'form has errors'
@@ -311,6 +380,7 @@ def formtable():
         response.flash = 'please fill out the form'
         
     if photoForm.process().accepted:
+        uploadPhotoToFlickr(photoForm)
         response.flash = 'form accepted'
     elif photoForm.errors:
         response.flash = 'form has errors'
@@ -333,39 +403,44 @@ def formtable():
             row.file = str(URL('default','download',args=row.file))[1:]
         myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc: IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
         table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"},upload="http://127.0.0.1:8000")
+    
     elif formType == "RFI":
         rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
         table = SQLTABLE(rows,_width="800px",       
             columns=["RFI.rfiNum","RFI.dateSent","RFI.reqRefTo","RFI.dateRec","RFI.responseBy","RFI.responseDate","RFI.statusFlag"],headers=
             {"RFI.rfiNum":"RFI #","RFI.dateSent":"Date Sent","RFI.reqRefTo":"Request Referred To","RFI.dateRec":"Date Received","RFI.responseDate":"Response Date","RFI.responseBy":"Response By","RFI.statusFlag":"Status Flag"})
+    
     elif formType == "Submittal":
         rows = db(db.Submittal.projectNum == str(request.vars.projectNum)).select()
         for row in rows:
             row.submittal = str(URL('default','download',args=row.submittal))[1:]
         table = SQLTABLE(rows, columns=["Submittal.assignedTo","Submittal.statusFlag","Submittal.submittal"],
          headers={"Submittal.assignedTo":"Assigned To","Submittal.statusFlag":"Status Flag","Submittal.submittal":"Submitted File"},upload="http://127.0.0.1:8000")
+    
     elif formType == "ProposalRequest":
         rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
         table = SQLTABLE(rows, columns=["ProposalRequest.reqNum","ProposalRequest.amendNum","ProposalRequest.sentTo","ProposalRequest.propDate"],
          headers={"ProposalRequest.reqNum":"Request Number","ProposalRequest.amendNum":"Amendment Number","ProposalRequest.sentTo":"Sent To","ProposalRequest.propDate":"Proposal Request Date"})
+    
     elif formType == "Proposal":
         rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()
         for row in rows:
             row.file = str(URL('default','download',args=row.file))[1:]
         table = SQLTABLE(rows, columns=["Proposal.reqNum","Proposal.propDate","Proposal.file"],
         headers={"Proposal.reqNum":"Proposal Number","Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"},upload="http://127.0.0.1:8000")
+    
     elif formType == "MeetingMinutes":
         rows = db().select(db.MeetingMinutes.ALL)
         for row in rows:
             row.file = str(URL('default','download',args=row.file))[1:]
         table = SQLTABLE(rows, columns=["MeetingMinutes.meetDate","MeetingMinutes.file"],
         headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"},upload="http://127.0.0.1:8000")
-    elif formType == "Photo":                          #WILL NEED TO CHANGE TO SHOW PHOTOS!!!!
-        rows = db().select(db.MeetingMinutes.ALL)
-        for row in rows:
-            row.file = str(URL('default','download',args=row.file))[1:]
-        table = SQLTABLE(rows, columns=["MeetingMinutes.meetDate","MeetingMinutes.file"],
-        headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"},upload="http://127.0.0.1:8000")
+    
+    elif formType == "Photo":    
+        rows = db(db.Photos.projectNum == str(request.vars.projectNum)).select()
+        #for row in rows:
+            #row.flickrURL = DIV(A(IMG(_src=row.flickrURL), _href=row.flickrURL))
+        table = SQLTABLE(rows, columns=["Photos.title","Photos.description","Photos.flickrURL"], headers={"Photos.title":"Title", "Photos.description":"Description","Photos.flickrURL":"url"})
 
     if len(rows)==0:
         table = "There are no documents uploaded for this project section as of yet."

@@ -128,3 +128,7 @@ db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','s
 db.define_table("Proposal", Field('reqNum','integer'), Field('propDate','date'), Field('file','upload'),Field('projectNum','string'))
 
 db.define_table("MeetingMinutes", Field('meetDate','date'), Field('file','upload'))
+
+db.define_table("PhotoToken", Field('token','string'))
+
+db.define_table("Photos", Field('projectNum','string'), Field('flickrURL','string'), Field('title','string'), Field('description','text'), Field('photo','upload', autodelete=True))

@@ -13,7 +13,7 @@
 #import httplib2 
 #import urllib2
 import flickrapi
-import ctypes
+#import ctypes
 
 
 #Flickr API keys
@@ -87,15 +87,7 @@ def uploadPhotoToFlickr(photoForm):
     idElement = flickr.upload(filename=name, title=title, description=descr)
     id = idElement.find('photoid').text
     flickrUrl =  "http://www.flickr.com/photos/"+USER_ID+"/"+str(id)+"/"  
-    '''
-    root = flickr.photos_getInfo(api_key=KEY, photo_id=str(id), secret=SECRET_KEY)
-    infoElement = root.find('photo')
-    farmId = infoElement.attrib["id"]
-    serverId = infoElement.attrib["server"]
-    thumbnail = "http://farm"+str(farmId)+".staticflickr.com/"+str(serverId)+"/"+str(id)+"_"+str(SECRET_KEY)+"_t.jpg"
-    MessageBox = ctypes.windll.user32.MessageBoxA
-    MessageBox(None, thumbnail, 'Title', 0)
-    '''
+
     #Delete the corresponding row in our database (because we don't want to store the actual photo here)
     db(db.Photos.id == photoWeb2pyId).delete()
     
@@ -289,12 +281,14 @@ def showform():
         form = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
     elif displayForm == "MeetingMinutes":
         form = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
-    elif displayForm == "Photo":                          #WILL NEED TO CHANGE TO SHOW PHOTOS!!!!
+    elif displayForm == "Photo":                         
         form = SQLFORM(db.Photos, labels={'projectNum':'Project Number', 'title':'Title', 'description':'Description', 'photo':'Photo'}, fields = ['projectNum','title','description','photo'])
 
     if form != None:
         if form.process().accepted:
             response.flash = T('form accepted')
+            if displayForm == "Photo":
+                uploadPhotoToFlickr(form)
         elif form.errors:
             response.flash = 'form has errors'
         else:

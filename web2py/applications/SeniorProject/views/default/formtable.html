@@ -35,7 +35,7 @@ var data = [];
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].projNum))}}'>Proposal Requests</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=projects[index].projNum))}}'>Proposals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"}, 
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].id))}}'>Photos</a>"} ]});
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].projNum))}}'>Photos</a>"} ]});
   {{pass}} 
 
 ;
@@ -66,7 +66,6 @@ $("#content table").dataTable(
   );
 {{pass}}
 
-alert("{{=response.flash or ''}}");
 
 });
 
@@ -98,16 +97,7 @@ alert("{{=response.flash or ''}}");
     <div id="content">
       
     </div>
-    <div id="adminsidebar">
-    <ul>
-        <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
-        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
-        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
-        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
-    </ul>
-
-    </div>
-    
+    {{include "adminSidebar.html"}}
 
     {{=footer}}
 </body>

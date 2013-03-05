@@ -354,3 +354,19 @@ CREATE TABLE MeetingMinutes(
     file CHAR(512)
 );
 success!
+timestamp: 2013-03-05T15:30:35.786379
+CREATE TABLE PhotoToken(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token CHAR(512)
+);
+success!
+timestamp: 2013-03-05T15:30:35.975380
+CREATE TABLE Photos(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    projectNum CHAR(512),
+    flickrURL CHAR(512),
+    title CHAR(512),
+    description TEXT,
+    photo CHAR(512)
+);
+success!

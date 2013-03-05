@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Create a Project</title>
+    <title>Manage Users</title>
 <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
@@ -26,14 +26,27 @@ $("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
 </head>
 
 <body>
-
+    
+    
+    <div class="flash">{{=response.flash or ''}}</div>
     {{=header}}
     
-    <div id ="projectForm">
-        {{=form}}
+    <div id ="userFunctions">
+      
+        <a href="{{=URL('default','register')}}">Create User</a>
+        <a href="{{=URL('default','changepermissions')}}">Change User Permissions</a>
+        <a href="{{=URL('default','deleteusers')}}">Delete Users</a>
     </div>
 
-    {{include "adminSidebar.html"}}
+    <div id="adminsidebar"/>
+    <ul>
+        <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
+        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
+        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
+        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
+    </ul>
+
+    </div>
 
     {{=footer}}
 </body>

@@ -22,18 +22,6 @@ if ("{{=displayForm}}"=="RFI"){
 /*$("#RFI_dateSent").datepicker({"dateFormat": "yy-mm-dd"})
 $("#RFI_dateRec").datepicker({"dateFormat": "yy-mm-dd"})
 $("#RFI_responseDate").datepicker({"dateFormat": "yy-mm-dd"})*/
-$("#RFI_rfiNum").blur(function(){
-
-  if (["x","y","x"].indexOf($("#RFI_rfiNum").val()) ==-1){
-    alert("Please change this field to read either 'x' or 'y' or 'z'");}})
-
-
-/*.autocomplete({
-    minLength:0,
-    source: ["one","two","three"]
-    });
-$("#RFI_rfiNum").on("click", function(){ $("#RFI_rfiNum").autocomplete("search"); });​*/
-
 }
 else if ("{{=displayForm}}"=="ProposalRequest"){
 $("#ProposalRequest_propDate").datepicker({"dateFormat": "yy-mm-dd"})

@@ -103,17 +103,44 @@ def uploadPhotoToFlickr(photoForm):
     db.Photos.insert(projectNum=projNum, flickrURL=flickrUrl, title=title, description=descr)
 
 
+
 @auth.requires_login()
 def index():
     """
     example action using the internationalization operator T and flash
-    rendered by views/default/index.html or views/generic.html
+    rendered by views/fault/index.html or views/generic.html
     """
     
     
+<<<<<<< HEAD
 
     response.flash = "Erik Smellz"
     return dict(
+=======
+    if meetingMinutesForm.process().accepted:
+        response.flash = 'form accepted'
+    elif meetingMinutesForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if photoForm.process().accepted:
+        uploadPhotoToFlickr(photoForm)
+        response.flash = 'form accepted'
+    elif photoForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if myProfileForm.process().accepted:
+        response.flash = 'form accepted'
+    elif myProfileForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+       
+    return dict(ccdForm=ccdForm,
+>>>>>>> fcdf23e4927d250b84defbd166690e52066a62f7
                 projects=projects,
                 myProfileForm=myProfileForm,
                 header=header,
@@ -290,8 +317,7 @@ def showform():
     elif displayForm == "MeetingMinutes":
         form = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
     elif displayForm == "Photo":                          #WILL NEED TO CHANGE TO SHOW PHOTOS!!!!
-        form = SQLFORM(db.Photos, labels={'projectNum':'Project Number', 'title':'Title', 'description':'Description', 'photo':'Photo'}, fields = ['projectNum','title','description','photo'])
-
+        form = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'}) 
     if form != None:
         if form.process().accepted:
             response.flash = T('form accepted')
@@ -310,6 +336,66 @@ def showform():
 @auth.requires_login()
 def formtable():
     formType = request.vars.formType
+<<<<<<< HEAD
+=======
+    if ccdForm.process().accepted:
+        response.flash = 'form accepted'
+    elif ccdForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if rfiForm.process().accepted:
+        response.flash = 'form accepted'
+    elif rfiForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if submittalForm.process().accepted:
+        response.flash = 'form accepted'
+    elif submittalForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if proposalRequestForm.process().accepted:
+        response.flash = 'form accepted'
+    elif proposalRequestForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if proposalForm.process().accepted:
+        response.flash = 'form accepted'
+    elif proposalForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+    
+    if meetingMinutesForm.process().accepted:
+        response.flash = 'form accepted'
+    elif meetingMinutesForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if photoForm.process().accepted:
+        uploadPhotoToFlickr(photoForm)
+        response.flash = 'form accepted'
+    elif photoForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+    if myProfileForm.process().accepted:
+        response.flash = 'form accepted'
+    elif myProfileForm.errors:
+        response.flash = 'form has errors'
+    else:
+        response.flash = 'please fill out the form'
+        
+>>>>>>> fcdf23e4927d250b84defbd166690e52066a62f7
     table = None
     image = None
     fullTable = True

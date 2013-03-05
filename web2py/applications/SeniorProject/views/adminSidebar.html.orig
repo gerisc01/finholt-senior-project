@@ -1,10 +1,23 @@
+<<<<<<< HEAD
+<div id="adminsidebar">
+    
+=======
 <div id="adminsidebar">    
+>>>>>>> fcdf23e4927d250b84defbd166690e52066a62f7
     <ul>
         <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
         <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
         <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
+<<<<<<< HEAD
+        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
+    </ul>
+    
+
+    </div>
+=======
         <li><a href="{{=URL('default','register')}}">Create User</a></li>
         <li><a href="{{=URL('default','deleteusers')}}">Delete User</a></li>
         <li><a href="{{=URL('default','changepermissions')}}">User Permissions</a></li>
     </ul>
 </div>
+>>>>>>> fcdf23e4927d250b84defbd166690e52066a62f7

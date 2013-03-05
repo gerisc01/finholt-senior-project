@@ -8,7 +8,7 @@ text-align:center;
 
 #projectsidebar{
 border-right:5px solid #104E8B;
-width:150px;
+width:160px;
 min-height:300px;
 display: inline;
 float:left;
@@ -22,8 +22,8 @@ text-align:center;
 #footer{
     margin: 15px;
     text-align: center;
-    color:gray;
-    clear:both;
+    clear: both;
+    background-color: #9CAA92;
 }
 #projecttabs li{
     padding:10px;
@@ -36,7 +36,7 @@ text-align:center;
 }
 #projecttabs li:hover{
 
-    background-color: #5CACEE;
+    background-color: #1566B7;
 }
 #projecttabs{
     margin-bottom:2px;
@@ -52,7 +52,7 @@ text-align:center;
     display:inline;
     float:right;
     border-left:5px solid #104E8B;
-    width:150px;
+    width:160px;
     height:300px;
     margin:5px;
 
@@ -80,6 +80,26 @@ tr.odd {
 tr.even{
 
     background-color: #FFFFFF;
+}
+div.flash {
+    font-weight: bold;
+    display: none;
+    position: fixed;
+    padding: 10px;
+    top: 48px;
+    right: 50px;
+    min-width: 280px;
+    opacity: 0.85;
+    margin: 0px 0px 10px 10px;
+    color: #fff;
+    vertical-align: middle;
+    cursor: pointer;
+    background: #000;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    z-index: 2;
 }
 html{
     height:100%;

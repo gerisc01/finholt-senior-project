@@ -73,7 +73,11 @@ $('#projectsidebar').bind(
       Welcome to Finholt Construction!
     </div>
     {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
+<<<<<<< HEAD
+        {{include 'adminSidebar.html'}}
+=======
         {{include "adminSidebar.html"}}
+>>>>>>> fcdf23e4927d250b84defbd166690e52066a62f7
     {{pass}}
 
     {{=footer}}

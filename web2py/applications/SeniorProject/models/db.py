@@ -119,13 +119,13 @@ db.define_table("ProjectUser", Field('userRole','string'), Field('projectId','st
 
 db.define_table("CCD", Field('ccdNum','string'), Field('projectNum','string'), Field('file','upload'))
 
-db.define_table("Submittal", Field('statusFlag','string'), Field('projectNum','string'), Field('assignedTo','string'), Field('submittal','upload'))
+db.define_table("Submittal", Field('statusFlag','string'), Field('projectNum','string'), Field('assignedTo','string'), Field('submittal','upload'), Field('subType','string'))
 
 db.define_table("RFI", Field('rfiNum','string'), Field('requestBy','string'), Field('dateSent','date'), Field('reqRefTo','string'), Field('drawingNum','integer'), Field('detailNum','integer'), Field('specSection','integer'), Field('sheetName','string'), Field('grids','string'), Field('sectionPage','integer'), Field('description','text'), Field('suggestion','text'), Field('reply','text'), Field('responseBy','date'), Field('responseDate','date'), Field('statusFlag','string'),Field('projectNum','string'))
 
-db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','string'), Field('projectNum','string'), Field('subject','text'), Field('propDate','date'), Field('sentTo','string'), Field('cc','string'), Field('description','text'))
+db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','string'), Field('projectNum','string'), Field('subject','text'), Field('propDate','date'), Field('sentTo','string'), Field('cc','string'), Field('description','text'), Field('statusFlag','string'))
 
-db.define_table("Proposal", Field('reqNum','integer'), Field('propDate','date'), Field('file','upload'),Field('projectNum','string'))
+db.define_table("Proposal", Field('propNum','integer'), Field('propReqRef','integer'), Field('propDate','date'), Field('file','upload'),Field('projectNum','string'))
 
 db.define_table("MeetingMinutes", Field('meetDate','date'), Field('file','upload'))
 

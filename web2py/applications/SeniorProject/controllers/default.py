@@ -41,7 +41,18 @@ if db(db.PhotoToken).isempty():                #we don't have the token yet
         url = flickr.web_login_url('write')    #get the url to go to in order to authenticate
         redirect(url)                          #redirect to that website
 
+    
+ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
 
+rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
+
+meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
+
+photoForm = SQLFORM(db.Photos, labels={'projectNum':'Project Number', 'title':'Title', 'description':'Description', 'photo':'Photo'}, fields = ['projectNum','title','description','photo'])
+
+
+
+>>>>>>> Dropdowns. New db fields, controller changes
 if auth.user != None:
     record = auth.user.id     #Gets the info for the current user
     myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
@@ -254,14 +265,23 @@ def showform():
     if displayForm == "CCD":
         form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
     elif displayForm == "RFI":
+
         form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
         form.vars.statusFlag = "Outstanding"
+        yourname = auth.user.first_name
+        db.RFI.requestBy.requires = IS_IN_SET([yourname])
+        db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.first_name')
+        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
     elif displayForm == "Submittal":
-        form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'assignedTo':'Assigned to'})
-    elif displayForm == "ProposalRequest":
-        form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'})
+        db.Submittal.subType.requires = IS_IN_SET(['samples','shop drawing','product data'])
+        db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.first_name')
+        db.Submittal.statusFlag.requires = IS_IN_SET(['approved','resubmit','approved with comments','submitted for review'])
+        form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'subType':'Submittal Type','assignedTo':'Assigned to'}) 
+    elif displayForm == "ProposalRequest":  
+        db.ProposalRequest.statusFlag.requires = IS_IN_SET(['open','closed'])     
+        form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'statusFlag':'Status', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'})
     elif displayForm == "Proposal":
-        form = SQLFORM(db.Proposal, labels={'reqNum':'Request #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
+        form = SQLFORM(db.Proposal, labels={'propNum':'Proposal #', 'propReqRef':'Proposal Request Reference #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
     elif displayForm == "MeetingMinutes":
         form = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
     elif displayForm == "Photo":                         
@@ -313,20 +333,20 @@ def formtable():
         rows = db(db.Submittal.projectNum == str(request.vars.projectNum)).select()
         for row in rows:
             row.submittal = str(URL('default','download',args=row.submittal))[1:]
-        table = SQLTABLE(rows, columns=["Submittal.assignedTo","Submittal.statusFlag","Submittal.submittal"],
-         headers={"Submittal.assignedTo":"Assigned To","Submittal.statusFlag":"Status Flag","Submittal.submittal":"Submitted File"},upload="http://127.0.0.1:8000")
+        table = SQLTABLE(rows, columns=["Submittal.assignedTo","Submittal.statusFlag","Submittal.subType","Submittal.submittal"],
+         headers={"Submittal.assignedTo":"Assigned To","Submittal.statusFlag":"Status Flag","Submittal.subType":"Type","Submittal.submittal":"Submitted File"},upload="http://127.0.0.1:8000")
     
     elif formType == "ProposalRequest":
         rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
-        table = SQLTABLE(rows, columns=["ProposalRequest.reqNum","ProposalRequest.amendNum","ProposalRequest.sentTo","ProposalRequest.propDate"],
-         headers={"ProposalRequest.reqNum":"Request Number","ProposalRequest.amendNum":"Amendment Number","ProposalRequest.sentTo":"Sent To","ProposalRequest.propDate":"Proposal Request Date"})
+        table = SQLTABLE(rows, columns=["ProposalRequest.reqNum","ProposalRequest.amendNum","ProposalRequest.statusFlag","ProposalRequest.sentTo","ProposalRequest.propDate"],
+         headers={"ProposalRequest.reqNum":"Request Number","ProposalRequest.amendNum":"Amendment Number","ProposalRequest.sentTo":"Sent To","ProposalRequest.statusFlag":"Status Flag","ProposalRequest.propDate":"Proposal Request Date"})
     
     elif formType == "Proposal":
         rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()
         for row in rows:
             row.file = str(URL('default','download',args=row.file))[1:]
-        table = SQLTABLE(rows, columns=["Proposal.reqNum","Proposal.propDate","Proposal.file"],
-        headers={"Proposal.reqNum":"Proposal Number","Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"},upload="http://127.0.0.1:8000")
+        table = SQLTABLE(rows, columns=["Proposal.propNum","Proposal.propReqRef","Proposal.propDate","Proposal.file"],
+        headers={"Proposal.propNum":"Proposal Number","Proposal.propReqRef":"Proposal Request Reference Number","Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"},upload="http://127.0.0.1:8000")
     
     elif formType == "MeetingMinutes":
         rows = db().select(db.MeetingMinutes.ALL)

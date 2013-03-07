@@ -102,9 +102,8 @@ def index():
     rendered by views/default/index.html or views/generic.html
     """
     
-    
-
-    response.flash = "Erik Smellz"
+     
+    response.flash = "Welcome " + auth.user.first_name + "!"
     return dict(
                 projects=projects,
                 myProfileForm=myProfileForm,

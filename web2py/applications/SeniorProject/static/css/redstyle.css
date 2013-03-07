@@ -1,22 +1,26 @@
 html{
-background:#CAC37F;
-}
-
-#ulprojecttabs{
-text-align:center;
+    background:#CAC37F;
+    height: 100%;
 }
 
 #projectsidebar{
-border-right:5px solid #7F1719;
-width:160px;
-min-height:300px;
-display: inline;
-float:left;
+    border-right:5px solid #7F1719;
+    width:160px;
+    min-height:300px;
+    display: inline;
+    float:left;
+}
 
+#projectsidebar a:link {
+    color: #7F1719;
+}
+
+#projectsidebar a:visited {
+    color: #7F1719;
 }
 
 #header{
-text-align:center;
+    text-align:center;
 }
 
 #footer{
@@ -24,6 +28,14 @@ text-align:center;
     text-align: center;
     clear: both;
     background-color: #7C7634;
+}
+
+#footer a:link {
+    color: #7F1719;
+}
+
+#footer a:visited {
+    color: #7F1719;
 }
 #projecttabs li{
     padding:10px;
@@ -34,19 +46,36 @@ text-align:center;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
 }
+
+#ulprojecttabs{
+   text-align:center;
+}
+
+#projecttabs{
+    margin-bottom: 2px;
+    min-width: 800px;
+    text-align: center;
+}
+
 #projecttabs li:hover{
     background-color: #DEE79C;
 }
-#projecttabs{
-    margin-bottom:2px;
-    min-width:800px;
-    text-align:center;
+
+#projecttabs a:visited{
+    text-decoration: none;
+    color: black;
 }
+
 #content{
-    max-width:800px;
-    padding:20px;
-    float:left;
+    max-width: 600px;
+    padding: 20px;
+    float: left;
 }
+
+#content a:link{
+    color: #7F1719;
+}
+
 #adminsidebar{
     display:inline;
     float:right;
@@ -56,9 +85,20 @@ text-align:center;
     margin:5px;
 
 }
-#adminsidebar li{
 
+#adminsidebar a:link {
+    color: #7F1719;
 }
+
+#adminsidebar a:visited {
+    color: #7F1719;
+}
+
+#adminsidebar a:hover {
+    color: #7F1719;
+    font-size:100%;
+}
+
 #projectForm{
     display: inline-block;
     float: left;
@@ -81,6 +121,7 @@ tr.even{
     background-color: #FFFFFF;
 }
 div.flash {
+    font-family: Arial, Verdana;
     font-weight: bold;
     display: none;
     position: fixed;
@@ -100,9 +141,8 @@ div.flash {
     -webkit-border-radius: 5px;
     z-index: 2;
 }
-html{
-    height:100%;
+
+a:link {
+    text-decoration: none;
+    color: black;
 }
-a:link {color:#7F1719;}
-a:visited {color:#7F1719;}
-a:hover {color:#7F1719;font-size:105%;}

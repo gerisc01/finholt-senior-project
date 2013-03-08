@@ -236,38 +236,40 @@ def archiveprojects():
     table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
     return dict(table=table, footer=footer, header=header, css=css)
 
-
-@auth.requires_login()
-@auth.requires_membership('Admin')
-
-def manageusers():
-    table = None
-    #rows = db().select(db.Users.ALL)
-    #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
-    #table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
-    return dict(table=table, footer=footer, header=header, css=css)
-
 def showform():
     displayForm = request.vars.displayForm
     form = None
     if displayForm == "CCD":
         form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
+        rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()
+        form.vars.ccdNum = len(rows) + 1
     elif displayForm == "RFI":
-        yourname = auth.user.first_name  
-        db.RFI.requestBy.requires = IS_IN_SET([yourname])
         db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.first_name')
         form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
+        rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
+        form.vars.rfiNum = len(rows) + 1
+        form.vars.requestBy = auth.user.first_name
         form.vars.statusFlag = "Outstanding"            
     elif displayForm == "Submittal":
-        db.Submittal.subType.requires = IS_IN_SET(['samples','shop drawing','product data'])
+        db.Submittal.subType.requires = IS_IN_SET(['Samples','Shop Drawing','Product Data'])
         db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.first_name')
-        db.Submittal.statusFlag.requires = IS_IN_SET(['approved','resubmit','approved with comments','submitted for review'])
+        db.Submittal.statusFlag.requires = IS_IN_SET(['Approved','Resubmit','Approved with Comments','Submitted for Review'])
         form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'subType':'Submittal Type','assignedTo':'Assigned to'}) 
     elif displayForm == "ProposalRequest":  
-        db.ProposalRequest.statusFlag.requires = IS_IN_SET(['open','closed'])     
+        db.ProposalRequest.statusFlag.requires = IS_IN_SET(['Open','Closed'])     
         form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'statusFlag':'Status', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'})
+        rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
+        form.vars.reqNum = len(rows) + 1
     elif displayForm == "Proposal":
+        therows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select(db.ProposalRequest.reqNum)
+        alist = therows.as_list()
+        blist = []
+        for item in alist:
+            blist.append(item['reqNum'])
+        db.Proposal.propReqRef.requires = IS_IN_SET(blist)
         form = SQLFORM(db.Proposal, labels={'propNum':'Proposal #', 'propReqRef':'Proposal Request Reference #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
+        rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()
+        form.vars.propNum = len(rows) + 1
     elif displayForm == "MeetingMinutes":
         form = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
     elif displayForm == "Photo":                         
@@ -282,6 +284,7 @@ def showform():
             response.flash = 'form has errors'
         else:
             response.flash = 'please fill out the form'
+            
     return dict(displayForm=displayForm,
                 form=form,
                 myProfileForm=myProfileForm,
@@ -362,14 +365,15 @@ def formtable():
 
 def replyRFI():
     id = request.args(0)
-    replyRfiForm = SQLFORM(db.RFI, id, showid=False, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By', 'reply':'Reply', 'responseDate':'Response Date'}, fields = ['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'responseBy', 'reply', 'responseDate'], _id="replyRfiForm")
+    db.RFI.statusFlag.requires = IS_IN_SET(['Outstanding','Closed'])
+    replyRfiForm = SQLFORM(db.RFI, id, showid=False, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By', 'reply':'Reply', 'responseDate':'Response Date', 'statusFlag':'Status Flag'}, fields = ['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'responseBy', 'reply', 'responseDate', 'statusFlag'], _id="replyForm")
     
     if replyRfiForm != None:
         if replyRfiForm.process().accepted:
             row = db(db.RFI.id==id).select().first()
             row.update_record(reply=str(replyRfiForm.vars.reply), responseDate=str(replyRfiForm.vars.responseDate))       
             db.commit()   
-            session.flash = T('form accepted')  
+            session.flash = T('RFI Reply Accepted')  
             redirect(URL('default', 'formtable', vars=dict(formType='RFI', projectNum=str(replyRfiForm.vars.projectNum))))                      
         elif replyRfiForm.errors:
             response.flash = 'form has errors'

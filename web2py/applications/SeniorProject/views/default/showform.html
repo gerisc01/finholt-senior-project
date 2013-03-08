@@ -17,23 +17,6 @@
 <script type="text/javascript">
 $(document).ready(function(){
 
-
-if ("{{=displayForm}}"=="RFI"){
-/*$("#RFI_dateSent").datepicker({"dateFormat": "yy-mm-dd"})
-$("#RFI_responseDate").datepicker({"dateFormat": "yy-mm-dd"})*/
-}
-else if ("{{=displayForm}}"=="ProposalRequest"){
-$("#ProposalRequest_propDate").datepicker({"dateFormat": "yy-mm-dd"})
-}
-else if ("{{=displayForm}}"=="Proposal"){
-$("#Proposal_propDate").datepicker({"dateFormat": "yy-mm-dd"})
-}
-else if("{{=displayForm}}"=="MeetingMinutes"){
-$("#MeetingMinutes_meetDate").datepicker({"dateFormat": "yy-mm-dd"})
-}
-
-
-
 $("#MyProfile").click(function(){
 $("#content").html('{{=myProfileForm}}')
 $("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
@@ -105,15 +88,7 @@ $('#projectsidebar').bind(
     <div id="content">
       {{=form}}
     </div>
-    <div id="adminsidebar">
-    <ul>
-        <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
-        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
-        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
-        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
-    </ul>
-
-    </div>
+    {{include 'adminSidebar.html'}}
     
 
     {{=footer}}

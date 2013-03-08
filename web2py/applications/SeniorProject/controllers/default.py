@@ -41,18 +41,7 @@ if db(db.PhotoToken).isempty():                #we don't have the token yet
         url = flickr.web_login_url('write')    #get the url to go to in order to authenticate
         redirect(url)                          #redirect to that website
 
-    
-ccdForm = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
 
-rfiForm = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
-
-meetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
-
-photoForm = SQLFORM(db.Photos, labels={'projectNum':'Project Number', 'title':'Title', 'description':'Description', 'photo':'Photo'}, fields = ['projectNum','title','description','photo'])
-
-
-
->>>>>>> Dropdowns. New db fields, controller changes
 if auth.user != None:
     record = auth.user.id     #Gets the info for the current user
     myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
@@ -94,8 +83,7 @@ def index():
     """
     example action using the internationalization operator T and flash
     rendered by views/default/index.html or views/generic.html
-    """
-    
+    """    
      
     response.flash = "Welcome " + auth.user.first_name + "!"
     return dict(
@@ -265,13 +253,11 @@ def showform():
     if displayForm == "CCD":
         form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
     elif displayForm == "RFI":
-
-        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
-        form.vars.statusFlag = "Outstanding"
-        yourname = auth.user.first_name
+        yourname = auth.user.first_name  
         db.RFI.requestBy.requires = IS_IN_SET([yourname])
         db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.first_name')
-        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'dateRec':'Date Received', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'reply':'Reply', 'responseBy':'Response by', 'responseDate':'Response Date'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'dateRec', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'reply', 'responseBy', 'responseDate'])
+        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
+        form.vars.statusFlag = "Outstanding"            
     elif displayForm == "Submittal":
         db.Submittal.subType.requires = IS_IN_SET(['samples','shop drawing','product data'])
         db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.first_name')
@@ -322,7 +308,7 @@ def formtable():
         extracolumns = [{'label':'Reply to RFI',
                 'class': '', #class name of the header
                 'width':'', #width in pixels or %
-                'content':lambda row, rc: A("Reply", _href=URL('default','replyRFI',args=row.id)),
+                'content':lambda row, rc: A("Reply", _href=URL('default','replyRFI',args=row.id)) if auth.user.first_name == row.reqRefTo else A(" "),
                 'selected': False #agregate class selected to this column
                 }]
         table = SQLTABLE(rows,_width="800px",       
@@ -382,9 +368,9 @@ def replyRFI():
         if replyRfiForm.process().accepted:
             row = db(db.RFI.id==id).select().first()
             row.update_record(reply=str(replyRfiForm.vars.reply), responseDate=str(replyRfiForm.vars.responseDate))       
-            db.commit()     
-            redirect(URL('default', 'formtable', vars=dict(formType='RFI', projectNum=str(replyRfiForm.vars.projectNum))))           
-            response.flash = T('form accepted')
+            db.commit()   
+            session.flash = T('form accepted')  
+            redirect(URL('default', 'formtable', vars=dict(formType='RFI', projectNum=str(replyRfiForm.vars.projectNum))))                      
         elif replyRfiForm.errors:
             response.flash = 'form has errors'
         else:

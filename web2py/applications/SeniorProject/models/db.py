@@ -127,7 +127,7 @@ db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','s
 
 db.define_table("Proposal", Field('propNum','integer'), Field('propReqRef','integer'), Field('propDate','date'), Field('file','upload'),Field('projectNum','string'))
 
-db.define_table("MeetingMinutes", Field('meetDate','date'), Field('file','upload'))
+db.define_table("MeetingMinutes", Field('projectNum','string'), Field('meetDate','date'), Field('file','upload'))
 
 db.define_table("PhotoToken", Field('token','string'))
 

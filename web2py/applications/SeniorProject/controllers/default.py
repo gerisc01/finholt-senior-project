@@ -243,27 +243,23 @@ def showform():
         form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
         rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()
         form.vars.ccdNum = len(rows) + 1
-        form.vars.projectNum = request.vars.projectNum
     elif displayForm == "RFI":
-        db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+" "+'%(last_name)s')
+        db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.first_name')
         form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
         rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
         form.vars.rfiNum = len(rows) + 1
         form.vars.requestBy = auth.user.first_name
-        form.vars.statusFlag = "Outstanding"    
-        form.vars.projectNum = request.vars.projectNum        
+        form.vars.statusFlag = "Outstanding"            
     elif displayForm == "Submittal":
         db.Submittal.subType.requires = IS_IN_SET(['Samples','Shop Drawing','Product Data'])
-        db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+" "+'%(last_name)s')
+        db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.first_name')
         db.Submittal.statusFlag.requires = IS_IN_SET(['Approved','Resubmit','Approved with Comments','Submitted for Review'])
         form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'subType':'Submittal Type','assignedTo':'Assigned to'}) 
-        form.vars.projectNum = request.vars.projectNum
     elif displayForm == "ProposalRequest":  
         db.ProposalRequest.statusFlag.requires = IS_IN_SET(['Open','Closed'])     
         form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'statusFlag':'Status', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'})
         rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
         form.vars.reqNum = len(rows) + 1
-        form.vars.projectNum = request.vars.projectNum
     elif displayForm == "Proposal":
         therows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select(db.ProposalRequest.reqNum)
         alist = therows.as_list()
@@ -274,27 +270,16 @@ def showform():
         form = SQLFORM(db.Proposal, labels={'propNum':'Proposal #', 'propReqRef':'Proposal Request Reference #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
         rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()
         form.vars.propNum = len(rows) + 1
-        form.vars.projectNum = request.vars.projectNum
     elif displayForm == "MeetingMinutes":
-        form = SQLFORM(db.MeetingMinutes, labels={'projectNum':'Project Number', 'meetDate':'Meeting Date'})
-        form.vars.projectNum = request.vars.projectNum
+        form = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
     elif displayForm == "Photo":                         
         form = SQLFORM(db.Photos, labels={'projectNum':'Project Number', 'title':'Title', 'description':'Description', 'photo':'Photo'}, fields = ['projectNum','title','description','photo'])
-        form.vars.projectNum = request.vars.projectNum
 
     if form != None:
         if form.process().accepted:
             response.flash = T('form accepted')
-            if displayForm == "Photo":    #If the form submitted is a photo form, we need to upload it to flickr and delete the photo from our database
+            if displayForm == "Photo":
                 uploadPhotoToFlickr(form)
-            elif displayForm == "RFI":    #If the form submitted is an RFI form, we need to put the name of person the RFI is referred to instead of the id
-                reqUser = db(db.auth_user.id == form.vars.reqRefTo).select().first()
-                row = db(db.RFI.id == form.vars.id).select().first()
-                row.update_record(reqRefTo = reqUser.first_name + " " + reqUser.last_name)
-            elif displayForm == "Submittal": #If the form submitted is a Submittal, we need to put the name of person it is assigned to instead of the id
-                assignTo = db(db.auth_user.id == form.vars.assignedTo).select().first()
-                row = db(db.Submittal.id == form.vars.id).select().first()
-                row.update_record(assignedTo= assignTo.first_name + " " + assignTo.last_name)
         elif form.errors:
             response.flash = 'form has errors'
         else:
@@ -326,7 +311,7 @@ def formtable():
         extracolumns = [{'label':'Reply to RFI',
                 'class': '', #class name of the header
                 'width':'', #width in pixels or %
-                'content':lambda row, rc: A("Reply", _href=URL('default','replyRFI',args=row.id)) if auth.user.first_name+" "+auth.user.last_name == row.reqRefTo else A(" "),
+                'content':lambda row, rc: A("Reply", _href=URL('default','replyRFI',args=row.id)) if auth.user.first_name == row.reqRefTo else A(" "),
                 'selected': False #agregate class selected to this column
                 }]
         table = SQLTABLE(rows,_width="800px",       
@@ -353,7 +338,7 @@ def formtable():
         headers={"Proposal.propNum":"Proposal Number","Proposal.propReqRef":"Proposal Request Reference Number","Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"},upload="http://127.0.0.1:8000")
     
     elif formType == "MeetingMinutes":
-        rows = db(db.MeetingMinutes.projectNum == str(request.vars.projectNum)).select()
+        rows = db().select(db.MeetingMinutes.ALL)
         for row in rows:
             row.file = str(URL('default','download',args=row.file))[1:]
         table = SQLTABLE(rows, columns=["MeetingMinutes.meetDate","MeetingMinutes.file"],

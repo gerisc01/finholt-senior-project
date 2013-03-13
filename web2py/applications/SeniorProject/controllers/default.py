@@ -9,11 +9,8 @@
 ## - call exposes all registered services (none by default)
 #########################################################################
 
-#import oauth
-#import httplib2 
-#import urllib2
+
 import flickrapi
-#import ctypes
 
 
 #Flickr API keys
@@ -148,41 +145,43 @@ def data():
 @auth.requires_membership('Admin')
 def register():
     form = SQLFORM(db.auth_user)
+    if form.process().accepted:
+       response.flash = str(request.vars.first_name) + ' created as user'
+    elif form.errors:
+       response.flash = 'form has errors'
+    else:
+       response.flash = 'Please create a user'
     if form.validate():
         admin_user = auth.user
         auth.get_or_create_user(form.vars)
-        auth.add_membership(auth.id_group(role="General"),auth.user_id) 
+        auth.add_membership(auth.id_group(role="General"),auth.user_id)
         auth.user = admin_user
-        redirect(URL('default','manageusers'))
+        redirect(URL('default','register'))
     return dict(form=form, header=header, footer=footer, css=css)
-    #admin_auth = session.auth
-    #auth.is_logged_in = lambda: False
-    #def post_register(form):
-    #    auth.add_membership(auth.id_group(role="General"),auth.user_id) 
 
-     #   session.auth = admin_auth
-     #   auth.user = session.auth.user
-    #auth.settings.register_onaccept = post_register
-    #return dict(form=auth.register())
 
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def changepermissions():
      rows=db(db.auth_user.id>0).select() 
-     #db.auth_user.id.represent=lambda id: DIV(id,SELECT(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role), XML(getOtherRoles(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role))), _name='%i'%id)) # INPUT (_type='checkbox',_name='%i'%id)) 
-     db.auth_user.id.represent=lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id) # INPUT (_type='checkbox',_name='%i'%id)) 
-     table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
+     db.auth_user.id.represent=lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id)
+     table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
+ 
      if table.accepts(request.vars): 
         for item in request.vars.keys():
             if item.isdigit():
                 if not auth.has_membership(user_id=int(item), role=request.vars[item]):
-                    if auth.has_membership(user_id=int(item), role=getUserRole(int(item))): #in case they are in their individual user group. We shoudl only delete them from the group we are in if they are switching from General to Admin or vice versa.
+                    if auth.has_membership(user_id=int(item), role=getUserRole(int(item))): #in case they are in their individual user group. We should only delete them from the group we are in if they are switching from General to Admin or vice versa.
                         
                         auth.del_membership(auth.id_group(role=getUserRole(int(item))),int(item))
-                    auth.add_membership(auth.id_group(role=request.vars[item]),int(item)) 
-                    
-
-        redirect(URL('default','manageusers'))
+                    auth.add_membership(auth.id_group(role=request.vars[item]),int(item))
+        session.flash = 'Permissions changed'
+        redirect(URL('default','changepermissions'))
+     elif table.errors:
+         session.flash = 'An error has occured'
+     else:
+         session.flash = 'Modify user permissions'
+     
      return dict(table=table, footer=footer, header=header, css=css)
 
 @auth.requires_login()
@@ -190,13 +189,20 @@ def changepermissions():
 def deleteusers():
      rows=db(db.auth_user.id>0).select() 
      db.auth_user.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
-     table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
+     table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
+     if table.process().accepted:
+       response.flash = str(request.vars.first_name) + ' deleted as user'
+     elif table.errors:
+       response.flash = 'form has errors'
+     else:
+       response.flash = 'Select users to delete'
      if table.accepts(request.vars): 
         for item in request.vars.keys():
             if item.isdigit():
                 db(db.auth_user.id == int(item)).delete()
+        session.flash = 'User deleted'
         redirect(URL('default','deleteusers'))
-            # or so something not sure what you want to do 
+
      return dict(table=table, footer=footer, header=header,css=css)
  
 @auth.requires_login()    
@@ -204,21 +210,26 @@ def deleteusers():
 def createproject():
     form = SQLFORM(db.Project, labels={'openDate':'Open Date', 'closedDate':'Closed Date', 'projNum':'Project Number'})
     if form.process().accepted:
-       response.flash = 'form accepted'
+       response.flash = str(request.vars.name) + ' has been created'
     elif form.errors:
        response.flash = 'form has errors'
     else:
-       response.flash = 'please fill out the form'
+       response.flash = 'please create a project'
     return dict(form=form, footer=footer, header=header, css=css)
 
 @auth.requires_login()   
 @auth.requires_membership('Admin')
 def manageprojects():
     table = None
-    rows = db(db.Project.archived == False).select()
+    rows = db(db.Project.archived == False).select()    
     db.Project.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
-    #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
     table = FORM(SQLTABLE(rows,columns=["Project.id","Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}),INPUT(_type='submit'))
+    if table.process().accepted:
+       response.flash = str(request.vars.name) + ' has been archived'
+    elif table.errors:
+       response.flash = 'form has errors'
+    else:
+       response.flash = 'Select a project to archive'
     if table.accepts(request.vars):
         for pID in request.vars.keys():
             if pID.isdigit():
@@ -232,9 +243,20 @@ def manageprojects():
 def archiveprojects():
     table = None
     rows = db(db.Project.archived == True).select()
-    #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
-    table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
+    extracolumns = [{'label':'View Archived Project',
+                'class': '', #class name of the header
+                'width':'', #width in pixels or %
+                'content':lambda row, rc: A("View", _href=URL('default','viewArchive', args=row.id), _target='new'),
+                'selected': False #agregate class selected to this column
+                }]
+    table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"},extracolumns=extracolumns)
     return dict(table=table, footer=footer, header=header, css=css)
+    
+def viewArchive():
+    project = db(db.Project.id == request.args(0)).select().first()
+    return dict(project=project, footer=footer, header=header, css=css)
+    
+###Create new archived form table.
 
 def showform():
     displayForm = request.vars.displayForm
@@ -243,43 +265,55 @@ def showform():
         form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"})
         rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()
         form.vars.ccdNum = len(rows) + 1
+        form.vars.projectNum = request.vars.projectNum
     elif displayForm == "RFI":
-        db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.first_name')
+        db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
         form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
         rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
         form.vars.rfiNum = len(rows) + 1
         form.vars.requestBy = auth.user.first_name
-        form.vars.statusFlag = "Outstanding"            
+        form.vars.statusFlag = "Outstanding"  
+        form.vars.projectNum = request.vars.projectNum          
     elif displayForm == "Submittal":
         db.Submittal.subType.requires = IS_IN_SET(['Samples','Shop Drawing','Product Data'])
-        db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.first_name')
+        db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
         db.Submittal.statusFlag.requires = IS_IN_SET(['Approved','Resubmit','Approved with Comments','Submitted for Review'])
-        form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'subType':'Submittal Type','assignedTo':'Assigned to'}) 
-    elif displayForm == "ProposalRequest":  
-        db.ProposalRequest.statusFlag.requires = IS_IN_SET(['Open','Closed'])     
-        form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'statusFlag':'Status', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'})
+        form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'subType':'Submittal Type', 'sectNum':'Section Number','assignedTo':'Assigned to'}) 
+        form.vars.projectNum = request.vars.projectNum
+    elif displayForm == "ProposalRequest":     
+        form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'}, fields =['reqNum','amendNum','projectNum','subject','propDate','sentTo','cc','description'])
         rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
+        form.vars.statusFlag = "Open"
         form.vars.reqNum = len(rows) + 1
+        form.vars.creator = auth.user.id
+        form.vars.projectNum = request.vars.projectNum
     elif displayForm == "Proposal":
-        therows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select(db.ProposalRequest.reqNum)
-        alist = therows.as_list()
-        blist = []
-        for item in alist:
-            blist.append(item['reqNum'])
-        db.Proposal.propReqRef.requires = IS_IN_SET(blist)
+        therows = len(db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select(db.ProposalRequest.reqNum))
+        mylist = list(range(1,therows+1))
+        db.Proposal.propReqRef.requires = IS_IN_SET(mylist)
         form = SQLFORM(db.Proposal, labels={'propNum':'Proposal #', 'propReqRef':'Proposal Request Reference #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
         rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()
         form.vars.propNum = len(rows) + 1
+        form.vars.projectNum = request.vars.projectNum
     elif displayForm == "MeetingMinutes":
-        form = SQLFORM(db.MeetingMinutes, labels={'meetDate':'Meeting Date'})
+        form = SQLFORM(db.MeetingMinutes, labels={'projectNum':'Project Number','meetDate':'Meeting Date'})
+        form.vars.projectNum = request.vars.projectNum
     elif displayForm == "Photo":                         
         form = SQLFORM(db.Photos, labels={'projectNum':'Project Number', 'title':'Title', 'description':'Description', 'photo':'Photo'}, fields = ['projectNum','title','description','photo'])
-
+        form.vars.projectNum = request.vars.projectNum
     if form != None:
         if form.process().accepted:
             response.flash = T('form accepted')
-            if displayForm == "Photo":
-                uploadPhotoToFlickr(form)
+            if displayForm == "Photo":    #If the form submitted is a photo form, we need to upload it to flickr and delete the photo from our database
+                 uploadPhotoToFlickr(form)
+            elif displayForm == "RFI":    #If the form submitted is an RFI form, we need to put the name of person the RFI is referred to instead of the id
+                reqUser = db(db.auth_user.id == form.vars.reqRefTo).select().first()
+                row = db(db.RFI.id == form.vars.id).select().first()
+                row.update_record(reqRefTo = reqUser.first_name + " " + reqUser.last_name)
+            elif displayForm == "Submittal": #If the form submitted is a Submittal, we need to put the name of person it is assigned to instead of the id
+                assignTo = db(db.auth_user.id == form.vars.assignedTo).select().first()
+                row = db(db.Submittal.id == form.vars.id).select().first()
+                row.update_record(assignedTo= assignTo.first_name + " " + assignTo.last_name)
         elif form.errors:
             response.flash = 'form has errors'
         else:
@@ -311,7 +345,7 @@ def formtable():
         extracolumns = [{'label':'Reply to RFI',
                 'class': '', #class name of the header
                 'width':'', #width in pixels or %
-                'content':lambda row, rc: A("Reply", _href=URL('default','replyRFI',args=row.id)) if auth.user.first_name == row.reqRefTo else A(" "),
+                'content':lambda row, rc: A("Reply", _href=URL('default','replyRFI',args=row.id)) if auth.user.first_name +" " + auth.user.last_name == row.reqRefTo else A(" "),
                 'selected': False #agregate class selected to this column
                 }]
         table = SQLTABLE(rows,_width="800px",       
@@ -322,13 +356,19 @@ def formtable():
         rows = db(db.Submittal.projectNum == str(request.vars.projectNum)).select()
         for row in rows:
             row.submittal = str(URL('default','download',args=row.submittal))[1:]
-        table = SQLTABLE(rows, columns=["Submittal.assignedTo","Submittal.statusFlag","Submittal.subType","Submittal.submittal"],
-         headers={"Submittal.assignedTo":"Assigned To","Submittal.statusFlag":"Status Flag","Submittal.subType":"Type","Submittal.submittal":"Submitted File"},upload="http://127.0.0.1:8000")
+        table = SQLTABLE(rows, columns=["Submittal.assignedTo","Submittal.statusFlag","Submittal.subType","Submittal.sectNum","Submittal.submittal"],
+         headers={"Submittal.assignedTo":"Assigned To","Submittal.statusFlag":"Status Flag","Submittal.subType":"Type","Submittal.sectNum":"Section Number","Submittal.submittal":"Submitted File"},upload="http://127.0.0.1:8000")
     
     elif formType == "ProposalRequest":
         rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
+        extracolumns = [{'label':'Change Status',
+                'class': '', #class name of the header
+                'width':'', #width in pixels or %
+                'content':lambda row, rc: A("Make Change", _href=URL('default','changePropReq',args=row.id)) if auth.user.id == row.creator else A(" "),
+                'selected': False #agregate class selected to this column
+                }]
         table = SQLTABLE(rows, columns=["ProposalRequest.reqNum","ProposalRequest.amendNum","ProposalRequest.statusFlag","ProposalRequest.sentTo","ProposalRequest.propDate"],
-         headers={"ProposalRequest.reqNum":"Request Number","ProposalRequest.amendNum":"Amendment Number","ProposalRequest.sentTo":"Sent To","ProposalRequest.statusFlag":"Status Flag","ProposalRequest.propDate":"Proposal Request Date"})
+         headers={"ProposalRequest.reqNum":"Request Number","ProposalRequest.amendNum":"Amendment Number","ProposalRequest.sentTo":"Sent To","ProposalRequest.statusFlag":"Status Flag","ProposalRequest.propDate":"Proposal Request Date"},extracolumns=extracolumns)
     
     elif formType == "Proposal":
         rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()
@@ -338,7 +378,7 @@ def formtable():
         headers={"Proposal.propNum":"Proposal Number","Proposal.propReqRef":"Proposal Request Reference Number","Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"},upload="http://127.0.0.1:8000")
     
     elif formType == "MeetingMinutes":
-        rows = db().select(db.MeetingMinutes.ALL)
+        rows = db(db.MeetingMinutes.projectNum == str(request.vars.projectNum)).select()
         for row in rows:
             row.file = str(URL('default','download',args=row.file))[1:]
         table = SQLTABLE(rows, columns=["MeetingMinutes.meetDate","MeetingMinutes.file"],
@@ -381,7 +421,26 @@ def replyRFI():
             response.flash = 'please fill out the form'
             
     return dict(replyRfiForm = replyRfiForm, css=css, header=header, footer=footer)
-    
+
+def changePropReq():
+    id = request.args(0)
+    db.ProposalRequest.statusFlag.requires = IS_IN_SET(['Open','Closed'])     
+    changePropReqForm = SQLFORM(db.ProposalRequest, id, showid=False, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'statusFlag':'Status', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'}, fields =['reqNum','amendNum','projectNum','subject','propDate','sentTo','cc','description','statusFlag'], _id="changePropReqForm")
+        
+    if changePropReqForm != None:
+        if changePropReqForm.process().accepted:
+            row = db(db.ProposalRequest.id==id).select().first()
+            row.update_record(statusFlag=str(changePropReqForm.vars.statusFlag))       
+            db.commit()   
+            session.flash = T('Status Change Accepted')  
+            redirect(URL('default', 'formtable', vars=dict(formType='ProposalRequest', projectNum=str(changePropReqForm.vars.projectNum))))                      
+        elif changePropReqForm.errors:
+            response.flash = 'form has errors'
+        else:
+            response.flash = 'please fill out the form'
+            
+    return dict(changePropReqForm = changePropReqForm, css=css, header=header, footer=footer)  
+
 def getOtherRoles(id):
     if auth.has_membership(user_id=id, role="Admin"):
         return "General"

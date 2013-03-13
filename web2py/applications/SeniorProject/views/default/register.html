@@ -2,11 +2,11 @@
 <html>
 
 <head>
-    <title>Manage Users</title>
+    <title>Create New User</title>
 <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
-
+{{include "web2py_ajax.html"}}
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
 
   <script src="{{=URL('static','js/jquery.js')}}"></script> 
@@ -23,7 +23,7 @@ $(document).ready(function(){
 </head>
 
 <body>
-
+    <div class="flash">{{=response.flash or ''}}</div>
     {{=header}}
     
     <div id="content">
@@ -32,7 +32,6 @@ $(document).ready(function(){
     
     {{include "adminSidebar.html"}}
     
-
     {{=footer}}
 </body>
 

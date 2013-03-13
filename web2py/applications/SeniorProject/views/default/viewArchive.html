@@ -2,7 +2,7 @@
 <html>
 
 <head>
-<title>Senior Project</title>
+<title>View Archived Project</title>
 <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
@@ -16,17 +16,17 @@
 <script type="text/javascript">
 $(document).ready(function(){
 
-
 var data = [];
 
-data.push({label:"Project "+"{{=T(project.name)}}", children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=project.projNum))}}'>RFIs</a>"},
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=project.projNum))}}'>Submittals</a>"},
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=project.projNum))}}'>CCDs</a>"},
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=project.projNum))}}'>Proposal Requests</a>"},
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=project.projNum))}}'>Proposals</a>"},
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=project.projNum))}}'>Meeting Minutes</a>"},
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=project.projNum))}}'>Photos</a>"}  ]});
+data.push({label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='RFI',projectNum=project.projNum))}}'>RFIs</a>"},
+  {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Submittal',projectNum=project.projNum))}}'>Submittals</a>"},
+  {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='CCD',projectNum=project.projNum))}}'>CCDs</a>"},
+  {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='ProposalRequest',projectNum=project.projNum))}}'>Proposal Requests</a>"},
+  {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Proposal',projectNum=project.projNum))}}'>Proposals</a>"},
+  {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='MeetingMinutes',projectNum=project.projNum))}}'>Meeting Minutes</a>"},
+  {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Photo',projectNum=project.projNum))}}'>Photos</a>"} );
   {{pass}} 
+  
 $(function() {
     $('#projectsidebar').tree({
         data: data,
@@ -59,7 +59,5 @@ $('#projectsidebar').bind(
       ARCHIVED MODE!
     </div>
 
-    {{=footer}}
 </body>
-
 </html>

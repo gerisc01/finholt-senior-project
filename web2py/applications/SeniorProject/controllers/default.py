@@ -49,6 +49,7 @@ else:
 projects = db(db.Project.archived == False).select()
 
 header = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg')), _href=URL('default','index')), _id="header")
+header_archived = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg'))), _id="header")
 footer = DIV(A("Home Page", _href=URL('default','index')), _id="footer")
 css = "/SeniorProject/static/css/bluestyle.css"
 
@@ -239,7 +240,6 @@ def manageprojects():
     
 @auth.requires_login()
 @auth.requires_membership('Admin')
-
 def archiveprojects():
     table = None
     rows = db(db.Project.archived == True).select()
@@ -254,9 +254,8 @@ def archiveprojects():
     
 def viewArchive():
     project = db(db.Project.id == request.args(0)).select().first()
-    return dict(project=project, footer=footer, header=header, css=css)
+    return dict(project=project, header=header_archived, css=css)
     
-###Create new archived form table.
 
 def showform():
     displayForm = request.vars.displayForm
@@ -326,6 +325,68 @@ def showform():
                 footer=footer,
                 header=header,
                 css=css)
+
+@auth.requires_login()
+def formtablearchived():
+    formType = request.vars.formType
+    project =  db(db.Project.projNum == request.vars.projectNum).select().first()
+    table = None
+    image = None
+    fullTable = True
+    if formType == "CCD":
+        rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()
+        for row in rows:
+            row.file = str(URL('default','download',args=row.file))[1:]
+        myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc: IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
+        table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"},upload="http://127.0.0.1:8000")
+    
+    elif formType == "RFI":
+        rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
+        table = SQLTABLE(rows,_width="800px",       
+            columns=["RFI.rfiNum","RFI.dateSent","RFI.reqRefTo","RFI.responseDate"],headers=
+            {"RFI.rfiNum":"RFI #","RFI.dateSent":"Date Sent","RFI.reqRefTo":"Request Referred To","RFI.responseDate":"Response Date"})
+    
+    elif formType == "Submittal":
+        rows = db(db.Submittal.projectNum == str(request.vars.projectNum)).select()
+        for row in rows:
+            row.submittal = str(URL('default','download',args=row.submittal))[1:]
+        table = SQLTABLE(rows, columns=["Submittal.assignedTo","Submittal.subType","Submittal.sectNum","Submittal.submittal"],
+         headers={"Submittal.assignedTo":"Assigned To","Submittal.subType":"Type","Submittal.sectNum":"Section Number","Submittal.submittal":"Submitted File"},upload="http://127.0.0.1:8000")
+    
+    elif formType == "ProposalRequest":
+        rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
+        table = SQLTABLE(rows, columns=["ProposalRequest.reqNum","ProposalRequest.amendNum","ProposalRequest.sentTo","ProposalRequest.propDate"],
+         headers={"ProposalRequest.reqNum":"Request Number","ProposalRequest.amendNum":"Amendment Number","ProposalRequest.sentTo":"Sent To","ProposalRequest.propDate":"Proposal Request Date"})
+    
+    elif formType == "Proposal":
+        rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()
+        for row in rows:
+            row.file = str(URL('default','download',args=row.file))[1:]
+        table = SQLTABLE(rows, columns=["Proposal.propNum","Proposal.propReqRef","Proposal.propDate","Proposal.file"],
+        headers={"Proposal.propNum":"Proposal Number","Proposal.propReqRef":"Proposal Request Reference Number","Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"},upload="http://127.0.0.1:8000")
+    
+    elif formType == "MeetingMinutes":
+        rows = db(db.MeetingMinutes.projectNum == str(request.vars.projectNum)).select()
+        for row in rows:
+            row.file = str(URL('default','download',args=row.file))[1:]
+        table = SQLTABLE(rows, columns=["MeetingMinutes.meetDate","MeetingMinutes.file"],
+        headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"},upload="http://127.0.0.1:8000")
+    
+    elif formType == "Photo":    
+        rows = db(db.Photos.projectNum == str(request.vars.projectNum)).select()
+        db.Photos.flickrURL.represent=lambda flickrURL: A("View Photo", _href=flickrURL, _target="_blank")
+        table = SQLTABLE(rows, columns=["Photos.title","Photos.description","Photos.flickrURL"], headers={"Photos.title":"Title", "Photos.description":"Description","Photos.flickrURL":"Photo"})
+
+    if len(rows)==0:
+        table = "There were no documents uploaded for this project section."
+        fullTable = False
+
+    return dict(formType=formType,
+                project=project,
+                table= table,
+                header=header_archived,
+                css=css,
+                fullTable=fullTable)
 
 @auth.requires_login()
 def formtable():
@@ -420,7 +481,7 @@ def replyRFI():
         else:
             response.flash = 'please fill out the form'
             
-    return dict(replyRfiForm = replyRfiForm, css=css, header=header, footer=footer)
+    return dict(replyRfiForm=replyRfiForm, css=css, header=header, footer=footer)
 
 def changePropReq():
     id = request.args(0)
@@ -439,7 +500,7 @@ def changePropReq():
         else:
             response.flash = 'please fill out the form'
             
-    return dict(changePropReqForm = changePropReqForm, css=css, header=header, footer=footer)  
+    return dict(changePropReqForm=changePropReqForm, css=css, header=header, footer=footer)  
 
 def getOtherRoles(id):
     if auth.has_membership(user_id=id, role="Admin"):

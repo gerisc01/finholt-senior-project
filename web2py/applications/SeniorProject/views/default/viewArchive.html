@@ -7,26 +7,28 @@
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 {{include 'web2py_ajax.html'}}
-<script src="{{=URL('static','js/modernizr.custom.js')}}"></script>   
+<script src="{{=URL('static','js/modernizr.custom.js')}}"></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
-  <script src="{{=URL('static','js/jquery.js')}}"></script> 
-  <script src="{{=URL('static','js/jquery.ui.accordion.js')}}"></script> 
-  <script src="{{=URL('static','js/jquery-ui-1.9.0.custom.min.js')}}"></script> 
+  <script src="{{=URL('static','js/jquery.js')}}"></script>
+  <script src="{{=URL('static','js/jquery.ui.accordion.js')}}"></script>
+  <script src="{{=URL('static','js/jquery-ui-1.9.0.custom.min.js')}}"></script>
   <script src="{{=URL('static','jqTree/tree.jquery.js')}}"></script>
 <script type="text/javascript">
 $(document).ready(function(){
 
 var data = [];
 
-data.push({label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='RFI',projectNum=project.projNum))}}'>RFIs</a>"},
+data.push(
+  {label:"<a href='{{=URL('default','newsfeedarchived',vars=dict(formType='NewsFeed',projectNum=project.projNum))}}'>News Feed</a>"},
+  {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='RFI',projectNum=project.projNum))}}'>RFIs</a>"},
   {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Submittal',projectNum=project.projNum))}}'>Submittals</a>"},
   {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='CCD',projectNum=project.projNum))}}'>CCDs</a>"},
   {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='ProposalRequest',projectNum=project.projNum))}}'>Proposal Requests</a>"},
   {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Proposal',projectNum=project.projNum))}}'>Proposals</a>"},
   {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='MeetingMinutes',projectNum=project.projNum))}}'>Meeting Minutes</a>"},
   {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Photo',projectNum=project.projNum))}}'>Photos</a>"} );
-  {{pass}} 
-  
+  {{pass}}
+
 $(function() {
     $('#projectsidebar').tree({
         data: data,
@@ -51,12 +53,12 @@ $('#projectsidebar').bind(
 <body>
     <div class="flash">{{=response.flash or ''}}</div>
     {{=header}}
-
+    <p style="text-align:center;">ARCHIVED MODE</p>
     <hr>
     <div id="projectsidebar">
     </div>
     <div id="content">
-      ARCHIVED MODE!
+      You are currently viewing archived project {{=project.name}}
     </div>
 
 </body>

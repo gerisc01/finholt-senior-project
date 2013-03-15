@@ -118,7 +118,7 @@ db.define_table("Project", Field('name','string'), Field('openDate','date'), Fie
 
 db.define_table("ProjectUser", Field('userRole','string'), Field('projectId','string'))
 
-#db.define_table("User", Field('name','string'), Field('role','string'))     
+db.define_table("NewsFeed", Field('projectNum','string'), Field('type','string'), Field('created_on','datetime'), Field('description','string'), Field('creator','string'))
 
 db.define_table("CCD", Field('ccdNum','string'), Field('projectNum','string'), Field('file','upload',requires=IS_UPLOAD_FILENAME(extension=uploadTypes)))
 

@@ -9,7 +9,6 @@
 ## - call exposes all registered services (none by default)
 #########################################################################
 
-
 import flickrapi
 
 
@@ -256,6 +255,14 @@ def viewArchive():
     project = db(db.Project.id == request.args(0)).select().first()
     return dict(project=project, header=header_archived, css=css)
     
+def newsfeed():
+    entries = db().select(db.NewsFeed.ALL)  
+    return dict(entries=entries, fullTable=True, projects=projects, myProfileForm=myProfileForm, header=header, footer=footer, css=css)
+    
+def newsfeedarchived():
+    project = db(db.Project.projNum == request.vars.projectNum).select().first()
+    entries = db().select(db.NewsFeed.ALL)   
+    return dict(entries=entries, fullTable=True, project=project, header=header_archived, css=css)  
 
 def showform():
     displayForm = request.vars.displayForm

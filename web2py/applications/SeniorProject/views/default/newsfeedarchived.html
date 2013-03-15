@@ -2,7 +2,8 @@
 <html>
 
 <head>
-<title>View Archived Project</title>
+<title>Senior Project</title>
+<cfheader name="Content-Type" value="application/rss+xml">
 <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
@@ -18,7 +19,6 @@
 $(document).ready(function(){
 
 var data = [];
-
 
 data.push(
 {label:"<a href='{{=URL('default','newsfeedarchived',vars=dict(formType='NewsFeed',projectNum=project.projNum))}}'>News Feed</a>"},
@@ -51,14 +51,8 @@ $('#projectsidebar').bind(
     }
 );
 
-$("#content").append('{{=table}}');
-
-{{if fullTable==True:}}
-$("#content table").dataTable(
-  );
-{{pass}}
-
 });
+
 
 </script>
 
@@ -66,14 +60,22 @@ $("#content table").dataTable(
 
 <body>
 <div class="flash">{{=response.flash or ''}}</div>
-   {{=header}}
+    {{=header}}
     <p style="text-align:center;">ARCHIVED MODE</p>
     <hr>
-    <div id="projectsidebar">    
+    <div id="projectsidebar">
+    </div>
+    <div id="newsfeed">
+       <table border='5px'>
+          {{for rss in entries:}}
+          <tr>
+            <td id='creator'>{{=T(rss.creator)}}</td>
+            <td id='descrip'>{{=T(rss.description)}}</td>
+            <td id='created_on'>{{=T(str(rss.created_on))}}</td>
+          </tr>
+          {{pass}} 
+       </table>
+    </div>
 
-    </div>
-    <div id="content">
-      
-    </div>
 </body>
 </html>

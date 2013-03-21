@@ -3,6 +3,7 @@
 
 <head>
 <title>Senior Project</title>
+<cfheader name="Content-Type" value="application/rss+xml">
 <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
@@ -16,14 +17,6 @@
   <script src="{{=URL('static','jqTree/tree.jquery.js')}}"></script>
 <script type="text/javascript">
 $(document).ready(function(){
-
-
-
-$("#MyProfile").click(function(){
-$("#content").html('{{=myProfileForm}}')
-$("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
-})
-
 
 var data = [];
 
@@ -48,7 +41,7 @@ $(function() {
         data: data,
         autoEscape:false
     });
-    var node = $('#projectsidebar').tree('getNodeById', {{=int(request.vars.projectNum)}});
+    var node = $('#projectsidebar').tree('getNodeById', {{=int(request.vars.projectNum[-1])}});
 $('#projectsidebar').tree('openNode', node);
 });
 
@@ -60,8 +53,6 @@ $('#projectsidebar').bind(
         $('#projectsidebar').tree('toggle', node);
     }
 );
-
-$("#content").append('{{=table}}');
 
 {{if fullTable==True:}}
 $("#content table").dataTable(
@@ -79,26 +70,23 @@ $("#content table").dataTable(
 <body>
 <div class="flash">{{=response.flash or ''}}</div>
    {{=header}}
-
-    <ul id = "projecttabs">
-        <li>Calendar</li>
-        <li id="CCD"><a href='{{=URL('default','showform',vars=dict(displayForm='CCD',projectNum=request.vars.projectNum))}}'>Upload CCD</a></li>
-        <li id="RFI"><a href='{{=URL('default','showform',vars=dict(displayForm='RFI',projectNum=request.vars.projectNum))}}'>Generate RFI</a></li>
-        <li id="Submittal"><a href='{{=URL('default','showform',vars=dict(displayForm='Submittal',projectNum=request.vars.projectNum))}}'>Upload Submittal</a></li>
-        <li id="ProposalRequest"><a href='{{=URL('default','showform',vars=dict(displayForm='ProposalRequest',projectNum=request.vars.projectNum))}}'>Generate Proposal Request</a></li>
-        <li id="Proposal"><a href='{{=URL('default','showform',vars=dict(displayForm='Proposal',projectNum=request.vars.projectNum))}}'>Upload Proposal</a></li>
-        <li id="MeetingMinutes"><a href='{{=URL('default','showform',vars=dict(displayForm='MeetingMinutes',projectNum=request.vars.projectNum))}}'>Meeting Minutes</a></li>
-        <li id="Photo"><a href='{{=URL('default','showform',vars=dict(displayForm='Photo',projectNum=request.vars.projectNum))}}'>Upload Photo</a></li>
-        <li id="MyProfile">My Profile</li>
-    </ul>
     <hr>
     <div id="projectsidebar">
-    
-
     </div>
-    <div id="content">
-      
+    <div id="newsfeed">
+       <table border='5px'>
+          {{for rss in entries:}}
+          <tr>
+            <td id='creator'>{{=T(rss.creator)}}</td>
+            <td id='created_on'>{{=T(str(rss.created_on))}}</td>
+          </tr>
+          <tr>
+            <td id='descrip'>{{=T(rss.description)}}</td>            
+          </tr>
+          {{pass}} 
+       </table>
     </div>
+   
     {{include "adminSidebar.html"}}
 
     {{=footer}}

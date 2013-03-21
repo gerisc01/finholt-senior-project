@@ -17,24 +17,6 @@
 <script type="text/javascript">
 $(document).ready(function(){
 
-
-if ("{{=displayForm}}"=="RFI"){
-/*$("#RFI_dateSent").datepicker({"dateFormat": "yy-mm-dd"})
-$("#RFI_dateRec").datepicker({"dateFormat": "yy-mm-dd"})
-$("#RFI_responseDate").datepicker({"dateFormat": "yy-mm-dd"})*/
-}
-else if ("{{=displayForm}}"=="ProposalRequest"){
-$("#ProposalRequest_propDate").datepicker({"dateFormat": "yy-mm-dd"})
-}
-else if ("{{=displayForm}}"=="Proposal"){
-$("#Proposal_propDate").datepicker({"dateFormat": "yy-mm-dd"})
-}
-else if("{{=displayForm}}"=="MeetingMinutes"){
-$("#MeetingMinutes_meetDate").datepicker({"dateFormat": "yy-mm-dd"})
-}
-
-
-
 $("#MyProfile").click(function(){
 $("#content").html('{{=myProfileForm}}')
 $("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
@@ -45,7 +27,9 @@ var data = [];
 
 
 {{for index  in range(len(projects)):}}
-  data.push({label:"Project "+"{{=T(projects[index].name)}}",id:{{=int(projects[index].projNum)}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].projNum))}}'>RFIs</a>"},
+  data.push({label:"Project "+"{{=T(projects[index].name)}}",id:{{=int(projects[index].id)}}, children:[
+  {label:"<a href='{{=URL('default','newsfeed',vars=dict(formType='NewsFeed',projectNum=projects[index].projNum))}}'>News Feed</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].projNum))}}'>RFIs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].projNum))}}'>Submittals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].projNum))}}'>CCDs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].projNum))}}'>Proposal Requests</a>"},
@@ -106,15 +90,7 @@ $('#projectsidebar').bind(
     <div id="content">
       {{=form}}
     </div>
-    <div id="adminsidebar">
-    <ul>
-        <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
-        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
-        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
-        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
-    </ul>
-
-    </div>
+    {{include 'adminSidebar.html'}}
     
 
     {{=footer}}

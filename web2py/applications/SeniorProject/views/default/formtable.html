@@ -29,12 +29,12 @@ var data = [];
 
 
 {{for index  in range(len(projects)):}}
-  data.push({label:"Project "+"{{=T(projects[index].name)}}",id:{{=int(projects[index].id)}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].projNum))}}'>RFIs</a>"},
+  data.push({label:"Project "+"{{=T(projects[index].name)}}",id:{{=int(projects[index].projNum)}}, children:[{label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].projNum))}}'>RFIs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].projNum))}}'>Submittals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].projNum))}}'>CCDs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].projNum))}}'>Proposal Requests</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=projects[index].projNum))}}'>Proposals</a>"},
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].id))}}'>Meeting Minutes</a>"}, 
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].projNum))}}'>Meeting Minutes</a>"}, 
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].projNum))}}'>Photos</a>"} ]});
   {{pass}} 
 
@@ -46,7 +46,7 @@ $(function() {
         data: data,
         autoEscape:false
     });
-    var node = $('#projectsidebar').tree('getNodeById', {{=int(request.vars.projectNum[-1])}});
+    var node = $('#projectsidebar').tree('getNodeById', {{=int(request.vars.projectNum)}});
 $('#projectsidebar').tree('openNode', node);
 });
 

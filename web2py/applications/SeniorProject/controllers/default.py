@@ -13,7 +13,6 @@
 #import httplib2 
 #import urllib2
 import flickrapi
-import ctypes
 
 
 #Flickr API keys
@@ -21,7 +20,7 @@ KEY = '614fd86a34a00d38293c7e803d14c3ab'
 SECRET_KEY = 'ad86826c3187eb4d'
 USER_ID = '93142072@N05'
 
-
+    
 if not db(db.PhotoToken).isempty():
     tok = (db.PhotoToken(db.PhotoToken.id>0)).token
     flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY, token = tok)     #create a flickr object
@@ -65,8 +64,11 @@ if auth.user != None:
 else: 
     myProfileForm = SQLFORM(db.auth_user, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
 
+projects = None
 
-projects = db(db.Project.archived == False).select()
+
+
+
 
 header = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg')), _href=URL('default','index')), _id="header")
 footer = DIV(A("Home Page", _href=URL('default','index')), _id="footer")
@@ -109,7 +111,14 @@ def index():
     example action using the internationalization operator T and flash
     rendered by views/default/index.html or views/generic.html
     """
-    
+    user = db(db.auth_user.id ==auth.user.id).select().first()
+    projects = None
+    for item in user.projects:
+        rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
+        if projects == None:
+            projects = rows
+        else:
+            projects= projects & rows
     
 
     response.flash = "Erik Smellz"
@@ -212,6 +221,39 @@ def changepermissions():
         redirect(URL('default','manageusers'))
      return dict(table=table, footer=footer, header=header, css=css)
 
+@auth.requires_membership("Admin")
+@auth.requires_login()
+def addtoproject():
+    rows=db(db.auth_user.id>0).select() 
+    db.auth_user.id.represent=lambda id: DIV('', XML(getAllProjectsHtml(id)), _name='%i'%id)
+    table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Add To","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
+    if table.accepts(request.vars):
+        for userid in request.vars.keys():
+            if userid.isdigit():
+                projectList = []
+                for item in request.vars[userid]:
+                    projectList.append(int(item))
+                db(db.auth_user.id ==int(userid)).update(projects=projectList)
+    return dict(table=table, footer=footer, header=header, css=css)
+
+@auth.requires_membership("Admin")
+@auth.requires_login()
+def deletefromproject():
+    rows=db(db.auth_user.id>0).select() 
+    db.auth_user.id.represent=lambda id: DIV('', XML(getUsersProjectsHtml(id)), _name='%i'%id)
+    table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove From","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
+    if table.accepts(request.vars): 
+        for userid in request.vars.keys():
+            if userid.isdigit():
+                user = db(db.auth_user.id ==int(userid)).select().first()
+                projects = user.projects
+                for item in request.vars[userid]:
+                    projects.remove(int(item))
+
+                db(db.auth_user.id ==int(userid)).update(projects=projects)
+
+    return dict(table=table, footer=footer, header=header, css=css)
+
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def deleteusers():
@@ -275,6 +317,14 @@ def manageusers():
     return dict(table=table, footer=footer, header=header, css=css)
 
 def showform():
+    user = db(db.auth_user.id ==auth.user.id).select().first()
+    projects = None
+    for item in user.projects:
+        rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
+        if projects == None:
+            projects = rows
+        else:
+            projects= projects & rows
     displayForm = request.vars.displayForm
     form = None
     if displayForm == "CCD":
@@ -309,6 +359,14 @@ def showform():
 
 @auth.requires_login()
 def formtable():
+    user = db(db.auth_user.id ==auth.user.id).select().first()
+    projects = None
+    for item in user.projects:
+        rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
+        if projects == None:
+            projects = rows
+        else:
+            projects= projects & rows
     formType = request.vars.formType
     table = None
     image = None
@@ -381,3 +439,31 @@ def getUserRole(id):
         return "Admin"
     else:
         return "General"
+
+def getAllProjectsHtml(id):
+    html=''
+    projects = db(db.Project.archived == False).select()
+    user = db(db.auth_user.id == id).select().first()
+
+    for row in projects:
+        if user.projects != None:
+            if row.id not in user.projects:
+                html +=  '<input value="'+str(row.id)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(row.id)+"</br>"
+        else:
+            html +=  '<input value="'+str(row.id)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(row.id)+"</br>"
+    if html =='':
+        html = "<p>In all projects</p>"
+    return html 
+
+def getUsersProjectsHtml(id):
+    html = ''
+
+    
+    user = db(db.auth_user.id == id).select().first()
+    if user.projects != None and len(user.projects)>=1:
+        for projId in user.projects:
+            project = db((db.Project.archived == False) & (db.Project.id == projId)).select().first()
+            html +=  '<input value="'+str(project.id)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(project.id)+"</br>"
+    else:
+        html = "<p>Not on any projects</p>"
+    return html

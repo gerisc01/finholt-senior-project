@@ -370,3 +370,5 @@ CREATE TABLE Photos(
     photo CHAR(512)
 );
 success!
+timestamp: 2013-03-12T14:23:53.099322
+ALTER TABLE auth_user ADD projects TEXT;

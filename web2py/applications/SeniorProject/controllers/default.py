@@ -85,10 +85,10 @@ def index():
     rendered by views/default/index.html or views/generic.html
     """
     user = db(db.auth_user.id ==auth.user.id).select().first()
-    projects = None
+    projects = []
     for item in user.projects:
         rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
-        if projects == None:
+        if len(projects) ==0:
             projects = rows
         else:
             projects= projects & rows
@@ -311,10 +311,10 @@ def newsfeedarchived():
 
 def showform():
     user = db(db.auth_user.id ==auth.user.id).select().first()
-    projects = None
+    projects = []
     for item in user.projects:
         rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
-        if projects == None:
+        if len(projects) ==0:
             projects = rows
         else:
             projects= projects & rows
@@ -451,14 +451,14 @@ def formtablearchived():
 @auth.requires_login()
 def formtable():
     user = db(db.auth_user.id ==auth.user.id).select().first()
-    projects = None
+    projects = []
     for item in user.projects:
         rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
-        if projects == None:
+        if len(projects) ==0:
             projects = rows
         else:
             projects= projects & rows
-            
+
     formType = request.vars.formType
     table = None
     image = None

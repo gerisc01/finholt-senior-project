@@ -125,7 +125,7 @@ db.define_table("CCD", Field('ccdNum','string'), Field('projectNum','string'), F
 
 db.define_table("Submittal", Field('statusFlag','string'), Field('projectNum','string'), Field('assignedTo','string'), Field('submittal','upload',requires=IS_UPLOAD_FILENAME(extension=uploadTypes)), Field('subType','string'), Field('sectNum','integer'))
 
-db.define_table("RFI", Field('rfiNum','string'), Field('requestBy','string'), Field('dateSent','date'), Field('reqRefTo','string'), Field('drawingNum','integer'), Field('detailNum','integer'), Field('specSection','integer'), Field('sheetName','string'), Field('grids','string'), Field('sectionPage','integer'), Field('description','text'), Field('suggestion','text'), Field('reply','text'), Field('responseBy','date'), Field('responseDate','date'), Field('statusFlag','string'),Field('projectNum','string'))
+db.define_table("RFI", Field('rfiNum','string'), Field('requestBy','string'), Field('dateSent','date'), Field('reqRefTo','string'), Field('drawingNum','integer'), Field('detailNum','integer'), Field('specSection','integer'), Field('sheetName','string'), Field('grids','string'), Field('sectionPage','integer'), Field('description','text'), Field('suggestion','text'), Field('reply','text'), Field('responseBy','date'), Field('responseDate','date'), Field('statusFlag','string'),Field('projectNum','string'), Field('projectName','string'), Field('owner','string'))
 
 db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','string'), Field('projectNum','string'), Field('subject','text'), Field('propDate','date'), Field('sentTo','string'), Field('cc','string'), Field('description','text'), Field('statusFlag','string'),Field('creator','integer'))
 

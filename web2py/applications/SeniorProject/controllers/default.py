@@ -94,7 +94,7 @@ def index():
             projects= projects & rows
     
 
-    response.flash = "Erik Smellz"
+    response.flash = "Welcome " + auth.user.first_name + "!"
     return dict(
                 projects=projects,
                 myProfileForm=myProfileForm,
@@ -327,7 +327,7 @@ def showform():
         form.vars.projectNum = request.vars.projectNum
     elif displayForm == "RFI":
         db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
-        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
+        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'projectName':'Project Name', 'owner':'Owner', 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','projectName','owner','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
         rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
         form.vars.rfiNum = len(rows) + 1
         form.vars.requestBy = auth.user.first_name

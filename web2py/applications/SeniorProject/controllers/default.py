@@ -8,52 +8,70 @@
 ## - download is for downloading files uploaded in the db (does streaming)
 ## - call exposes all registered services (none by default)
 #########################################################################
-
 import flickrapi
-
-
-#Flickr API keys
-KEY = '614fd86a34a00d38293c7e803d14c3ab'
-SECRET_KEY = 'ad86826c3187eb4d'
-USER_ID = '93142072@N05'
-
-    
-if not db(db.PhotoToken).isempty():
-    tok = (db.PhotoToken(db.PhotoToken.id>0)).token
-    flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY, token = tok)     #create a flickr object
-else:
-    flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY)
-
-if not db(db.PhotoToken).isempty():
-    # We have a token, but it might not be valid
-    try:
-        flickr.auth_checkToken()
-    except flickrapi.FlickrError:
-        db(db.PhotoToken.id > 0).delete()
-if db(db.PhotoToken).isempty():                #we don't have the token yet
-    if request.vars.frob:                      #if the frob is in the request 
-        db.PhotoToken[0] = {"token" : flickr.get_token(request.vars.frob)}    #insert a new row into the database with the token
-    else:
-        url = flickr.web_login_url('write')    #get the url to go to in order to authenticate
-        redirect(url)                          #redirect to that website
-
-
-if auth.user != None:
-    record = auth.user.id     #Gets the info for the current user
-    myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
-else: 
-    myProfileForm = SQLFORM(db.auth_user, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
-
-projects = None
-
-
-
-
 
 header = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg')), _href=URL('default','index')), _id="header")
 header_archived = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg'))), _id="header")
 footer = DIV(A("Home Page", _href=URL('default','index')), _id="footer")
 css = "/SeniorProject/static/css/bluestyle.css"
+
+def getUser():
+    user = None
+    if auth.user != None:
+        user = db(db.auth_user.id == auth.user.id).select().first()
+    return user
+ 
+def getProjectsForUser(user):
+    projects = []
+    if user != None and user.projects != None:
+        for item in user.projects:
+            rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
+            if len(projects) == 0:
+                projects = rows
+            else:
+                projects= projects & rows    
+    return projects
+   
+def getProfileFormForUser(user):
+    if user != None:
+        record = user.id    #Gets the info for the current user    
+        myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
+    else: 
+        myProfileForm = SQLFORM(db.auth_user, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
+    return myProfileForm
+   
+def setUpFlickrStuff():
+    #Flickr API keys
+    KEY = '614fd86a34a00d38293c7e803d14c3ab'
+    SECRET_KEY = 'ad86826c3187eb4d'
+    USER_ID = '93142072@N05'    
+        
+    if not db(db.PhotoToken).isempty():
+        tok = (db.PhotoToken(db.PhotoToken.id>0)).token
+        flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY, token = tok)     #create a flickr object
+    else:
+        flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY)
+    
+    if not db(db.PhotoToken).isempty():
+        # We have a token, but it might not be valid
+        try:
+            flickr.auth_checkToken()
+        except flickrapi.FlickrError:
+            db(db.PhotoToken.id > 0).delete()
+    if db(db.PhotoToken).isempty():                #we don't have the token yet
+        if request.vars.frob:                      #if the frob is in the request 
+            db.PhotoToken[0] = {"token" : flickr.get_token(request.vars.frob)}    #insert a new row into the database with the token
+        else:
+            url = flickr.web_login_url('write')    #get the url to go to in order to authenticate
+            redirect(url)                          #redirect to that website
+            
+            
+#Do all the set-up/initializing that is necessary    
+user = getUser()
+projects = getProjectsForUser(user)
+myProfileForm = getProfileFormForUser(user)
+setUpFlickrStuff()
+
 
 def uploadPhotoToFlickr(photoForm):
     #MessageBox = ctypes.windll.user32.MessageBoxA
@@ -84,16 +102,7 @@ def index():
     example action using the internationalization operator T and flash
     rendered by views/default/index.html or views/generic.html
     """
-    user = db(db.auth_user.id ==auth.user.id).select().first()
-    projects = []
-    for item in user.projects:
-        rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
-        if len(projects) ==0:
-            projects = rows
-        else:
-            projects= projects & rows
     
-
     response.flash = "Welcome " + auth.user.first_name + "!"
     return dict(
                 projects=projects,
@@ -154,6 +163,7 @@ def data():
     """
     return dict(form=crud(), css=css, footer=footer)
 
+@auth.requires_login()
 @auth.requires_membership('Admin')
 def register():
     form = SQLFORM(db.auth_user)
@@ -266,20 +276,23 @@ def createproject():
 @auth.requires_membership('Admin')
 def manageprojects():
     table = None
-    rows = db(db.Project.archived == False).select()    
-    db.Project.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
-    table = FORM(SQLTABLE(rows,columns=["Project.id","Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}),INPUT(_type='submit'))
-    if table.process().accepted:
-       response.flash = str(request.vars.name) + ' has been archived'
-    elif table.errors:
-       response.flash = 'form has errors'
-    else:
-       response.flash = 'Select a project to archive'
-    if table.accepts(request.vars):
-        for pID in request.vars.keys():
-            if pID.isdigit():
-                db(db.Project.id ==int(pID)).update(archived=True)
-        redirect(URL('default','manageprojects'))
+    rows = db(db.Project.archived == False).select() 
+    if len(rows) == 0:
+        table = "There are currently no non-archived projects"
+    else:   
+        db.Project.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
+        table = FORM(SQLTABLE(rows,columns=["Project.id","Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}),INPUT(_type='submit'))
+        if table.process().accepted:
+           response.flash = str(request.vars.name) + ' has been archived'
+        elif table.errors:
+           response.flash = 'form has errors'
+        else:
+           response.flash = 'Select a project to archive'
+        if table.accepts(request.vars):
+            for pID in request.vars.keys():
+                if pID.isdigit():
+                    db(db.Project.id ==int(pID)).update(archived=True)
+            redirect(URL('default','manageprojects'))
     return dict(table=table, footer=footer, header=header,css=css)
     
 @auth.requires_login()
@@ -287,37 +300,42 @@ def manageprojects():
 def archiveprojects():
     table = None
     rows = db(db.Project.archived == True).select()
-    extracolumns = [{'label':'View Archived Project',
-                'class': '', #class name of the header
-                'width':'', #width in pixels or %
-                'content':lambda row, rc: A("View", _href=URL('default','viewArchive', args=row.id), _target='new'),
-                'selected': False #agregate class selected to this column
-                }]
-    table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"},extracolumns=extracolumns)
+    if len(rows) == 0:
+        table = "There are no projects that have been achived"
+    else:
+        extracolumns = [{'label':'View Archived Project',
+                    'class': '', #class name of the header
+                    'width':'', #width in pixels or %
+                    'content':lambda row, rc: A("View", _href=URL('default','viewArchive', args=row.id), _target='new'),
+                    'selected': False #agregate class selected to this column
+                    }]
+        table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"},extracolumns=extracolumns)
     return dict(table=table, footer=footer, header=header, css=css)
     
+@auth.requires_login()
+@auth.requires_membership('Admin')
 def viewArchive():
     project = db(db.Project.id == request.args(0)).select().first()
     return dict(project=project, header=header_archived, css=css)
-    
+
+@auth.requires_login()    
 def newsfeed():
-    entries = db().select(db.NewsFeed.ALL)  
+    entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select()   
+    if entries == None or len(entries) == 0:
+        entries = None   
     return dict(entries=entries, fullTable=True, projects=projects, myProfileForm=myProfileForm, header=header, footer=footer, css=css)
-    
+
+@auth.requires_login() 
+@auth.requires_membership('Admin')   
 def newsfeedarchived():
     project = db(db.Project.projNum == request.vars.projectNum).select().first()
-    entries = db().select(db.NewsFeed.ALL)   
+    entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select()   
+    if entries == None or len(entries) == 0:
+        entries = None   
     return dict(entries=entries, fullTable=True, project=project, header=header_archived, css=css)  
 
+@auth.requires_login() 
 def showform():
-    user = db(db.auth_user.id ==auth.user.id).select().first()
-    projects = []
-    for item in user.projects:
-        rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
-        if len(projects) ==0:
-            projects = rows
-        else:
-            projects= projects & rows
     displayForm = request.vars.displayForm
     form = None
     if displayForm == "CCD":
@@ -387,6 +405,7 @@ def showform():
                 css=css)
 
 @auth.requires_login()
+@auth.requires_membership('Admin') 
 def formtablearchived():
     formType = request.vars.formType
     project =  db(db.Project.projNum == request.vars.projectNum).select().first()
@@ -450,15 +469,6 @@ def formtablearchived():
 
 @auth.requires_login()
 def formtable():
-    user = db(db.auth_user.id ==auth.user.id).select().first()
-    projects = []
-    for item in user.projects:
-        rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
-        if len(projects) ==0:
-            projects = rows
-        else:
-            projects= projects & rows
-
     formType = request.vars.formType
     table = None
     image = None
@@ -600,7 +610,6 @@ def getAllProjectsHtml(id):
 
 def getUsersProjectsHtml(id):
     html = ''
-
     
     user = db(db.auth_user.id == id).select().first()
     if user.projects != None and len(user.projects)>=1:

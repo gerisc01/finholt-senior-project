@@ -2,7 +2,7 @@
 <html>
 
 <head>
-<title>Senior Project</title>
+<title>Finholt Construction</title>
 <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
@@ -99,7 +99,9 @@ $("#content table").dataTable(
     <div id="content">
       
     </div>
-    {{include "adminSidebar.html"}}
+    {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
+        {{include "adminSidebar.html"}}
+    {{pass}}
 
     {{=footer}}
 </body>

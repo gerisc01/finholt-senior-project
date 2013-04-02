@@ -2,21 +2,28 @@
 <html>
 
 <head>
-<title>Senior Project</title>
+<title>Finholt Construction</title>
 <cfheader name="Content-Type" value="application/rss+xml">
 <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
+
 {{include 'web2py_ajax.html'}}
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
+  <script src="{{=URL('static','js/modernizr.custom.js')}}"></script> 
   <script src="{{=URL('static','js/jquery.js')}}"></script> 
   <script src="{{=URL('static','js/jquery.ui.accordion.js')}}"></script> 
   <script src="{{=URL('static','js/jquery.datatables.js')}}"></script> 
   <script src="{{=URL('static','js/jquery-ui-1.9.0.custom.min.js')}}"></script> 
   <script src="{{=URL('static','jqTree/tree.jquery.js')}}"></script>
 <script type="text/javascript">
+
 $(document).ready(function(){
+$("#MyProfile").click(function(){
+$("#content").html('{{=myProfileForm}}')
+$("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
+})
 
 var data = [];
 
@@ -70,24 +77,45 @@ $("#content table").dataTable(
 <body>
 <div class="flash">{{=response.flash or ''}}</div>
    {{=header}}
+   
+   <ul id = "projecttabs">
+        <li>Calendar</li>
+        <li id="CCD"><a href='{{=URL('default','showform',vars=dict(displayForm='CCD',projectNum=request.vars.projectNum))}}'>Upload CCD</a></li>
+        <li id="RFI"><a href='{{=URL('default','showform',vars=dict(displayForm='RFI',projectNum=request.vars.projectNum))}}'>Generate RFI</a></li>
+        <li id="Submittal"><a href='{{=URL('default','showform',vars=dict(displayForm='Submittal',projectNum=request.vars.projectNum))}}'>Upload Submittal</a></li>
+        <li id="ProposalRequest"><a href='{{=URL('default','showform',vars=dict(displayForm='ProposalRequest',projectNum=request.vars.projectNum))}}'>Generate Proposal Request</a></li>
+        <li id="Proposal"><a href='{{=URL('default','showform',vars=dict(displayForm='Proposal',projectNum=request.vars.projectNum))}}'>Upload Proposal</a></li>
+        <li id="MeetingMinutes"><a href='{{=URL('default','showform',vars=dict(displayForm='MeetingMinutes',projectNum=request.vars.projectNum))}}'>Meeting Minutes</a></li>
+        <li id="Photo"><a href='{{=URL('default','showform',vars=dict(displayForm='Photo',projectNum=request.vars.projectNum))}}'>Upload Photo</a></li>
+        <li id="MyProfile">My Profile</li>
+    </ul>
+    
     <hr>
     <div id="projectsidebar">
     </div>
     <div id="newsfeed">
-       <table border='5px'>
-          {{for rss in entries:}}
-          <tr>
-            <td id='creator'>{{=T(rss.creator)}}</td>
-            <td id='created_on'>{{=T(str(rss.created_on))}}</td>
-          </tr>
-          <tr>
-            <td id='descrip'>{{=T(rss.description)}}</td>            
-          </tr>
-          {{pass}} 
-       </table>
+       {{if entries != None:}}
+           <table border='5px'>         
+              {{for rss in entries:}}
+              <tr>
+                <td id='creator'>{{=T(rss.creator)}}</td>
+                <td id='created_on'>{{=T(str(rss.created_on))}}</td>
+              </tr>
+              <tr>
+                <td id='descrip'>{{=T(rss.description)}}</td>            
+              </tr>
+              {{pass}}             
+           </table>
+       {{else:}}
+           <tr>
+               <td>The newsfeed for this project is currently empty</td>
+           </tr>
+           {{pass}}
     </div>
-   
-    {{include "adminSidebar.html"}}
+    
+    {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
+        {{include "adminSidebar.html"}}
+    {{pass}}
 
     {{=footer}}
 </body>

@@ -12,7 +12,7 @@ import flickrapi
 
 header = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg')), _href=URL('default','index')), _id="header")
 header_archived = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg'))), _id="header")
-footer = DIV(A("Home Page", _href=URL('default','index')), _id="footer")
+footer = DIV(A("Home Page", _href=URL('default','index')), TD("------"), A("Log out", _href=URL('default','user', args='logout')), _id="footer")
 css = "/SeniorProject/static/css/bluestyle.css"
 
 def getUser():
@@ -185,7 +185,7 @@ def register():
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def changepermissions():
-     rows=db(db.auth_user.id>0).select() 
+     rows=db(db.auth_user.id != auth.user.id).select() 
      db.auth_user.id.represent=lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id)
      table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
  
@@ -224,9 +224,9 @@ def addtoproject():
 @auth.requires_membership("Admin")
 @auth.requires_login()
 def deletefromproject():
-    rows=db(db.auth_user.id>0).select() 
+    rows = db(db.auth_user.id > 0).select() 
     db.auth_user.id.represent=lambda id: DIV('', XML(getUsersProjectsHtml(id)), _name='%i'%id)
-    table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove From","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
+    table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove From","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
     if table.accepts(request.vars): 
         for userid in request.vars.keys():
             if userid.isdigit():
@@ -242,9 +242,9 @@ def deletefromproject():
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def deleteusers():
-     rows=db(db.auth_user.id>0).select() 
+     rows = db(db.auth_user.id != auth.user.id).select() 
      db.auth_user.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
-     table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
+     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
      if table.process().accepted:
        response.flash = str(request.vars.first_name) + ' deleted as user'
      elif table.errors:

@@ -1,22 +1,26 @@
 html{
-background:#AAB6A2;
-}
-
-#ulprojecttabs{
-text-align:center;
+    background: #AAB6A2;
+    height: 100%;
 }
 
 #projectsidebar{
-border-right:5px solid #104E8B;
-width:160px;
-min-height:300px;
-display: inline;
-float:left;
+    border-right:5px solid #104E8B;
+    width:160px;
+    min-height:300px;
+    display: inline;
+    float:left;
+}
 
+#projectsidebar a:link {
+    color: #104E8B;
+}
+
+#projectsidebar a:visited {
+    color: #104E8B;
 }
 
 #header{
-text-align:center;
+    text-align:center;
 }
 
 #footer{
@@ -25,6 +29,15 @@ text-align:center;
     clear: both;
     background-color: #9CAA92;
 }
+
+#footer a:link {
+    color: #104E8B;
+}
+
+#footer a:visited {
+    color: #104E8B;
+}
+
 #projecttabs li{
     padding:10px;
     border-top: 2px solid gray;
@@ -34,20 +47,45 @@ text-align:center;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
 }
-#projecttabs li:hover{
 
-    background-color: #1566B7;
+#ulprojecttabs{
+    text-align:center;
 }
+/**
+#ulprojecttabs a:hover{
+    background-color: #1879d8;
+}
+
+#ulprojecttabs a:visited{
+    text-decoration: none;
+    color: black;
+}
+**/
 #projecttabs{
     margin-bottom:2px;
     min-width:800px;
     text-align:center;
 }
-#content{
-    max-width:800px;
-    padding:20px;
-    float:left;
+
+#projecttabs li:hover{
+    background-color: #1879d8;
 }
+
+#projecttabs a:visited{
+    text-decoration: none;
+    color: black;
+}
+
+#content{
+    max-width: 600px;
+    padding: 20px;
+    float: left;
+}
+
+#content a:link {
+    color: #104E8B;
+}
+
 #adminsidebar{
     display:inline;
     float:right;
@@ -55,11 +93,21 @@ text-align:center;
     width:160px;
     height:300px;
     margin:5px;
-
 }
-#adminsidebar li{
 
+#adminsidebar a:link {
+    color: #104E8B;
 }
+
+#adminsidebar a:visited {
+    color: #104E8B;
+}
+
+#adminsidebar a:hover {
+    color: #104E8B;
+    font-size:100%;
+}
+
 #projectForm{
     display: inline-block;
     float: left;
@@ -78,10 +126,10 @@ tr.odd {
     background-color: #c1cdc1;
 }
 tr.even{
-
     background-color: #FFFFFF;
 }
 div.flash {
+    font-family: Arial, Verdana;
     font-weight: bold;
     display: none;
     position: fixed;
@@ -101,9 +149,8 @@ div.flash {
     -webkit-border-radius: 5px;
     z-index: 2;
 }
-html{
-    height:100%;
+
+a:link {
+    text-decoration: none;
+    color: black;
 }
-a:link {color:#104E8B;}
-a:visited {color:#104E8B;}
-a:hover {color:#104E8B;font-size:105%;}

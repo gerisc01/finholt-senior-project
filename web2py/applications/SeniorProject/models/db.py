@@ -58,7 +58,8 @@ db.define_table(
           writable=False, readable=False, default=''),
     Field('registration_id', length=512,                 # required
           writable=False, readable=False, default=''),
-    Field('role', length=512, label="Role"))
+    Field('role', length=512, label="Role"),
+    Field('projects','list:integer',writable=False,readable=False))
 
 custom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table
 custom_auth_table.first_name.requires = \
@@ -112,24 +113,27 @@ use_janrain(auth,filename='private/janrain.key')
 ## >>> for row in rows: print row.id, row.myfield
 #########################################################################
 
+uploadTypes = '(pdf|txt|doc|docx)'
+photoTypes = '(jpeg|png)'
+
 db.define_table("Project", Field('name','string'), Field('openDate','date'), Field('closedDate','date'), Field('projNum', 'integer'), Field('archived','boolean',readable=False, writable=False, default=False))
 
 db.define_table("ProjectUser", Field('userRole','string'), Field('projectId','string'))
 
-#db.define_table("User", Field('name','string'), Field('role','string'))          More stuff? Taken care of already?
+db.define_table("NewsFeed", Field('projectNum','string'), Field('type','string'), Field('created_on','datetime'), Field('description','string'), Field('creator','string'))
 
-db.define_table("CCD", Field('ccdNum','string'), Field('projectNum','string'), Field('file','upload'))
+db.define_table("CCD", Field('ccdNum','string'), Field('projectNum','string'), Field('file','upload',requires=IS_UPLOAD_FILENAME(extension=uploadTypes)))
 
-db.define_table("Submittal", Field('statusFlag','string'), Field('projectNum','string'), Field('assignedTo','string'), Field('submittal','upload'))
+db.define_table("Submittal", Field('statusFlag','string'), Field('projectNum','string'), Field('assignedTo','string'), Field('submittal','upload',requires=IS_UPLOAD_FILENAME(extension=uploadTypes)), Field('subType','string'), Field('sectNum','integer'))
 
-db.define_table("RFI", Field('rfiNum','string'), Field('requestBy','string'), Field('dateSent','date'), Field('reqRefTo','string'), Field('dateRec','date'), Field('drawingNum','integer'), Field('detailNum','integer'), Field('specSection','integer'), Field('sheetName','string'), Field('grids','string'), Field('sectionPage','integer'), Field('description','text'), Field('suggestion','text'), Field('reply','text'), Field('responseBy','string'), Field('responseDate','date'), Field('statusFlag','string'),Field('projectNum','string'))
+db.define_table("RFI", Field('rfiNum','string'), Field('requestBy','string'), Field('dateSent','date'), Field('reqRefTo','string'), Field('drawingNum','integer'), Field('detailNum','integer'), Field('specSection','integer'), Field('sheetName','string'), Field('grids','string'), Field('sectionPage','integer'), Field('description','text'), Field('suggestion','text'), Field('reply','text'), Field('responseBy','date'), Field('responseDate','date'), Field('statusFlag','string'),Field('projectNum','string'), Field('projectName','string'), Field('owner','string'))
 
-db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','string'), Field('projectNum','string'), Field('subject','text'), Field('propDate','date'), Field('sentTo','string'), Field('cc','string'), Field('description','text'))
+db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','string'), Field('projectNum','string'), Field('subject','text'), Field('propDate','date'), Field('sentTo','string'), Field('cc','string'), Field('description','text'), Field('statusFlag','string'),Field('creator','integer'))
 
-db.define_table("Proposal", Field('reqNum','integer'), Field('propDate','date'), Field('file','upload'),Field('projectNum','string'))
+db.define_table("Proposal", Field('propNum','integer'), Field('propReqRef','integer'), Field('propDate','date'), Field('file','upload',requires=IS_UPLOAD_FILENAME(extension=uploadTypes)),Field('projectNum','string'))
 
-db.define_table("MeetingMinutes", Field('meetDate','date'), Field('file','upload'))
+db.define_table("MeetingMinutes", Field('projectNum','string'), Field('meetDate','date'), Field('file','upload',requires=IS_UPLOAD_FILENAME(extension=uploadTypes)))
 
 db.define_table("PhotoToken", Field('token','string'))
 
-db.define_table("Photos", Field('projectNum','string'), Field('flickrURL','string'), Field('title','string'), Field('description','text'), Field('photo','upload', autodelete=True))
+db.define_table("Photos", Field('projectNum','string'), Field('flickrURL','string'), Field('title','string'), Field('description','text'), Field('photo','upload',autodelete=True,requires=IS_UPLOAD_FILENAME(extension=photoTypes)))

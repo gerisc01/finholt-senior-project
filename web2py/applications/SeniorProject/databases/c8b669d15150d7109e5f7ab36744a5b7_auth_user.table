@@ -103,4 +103,15 @@ I1
 sg7
 S'INTEGER PRIMARY KEY AUTOINCREMENT'
 p35
+ssS'projects'
+p36
+(dp37
+g4
+S'list:integer'
+p38
+sg6
+I11
+sg7
+S'TEXT'
+p39
 ss.

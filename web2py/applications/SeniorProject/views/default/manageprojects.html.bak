@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 <link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
-
+{{include 'web2py_ajax.html'}}
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
 
   <script src="{{=URL('static','js/jquery.js')}}"></script> 
@@ -17,33 +17,22 @@
   <script src="{{=URL('static','js/jquery.datatables.js')}}"></script> 
 <script type="text/javascript">
 $(document).ready(function(){
-
-$("#Project_openDate").datepicker({"dateFormat": "yy-mm-dd"});
-$("#Project_closedDate").datepicker({"dateFormat": "yy-mm-dd"});
-$("#tablearea table").dataTable();
 });
 </script>
 
 </head>
 
 <body>
-
+    <div class="flash">{{=response.flash or ''}}</div>
     {{=header}} 
     
     <div id ="tablearea">
         {{=table}}
     </div>
 
-    <div id="adminsidebar"/>
-    <ul>
-        <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
-        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
-        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
-        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
-    </ul>
-
-    </div>
-    {{=footer}
+    {{include "adminSidebar.html"}}
+    
+    {{=footer}}
 </body>
 
 </html>

@@ -10,7 +10,6 @@
 <script src="{{=URL('static','js/modernizr.custom.js')}}"></script>   
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
   <script src="{{=URL('static','js/jquery.js')}}"></script> 
-  <script src="{{=URL('static','js/jquery.ui.accordion.js')}}"></script> 
   <script src="{{=URL('static','js/jquery-ui-1.9.0.custom.min.js')}}"></script> 
   <script src="{{=URL('static','jqTree/tree.jquery.js')}}"></script>
 <script type="text/javascript">
@@ -75,6 +74,17 @@ $('#projectsidebar').bind(
     {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
         {{include "adminSidebar.html"}}
     {{pass}}
+    <div id="adminsidebar">
+    
+    <ul>
+        <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
+        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
+        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
+        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
+    </ul>
+    
+
+    </div>
 
     {{=footer}}
 </body>

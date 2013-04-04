@@ -1,0 +1,455 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.AttributeError'> 'module' object has no attribute 'pod'"
+p3
+sS'layer'
+p4
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/controllers/default.py'
+p5
+sS'code'
+p6
+S'# -*- coding: utf-8 -*-\n# this file is released under public domain and you can use without limitations\n\n#########################################################################\n## This is a samples controller\n## - index is the default action of any application\n## - user is required for authentication and authorization\n## - download is for downloading files uploaded in the db (does streaming)\n## - call exposes all registered services (none by default)\n#########################################################################\n\n#import oauth\n#import httplib2 \n#import urllib2\nimport flickrapi\nimport appy\n#import ctypes\n\n\n#Flickr API keys\nKEY = \'614fd86a34a00d38293c7e803d14c3ab\'\nSECRET_KEY = \'ad86826c3187eb4d\'\nUSER_ID = \'93142072@N05\'\n\n\nif not db(db.PhotoToken).isempty():\n    tok = (db.PhotoToken(db.PhotoToken.id>0)).token\n    flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY, token = tok)     #create a flickr object\nelse:\n    flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY)\n\nif not db(db.PhotoToken).isempty():\n    # We have a token, but it might not be valid\n    try:\n        flickr.auth_checkToken()\n    except flickrapi.FlickrError:\n        db(db.PhotoToken.id > 0).delete()\nif db(db.PhotoToken).isempty():                #we don\'t have the token yet\n    if request.vars.frob:                      #if the frob is in the request \n        db.PhotoToken[0] = {"token" : flickr.get_token(request.vars.frob)}    #insert a new row into the database with the token\n    else:\n        url = flickr.web_login_url(\'write\')    #get the url to go to in order to authenticate\n        redirect(url)                          #redirect to that website\n\n\n    \nccdForm = SQLFORM(db.CCD, labels={\'ccdNum\':\'CCD #\',\'projectNum\': "Project #"})\n\nrfiForm = SQLFORM(db.RFI, labels={\'rfiNum\':\'RFI #\',\'projectNum\':"Project #", \'requestBy\':\'Request by\', \'dateSent\':\'Date Sent\', \'reqRefTo\':\'Request Referred to\', \'dateRec\':\'Date Received\', \'drawingNum\':\'Drawing #\', \'detailNum\':\'Detail #\', \'specSection\':\'Spec Section #\', \'sheetName\':\'Sheet Name\', \'grids\':\'Grids\', \'sectionPage\':\'Section Page #\', \'description\':\'Description\', \'suggestion\':\'Contractor\\\'s Suggestion\', \'reply\':\'Reply\', \'responseBy\':\'Response by\', \'responseDate\':\'Response Date\'}, fields=[\'rfiNum\',\'projectNum\',\'requestBy\', \'dateSent\', \'reqRefTo\', \'dateRec\', \'drawingNum\', \'detailNum\', \'specSection\', \'sheetName\', \'grids\', \'sectionPage\', \'description\', \'suggestion\', \'reply\', \'responseBy\', \'responseDate\'])\n\nsubmittalForm = SQLFORM(db.Submittal, labels={\'statusFlag\':\'Status Flag\', \'projectNum\':\'Project Number\', \'assignedTo\':\'Assigned to\'})\n\nproposalRequestForm = SQLFORM(db.ProposalRequest, labels={\'reqNum\':\'Request #\', \'amendNum\':\'Amendment #\', \'projectNum\':\'Project #\', \'subject\':\'Subject\', \'propDate\':\'Proposal Date\', \'sentTo\':\'Sent to\', \'cc\':\'CC\', \'description\':\'Description\'})\n\nproposalForm = SQLFORM(db.Proposal, labels={\'reqNum\':\'Request #\', \'projectNum\':\'Project Number\', \'propDate\':\'Proposal Date\'})\n\nmeetingMinutesForm = SQLFORM(db.MeetingMinutes, labels={\'meetDate\':\'Meeting Date\'})\n\nphotoForm = SQLFORM(db.Photos, labels={\'projectNum\':\'Project Number\', \'title\':\'Title\', \'description\':\'Description\', \'photo\':\'Photo\'}, fields = [\'projectNum\',\'title\',\'description\',\'photo\'])\n\n\n\nif auth.user != None:\n    record = auth.user.id     #Gets the info for the current user\n    myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={\'first_name\':\'First Name\', \'last_name\':\'Last Name\', \'email\':\'E-mail\', \'phone\':\'Phone Number\', \'password\':\'New Password\'}, fields = [\'first_name\',\'last_name\',\'email\',\'phone\'],_id="profileForm")\nelse: \n    myProfileForm = SQLFORM(db.auth_user, showid=False, labels={\'first_name\':\'First Name\', \'last_name\':\'Last Name\', \'email\':\'E-mail\', \'phone\':\'Phone Number\', \'password\':\'New Password\'}, fields = [\'first_name\',\'last_name\',\'email\',\'phone\'],_id="profileForm")\n\n\nprojects = db(db.Project.archived == False).select()\n\nheader = DIV(A(IMG(_src=URL(\'static\',\'images/bluebannertext.jpg\')), _href=URL(\'default\',\'index\')), _id="header")\nfooter = DIV(A("Home Page", _href=URL(\'default\',\'index\')), _id="footer")\ncss = "/SeniorProject/static/css/bluestyle.css"\n\ndef uploadPhotoToFlickr(photoForm):\n    #MessageBox = ctypes.windll.user32.MessageBoxA\n    #MessageBox(None, str(photoForm.vars), \'Title\', 0)\n    \n    #Get the info from the submitted photo form\n    photoWeb2pyId = photoForm.vars.id\n    projNum = photoForm.vars.projectNum\n    title = photoForm.vars.title\n    descr = photoForm.vars.description\n    name = "applications/SeniorProject/uploads/" + photoForm.vars.photo\n    \n    #Upload the photo to flickr and get the id of the photo in order to construct the url of the photo\n    idElement = flickr.upload(filename=name, title=title, description=descr)\n    id = idElement.find(\'photoid\').text\n    flickrUrl =  "http://www.flickr.com/photos/"+USER_ID+"/"+str(id)+"/"  \n\n    #Delete the corresponding row in our database (because we don\'t want to store the actual photo here)\n    db(db.Photos.id == photoWeb2pyId).delete()\n    \n    #Create a new row in our database with all the same info as the deleted row, but without the photo file\n    db.Photos.insert(projectNum=projNum, flickrURL=flickrUrl, title=title, description=descr)\n\n#@auth.requires_login()\ndef index():\n    """\n    example action using the internationalization operator T and flash\n    rendered by views/default/index.html or views/generic.html\n    """\n    \n    \n\n    response.flash = "Erik Smellz"\n    return dict(\n                projects=projects,\n                myProfileForm=myProfileForm,\n                header=header,\n                footer=footer,\n                css=css)\n\ndef user():\n    """\n    exposes:\n    http://..../[app]/default/user/login\n    http://..../[app]/default/user/logout\n    http://..../[app]/default/user/register\n    http://..../[app]/default/user/profile\n    http://..../[app]/default/user/retrieve_password\n    http://..../[app]/default/user/change_password\n    use @auth.requires_login()\n        @auth.requires_membership(\'group name\')\n        @auth.requires_permission(\'read\',\'table name\',record_id)\n    to decorate functions that need access control\n    """\n    return dict(form=auth(), header=header, footer=footer, css=css)\n\n\ndef download():\n    """\n    allows downloading of uploaded files\n    http://..../[app]/default/download/[filename]\n    """\n    return response.download(request,db)\n\n\ndef call():\n    """\n    exposes services. for example:\n    http://..../[app]/default/call/jsonrpc\n    decorate with @services.jsonrpc the functions to expose\n    supports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv\n    """\n    return service()\n\n\n#@auth.requires_signature()\ndef data():\n    """\n    http://..../[app]/default/data/tables\n    http://..../[app]/default/data/create/[table]\n    http://..../[app]/default/data/read/[table]/[id]\n    http://..../[app]/default/data/update/[table]/[id]\n    http://..../[app]/default/data/delete/[table]/[id]\n    http://..../[app]/default/data/select/[table]\n    http://..../[app]/default/data/search/[table]\n    but URLs must be signed, i.e. linked with\n      A(\'table\',_href=URL(\'data/tables\',user_signature=True))\n    or with the signed load operator\n      LOAD(\'default\',\'data.load\',args=\'tables\',ajax=True,user_signature=True)\n    """\n    return dict(form=crud(), css=css, footer=footer)\n\n#@auth.requires_membership(\'Admin\')\ndef register():\n    form = SQLFORM(db.auth_user)\n    if form.validate():\n        admin_user = auth.user\n        auth.get_or_create_user(form.vars)\n        auth.add_membership(auth.id_group(role="General"),auth.user_id) \n        auth.user = admin_user\n        redirect(URL(\'default\',\'manageusers\'))\n    return dict(form=form, header=header, footer=footer, css=css)\n    #admin_auth = session.auth\n    #auth.is_logged_in = lambda: False\n    #def post_register(form):\n    #    auth.add_membership(auth.id_group(role="General"),auth.user_id) \n\n     #   session.auth = admin_auth\n     #   auth.user = session.auth.user\n    #auth.settings.register_onaccept = post_register\n    #return dict(form=auth.register())\n\n#@auth.requires_login()\n#@auth.requires_membership(\'Admin\')\ndef changepermissions():\n     rows=db(db.auth_user.id>0).select() \n     #db.auth_user.id.represent=lambda id: DIV(id,SELECT(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role), XML(getOtherRoles(str(db(db.auth_group.id==db(db.auth_membership.user_id==id).select().first().group_id).select().first().role))), _name=\'%i\'%id)) # INPUT (_type=\'checkbox\',_name=\'%i\'%id)) \n     db.auth_user.id.represent=lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name=\'%i\'%id) # INPUT (_type=\'checkbox\',_name=\'%i\'%id)) \n     table=FORM(SQLTABLE(rows, columns=["auth_user.id",\'auth_user.first_name\',\'auth_user.last_name\',\'auth_user.email\'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type=\'submit\')) \n     if table.accepts(request.vars): \n        for item in request.vars.keys():\n            if item.isdigit():\n                if not auth.has_membership(user_id=int(item), role=request.vars[item]):\n                    if auth.has_membership(user_id=int(item), role=getUserRole(int(item))): #in case they are in their individual user group. We shoudl only delete them from the group we are in if they are switching from General to Admin or vice versa.\n                        \n                        auth.del_membership(auth.id_group(role=getUserRole(int(item))),int(item))\n                    auth.add_membership(auth.id_group(role=request.vars[item]),int(item)) \n                    \n\n        redirect(URL(\'default\',\'manageusers\'))\n     return dict(table=table, footer=footer, header=header, css=css)\n\n#@auth.requires_login()\n#@auth.requires_membership(\'Admin\')\ndef deleteusers():\n     rows=db(db.auth_user.id>0).select() \n     db.auth_user.id.represent=lambda id: DIV(id,INPUT (_type=\'checkbox\',_name=\'%i\'%id)) \n     table=FORM(SQLTABLE(rows, columns=["auth_user.id",\'auth_user.first_name\',\'auth_user.last_name\',\'auth_user.email\'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type=\'submit\')) \n     if table.accepts(request.vars): \n        for item in request.vars.keys():\n            if item.isdigit():\n                db(db.auth_user.id == int(item)).delete()\n        redirect(URL(\'default\',\'deleteusers\'))\n            # or so something not sure what you want to do \n     return dict(table=table, footer=footer, header=header,css=css)\n \n#@auth.requires_login()    \n#@auth.requires_membership(\'Admin\')\ndef createproject():\n    form = SQLFORM(db.Project, labels={\'openDate\':\'Open Date\', \'closedDate\':\'Closed Date\', \'projNum\':\'Project Number\'})\n    if form.process().accepted:\n       response.flash = \'form accepted\'\n    elif form.errors:\n       response.flash = \'form has errors\'\n    else:\n       response.flash = \'please fill out the form\'\n    return dict(form=form, footer=footer, header=header, css=css)\n\n#@auth.requires_login()   \n#@auth.requires_membership(\'Admin\')\ndef manageprojects():\n    table = None\n    rows = db(db.Project.archived == False).select()\n    db.Project.id.represent=lambda id: DIV(id,INPUT (_type=\'checkbox\',_name=\'%i\'%id)) \n    #myextracolumns = [{\'label\': \'CCD Thumbnail(for testing)\',\'class\':\'\',\'selected\':False, \'width\':\'\', \'content\': lambda row, rc:     IMG(_width="40",_height="40",_src=URL(\'default\',\'download\',args=row.file))}]\n    table = FORM(SQLTABLE(rows,columns=["Project.id","Project.name","Project.projNum",\'Project.openDate\',"Project.closedDate"],headers={"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}),INPUT(_type=\'submit\'))\n    if table.accepts(request.vars):\n        for pID in request.vars.keys():\n            if pID.isdigit():\n                db(db.Project.id ==int(pID)).update(archived=True)\n        redirect(URL(\'default\',\'manageprojects\'))\n    return dict(table=table, footer=footer, header=header,css=css)\n    \n#@auth.requires_login()\n#@auth.requires_membership(\'Admin\')\n\ndef archiveprojects():\n    table = None\n    rows = db(db.Project.archived == True).select()\n    #myextracolumns = [{\'label\': \'CCD Thumbnail(for testing)\',\'class\':\'\',\'selected\':False, \'width\':\'\', \'content\': lambda row, rc:     IMG(_width="40",_height="40",_src=URL(\'default\',\'download\',args=row.file))}]\n    table = SQLTABLE(rows,columns=["Project.name","Project.projNum",\'Project.openDate\',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})\n    return dict(table=table, footer=footer, header=header, css=css)\n\n\n#@auth.requires_login()\n#@auth.requires_membership(\'Admin\')\n\ndef manageusers():\n    table = None\n    #rows = db().select(db.Users.ALL)\n    #myextracolumns = [{\'label\': \'CCD Thumbnail(for testing)\',\'class\':\'\',\'selected\':False, \'width\':\'\', \'content\': lambda row, rc:     IMG(_width="40",_height="40",_src=URL(\'default\',\'download\',args=row.file))}]\n    #table = SQLTABLE(rows,columns=["Project.name","Project.projNum",\'Project.openDate\',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})\n    return dict(table=table, footer=footer, header=header, css=css)\n    \ndef showform():\n    displayForm = request.vars.displayForm\n    form = None\n    if displayForm == "CCD":\n        form = SQLFORM(db.CCD, labels={\'ccdNum\':\'CCD #\',\'projectNum\': "Project #"})\n    elif displayForm == "RFI":\n        form = SQLFORM(db.RFI, labels={\'rfiNum\':\'RFI #\',\'projectNum\':"Project #", \'requestBy\':\'Request by\', \'dateSent\':\'Date Sent\', \'reqRefTo\':\'Request Referred to\', \'dateRec\':\'Date Received\', \'drawingNum\':\'Drawing #\', \'detailNum\':\'Detail #\', \'specSection\':\'Spec Section #\', \'sheetName\':\'Sheet Name\', \'grids\':\'Grids\', \'sectionPage\':\'Section Page #\', \'description\':\'Description\', \'suggestion\':\'Contractor\\\'s Suggestion\', \'reply\':\'Reply\', \'responseBy\':\'Response by\', \'responseDate\':\'Response Date\'}, fields=[\'rfiNum\',\'projectNum\',\'requestBy\', \'dateSent\', \'reqRefTo\', \'dateRec\', \'drawingNum\', \'detailNum\', \'specSection\', \'sheetName\', \'grids\', \'sectionPage\', \'description\', \'suggestion\', \'reply\', \'responseBy\', \'responseDate\'])\n    elif displayForm == "Submittal":\n        form = SQLFORM(db.Submittal, labels={\'statusFlag\':\'Status Flag\', \'projectNum\':\'Project Number\', \'assignedTo\':\'Assigned to\'})\n    elif displayForm == "ProposalRequest":\n        form = SQLFORM(db.ProposalRequest, labels={\'reqNum\':\'Request #\', \'amendNum\':\'Amendment #\', \'projectNum\':\'Project #\', \'subject\':\'Subject\', \'propDate\':\'Proposal Date\', \'sentTo\':\'Sent to\', \'cc\':\'CC\', \'description\':\'Description\'})\n    elif displayForm == "Proposal":\n        form = SQLFORM(db.Proposal, labels={\'reqNum\':\'Request #\', \'projectNum\':\'Project Number\', \'propDate\':\'Proposal Date\'})\n    elif displayForm == "MeetingMinutes":\n        form = SQLFORM(db.MeetingMinutes, labels={\'meetDate\':\'Meeting Date\'})\n    elif displayForm == "Photo":                         \n        form = SQLFORM(db.Photos, labels={\'projectNum\':\'Project Number\', \'title\':\'Title\', \'description\':\'Description\', \'photo\':\'Photo\'}, fields = [\'projectNum\',\'title\',\'description\',\'photo\'])\n\n    if form != None:\n        if form.process().accepted:\n            response.flash = T(\'form accepted\')\n            if displayForm == "Photo":\n                uploadPhotoToFlickr(form)\n        elif form.errors:\n            response.flash = \'form has errors\'\n        else:\n            response.flash = \'please fill out the form\'\n    return dict(displayForm=displayForm,\n                form=form,\n                myProfileForm=myProfileForm,\n                projects=projects,\n                footer=footer,\n                header=header,\n                css=css)\n\n\n#@auth.requires_login()\ndef formtable():\n    formType = request.vars.formType\n    table = None\n    image = None\n    fullTable = True\n    if formType == "CCD":\n        rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()\n        for row in rows:\n            row.file = str(URL(\'default\',\'download\',args=row.file))[1:]\n        myextracolumns = [{\'label\': \'CCD Thumbnail(for testing)\',\'class\':\'\',\'selected\':False, \'width\':\'\', \'content\': lambda row, rc: IMG(_width="40",_height="40",_src=URL(\'default\',\'download\',args=row.file))}]\n        table = SQLTABLE(rows,columns=["CCD.ccdNum",\'CCD.file\'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"},upload="http://127.0.0.1:8000")\n    \n    elif formType == "RFI":\n        rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()\n        db.RFI.rfiNum.represent=lambda rfiNum: A(str(rfiNum), _href=URL("default","create_odt",args=[int(rfiNum)]),_target="_blank")\n        table = SQLTABLE(rows,_width="800px",       \n            columns=["RFI.rfiNum","RFI.dateSent","RFI.reqRefTo","RFI.dateRec","RFI.responseBy","RFI.responseDate","RFI.statusFlag"],headers=\n            {"RFI.rfiNum":"RFI #","RFI.dateSent":"Date Sent","RFI.reqRefTo":"Request Referred To","RFI.dateRec":"Date Received","RFI.responseDate":"Response Date","RFI.responseBy":"Response By","RFI.statusFlag":"Status Flag"})\n    \n    elif formType == "Submittal":\n        rows = db(db.Submittal.projectNum == str(request.vars.projectNum)).select()\n        for row in rows:\n            row.submittal = str(URL(\'default\',\'download\',args=row.submittal))[1:]\n        table = SQLTABLE(rows, columns=["Submittal.assignedTo","Submittal.statusFlag","Submittal.submittal"],\n         headers={"Submittal.assignedTo":"Assigned To","Submittal.statusFlag":"Status Flag","Submittal.submittal":"Submitted File"},upload="http://127.0.0.1:8000")\n    \n    elif formType == "ProposalRequest":\n        rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()\n        table = SQLTABLE(rows, columns=["ProposalRequest.reqNum","ProposalRequest.amendNum","ProposalRequest.sentTo","ProposalRequest.propDate"],\n         headers={"ProposalRequest.reqNum":"Request Number","ProposalRequest.amendNum":"Amendment Number","ProposalRequest.sentTo":"Sent To","ProposalRequest.propDate":"Proposal Request Date"})\n    \n    elif formType == "Proposal":\n        rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()\n        for row in rows:\n            row.file = str(URL(\'default\',\'download\',args=row.file))[1:]\n        table = SQLTABLE(rows, columns=["Proposal.reqNum","Proposal.propDate","Proposal.file"],\n        headers={"Proposal.reqNum":"Proposal Number","Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"},upload="http://127.0.0.1:8000")\n    \n    elif formType == "MeetingMinutes":\n        rows = db().select(db.MeetingMinutes.ALL)\n        for row in rows:\n            row.file = str(URL(\'default\',\'download\',args=row.file))[1:]\n        table = SQLTABLE(rows, columns=["MeetingMinutes.meetDate","MeetingMinutes.file"],\n        headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"},upload="http://127.0.0.1:8000")\n    \n    elif formType == "Photo":    \n        rows = db(db.Photos.projectNum == str(request.vars.projectNum)).select()\n        db.Photos.flickrURL.represent=lambda flickrURL: A("View Photo", _href=flickrURL, _target="_blank")\n        table = SQLTABLE(rows, columns=["Photos.title","Photos.description","Photos.flickrURL"], headers={"Photos.title":"Title", "Photos.description":"Description","Photos.flickrURL":"Photo"})\n\n    if len(rows)==0:\n        table = "There are no documents uploaded for this project section as of yet."\n        fullTable = False\n\n    return dict(formType=formType,\n                myProfileForm=myProfileForm,\n                projects=projects,\n                table= table,\n                image=image,\n                footer=footer,\n                header=header,\n                css=css,\n                fullTable=fullTable)\n\ndef getOtherRoles(id):\n    if auth.has_membership(user_id=id, role="Admin"):\n        return "General"\n    else:\n        return "Admin"\ndef getUserRole(id):\n    if auth.has_membership(user_id=id, role="Admin"):\n        return "Admin"\n    else:\n        return "General"\n\ndef get_data(row_id):\n    import MySQLdb\n\n    db = MySQLdb.connect(host="10.24.6.23",user="seniorproj",passwd="web2py2012",db="finholt")\n    cur = db.cursor()\n\n    # Getting the rows from the database\n\n    cur.execute("SELECT * FROM RFI WHERE id = %s;",(row_id))\n    columns = cur.description\n    row = cur.fetchall()\n\n    dict = {}\n\n    for i in range(len(columns)):\n        dict[columns[i][0]] = row[0][i]\n\n    return dict\n\ndef create_odt():\n    import sys as s\n    from datetime import datetime\n    appy = local_import(\'appy\')\n \n    dict = get_data("1")\n\n    rfiNumber = dict[\'rfiNum\']\n\n    # Need to add database places for these and then add the dict\n    project = \'Hemodialysis Unit and Clinic Expansion\'\n    owner = \'Winneskiek Medical Center\'\n\n    requestBy = dict[\'requestBy\']\n\n    dtSent = dict[\'dateSent\']\n    DateSent = "%s/%s/%s" % (dtSent.month,dtSent.day,dtSent.year)\n    requestReferredTo = dict[\'reqRefTo\']\n\n    dtRec = dict[\'dateRec\']\n    DateReceived = "%s/%s/%s" % (dtRec.month,dtRec.day,dtRec.year)\n\n    drawingNum = dict[\'drawingNum\']\n\n    detailNum = dict[\'detailNum\']\n\n    specNum = dict[\'specSection\']\n    sheetName = dict[\'sheetName\']\n\n    grids = dict[\'grids\']\n    sectionPage = dict[\'sectionPage\']\n\n    rfiDescription = dict[\'description\']\n\n    contractorSuggestion = dict[\'suggestion\']\n\n    reply = dict[\'reply\']\n\n    responseBy = dict[\'responseBy\']\n\n    dtResp = dict[\'responseDate\']\n    responseDate = "%s/%s/%s" % (dtResp.month,dtResp.day,dtResp.year)\n\n    import sys as s\n    #print s.modules.keys()\n\n    print dir(appy.pod.renderer)\n    \n    renderer = appy.appy.pod.renderer.Renderer(\'rfiTemplate.odt\', globals(), \'result.odt\')\n    renderer.run()\n\nresponse._vars=response._caller(create_odt)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+S'exception'
+p10
+(dp11
+S'__hash__'
+p12
+S"<method-wrapper '__hash__' of exceptions.AttributeError object>"
+p13
+sS'__setattr__'
+p14
+S"<method-wrapper '__setattr__' of exceptions.AttributeError object>"
+p15
+sS'__reduce_ex__'
+p16
+S'<built-in method __reduce_ex__ of exceptions.AttributeError object>'
+p17
+sS'__getslice__'
+p18
+S"<method-wrapper '__getslice__' of exceptions.AttributeError object>"
+p19
+sS'__getitem__'
+p20
+S"<method-wrapper '__getitem__' of exceptions.AttributeError object>"
+p21
+sS'__setstate__'
+p22
+S'<built-in method __setstate__ of exceptions.AttributeError object>'
+p23
+sS'__reduce__'
+p24
+S'<built-in method __reduce__ of exceptions.AttributeError object>'
+p25
+sS'__str__'
+p26
+S"<method-wrapper '__str__' of exceptions.AttributeError object>"
+p27
+sS'__format__'
+p28
+S'<built-in method __format__ of exceptions.AttributeError object>'
+p29
+sS'__getattribute__'
+p30
+S"<method-wrapper '__getattribute__' of exceptions.AttributeError object>"
+p31
+sS'__class__'
+p32
+S"<type 'exceptions.AttributeError'>"
+p33
+sS'__unicode__'
+p34
+S'<built-in method __unicode__ of exceptions.AttributeError object>'
+p35
+sS'__delattr__'
+p36
+S"<method-wrapper '__delattr__' of exceptions.AttributeError object>"
+p37
+sS'__subclasshook__'
+p38
+S'<built-in method __subclasshook__ of type object>'
+p39
+sS'__repr__'
+p40
+S"<method-wrapper '__repr__' of exceptions.AttributeError object>"
+p41
+sS'args'
+p42
+S'("\'module\' object has no attribute \'pod\'",)'
+p43
+sS'__dict__'
+p44
+S'{}'
+p45
+sS'__sizeof__'
+p46
+S'<built-in method __sizeof__ of exceptions.AttributeError object>'
+p47
+sS'__doc__'
+p48
+S"'Attribute not found.'"
+p49
+sS'__init__'
+p50
+S"<method-wrapper '__init__' of exceptions.AttributeError object>"
+p51
+sS'__new__'
+p52
+S'<built-in method __new__ of type object>'
+p53
+ssS'evalue'
+p54
+S"'module' object has no attribute 'pod'"
+p55
+sS'request'
+p56
+cgluon.html
+XML_unpickle
+p57
+(S's\xfd\\\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top">ajax</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">application</td><td valign="top">:</td><td><div>SeniorProject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">args</td><td valign="top">:</td><td><div><table><tr><td><div>1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">body</td><td valign="top">:</td><td><div>&lt;cStringIO.StringO object at 0x21ad3dc0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cid</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">client</td><td valign="top">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">controller</td><td valign="top">:</td><td><div>default</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cookies</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">session_id_admin</td><td valign="top">:</td><td><div>127.0.0.1-76d98328-73af-4fe0-8eec-d2ae3a8fd211<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id_seniorproject</td><td valign="top">:</td><td><div>127.0.0.1-49cd90d3-fc76-4cd6-a57f-b43c17ef8687<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id_welcome</td><td valign="top">:</td><td><div>127.0.0.1-42b10924-5e99-4c48-aa28-b411787fdd38<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">env</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">app_folders</td><td valign="top">:</td><td><div>set([&#x27;/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">applications_parent</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">db_sessions</td><td valign="top">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">debugging</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">document_root</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/static/php/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">gateway_interface</td><td valign="top">:</td><td><div>CGI/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">gluon_parent</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept</td><td valign="top">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept_charset</td><td valign="top">:</td><td><div>ISO-8859-1,utf-8;q=0.7,*;q=0.3</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept_encoding</td><td valign="top">:</td><td><div>gzip,deflate,sdch</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept_language</td><td valign="top">:</td><td><div>en-US,en;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_connection</td><td valign="top">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_cookie</td><td valign="top">:</td><td><div>session_id_welcome=127.0.0.1-42b10924-5e99-4c48-aa28-b411787fdd38; session_id_admin=127.0.0.1-76d98328-73af-4fe0-8eec-d2ae3a8fd211; session_id_seniorproject=127.0.0.1-49cd90d3-fc76-4cd6-a57f-b43c17ef8687</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_host</td><td valign="top">:</td><td><div>localhost</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_referer</td><td valign="top">:</td><td><div>http://localhost/SeniorProject/default/formtable?formType=RFI&amp;projectNum=67</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_user_agent</td><td valign="top">:</td><td><div>Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Ubuntu Chromium/24.0.1312.56 Chrome/24.0.1312.56 Safari/537.17</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_jython</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_pypy</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_application_group</td><td valign="top">:</td><td><div>www.finholt.dev|</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_callable_object</td><td valign="top">:</td><td><div>application</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_handler_script</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_input_chunked</td><td valign="top">:</td><td><div>0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_listener_host</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_listener_port</td><td valign="top">:</td><td><div>80</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_process_group</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_request_handler</td><td valign="top">:</td><td><div>wsgi-script</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_script_reloading</td><td valign="top">:</td><td><div>1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_version</td><td valign="top">:</td><td><div><table><tr><td><div>3</div></td></tr><tr><td><div>3</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path_info</td><td valign="top">:</td><td><div>/SeniorProject/default/create_odt/1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path_translated</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/wsgihandler.py/SeniorProject/default/create_odt/1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">query_string</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">remote_addr</td><td valign="top">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">remote_port</td><td valign="top">:</td><td><div>60379</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">request_method</td><td valign="top">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">request_uri</td><td valign="top">:</td><td><div>/SeniorProject/default/create_odt/1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">script_filename</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/wsgihandler.py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">script_name</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_addr</td><td valign="top">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_admin</td><td valign="top">:</td><td><div>[no address given]</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_name</td><td valign="top">:</td><td><div>localhost</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_port</td><td valign="top">:</td><td><div>80</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_protocol</td><td valign="top">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_signature</td><td valign="top">:</td><td><div>&lt;address&gt;Apache/2.2.14 (Ubuntu) Server at localhost Port 80&lt;/address&gt;\n</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_software</td><td valign="top">:</td><td><div>Apache/2.2.14 (Ubuntu)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_path</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_version</td><td valign="top">:</td><td><div><table><tr><td><div>2</div></td></tr><tr><td><div>4</div></td></tr><tr><td><div>2</div></td></tr><tr><td><div>stable</div></td></tr><tr><td><div>datetime.datetime(2013, 3, 4, 3, 26, 21)</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_errors</td><td valign="top">:</td><td><div>&lt;mod_wsgi.Log object at 0x21b825e8&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_file_wrapper</td><td valign="top">:</td><td><div>&lt;built-in method file_wrapper of mod_wsgi.Adapter object at 0x2144cf08&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_input</td><td valign="top">:</td><td><div>&lt;mod_wsgi.Input object at 0x214de278&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_multiprocess</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_multithread</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_run_once</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_url_scheme</td><td valign="top">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_version</td><td valign="top">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>1</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">extension</td><td valign="top">:</td><td><div>html</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">folder</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">function</td><td valign="top">:</td><td><div>create_odt</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">get_vars</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">global_settings</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">app_folders</td><td valign="top">:</td><td><div>set([&#x27;/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">applications_parent</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">db_sessions</td><td valign="top">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">debugging</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">gluon_parent</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_jython</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_pypy</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">local_hosts</td><td valign="top">:</td><td><div><table><tr><td><div>WS4234</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>localhost</div></td></tr><tr><td><div>127.0.1.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_version</td><td valign="top">:</td><td><div><table><tr><td><div>2</div></td></tr><tr><td><div>4</div></td></tr><tr><td><div>2</div></td></tr><tr><td><div>stable</div></td></tr><tr><td><div>datetime.datetime(2013, 3, 4, 3, 26, 21)</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_https</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_local</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_restful</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">now</td><td valign="top">:</td><td><div>datetime.datetime(2013, 3, 7, 15, 34, 59, 439311)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">post_vars</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">raw_args</td><td valign="top">:</td><td><div>1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">raw_extension</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">url</td><td valign="top">:</td><td><div>/SeniorProject/default/create_odt/1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">utcnow</td><td valign="top">:</td><td><div>datetime.datetime(2013, 3, 7, 21, 34, 59, 439326)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">uuid</td><td valign="top">:</td><td><div>SeniorProject/127.0.0.1.2013-03-07.15-34-59.7159236e-727a-4f5f-b3be-53eea8544010</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">vars</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">environ</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">DOCUMENT_ROOT</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/static/php/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">GATEWAY_INTERFACE</td><td valign="top">:</td><td><div>CGI/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT</td><td valign="top">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT_CHARSET</td><td valign="top">:</td><td><div>ISO-8859-1,utf-8;q=0.7,*;q=0.3</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT_ENCODING</td><td valign="top">:</td><td><div>gzip,deflate,sdch</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT_LANGUAGE</td><td valign="top">:</td><td><div>en-US,en;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_CONNECTION</td><td valign="top">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_COOKIE</td><td valign="top">:</td><td><div>session_id_welcome=127.0.0.1-42b10924-5e99-4c48-aa28-b411787fdd38; session_id_admin=127.0.0.1-76d98328-73af-4fe0-8eec-d2ae3a8fd211; session_id_seniorproject=127.0.0.1-49cd90d3-fc76-4cd6-a57f-b43c17ef8687</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_HOST</td><td valign="top">:</td><td><div>localhost</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_REFERER</td><td valign="top">:</td><td><div>http://localhost/SeniorProject/default/formtable?formType=RFI&amp;projectNum=67</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_USER_AGENT</td><td valign="top">:</td><td><div>Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Ubuntu Chromium/24.0.1312.56 Chrome/24.0.1312.56 Safari/537.17</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">PATH_INFO</td><td valign="top">:</td><td><div>/SeniorProject/default/create_odt/1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">PATH_TRANSLATED</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/wsgihandler.py/SeniorProject/default/create_odt/1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">QUERY_STRING</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REMOTE_ADDR</td><td valign="top">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REMOTE_PORT</td><td valign="top">:</td><td><div>60379</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REQUEST_METHOD</td><td valign="top">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REQUEST_URI</td><td valign="top">:</td><td><div>/SeniorProject/default/create_odt/1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SCRIPT_FILENAME</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/wsgihandler.py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SCRIPT_NAME</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_ADDR</td><td valign="top">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_ADMIN</td><td valign="top">:</td><td><div>[no address given]</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_NAME</td><td valign="top">:</td><td><div>localhost</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_PORT</td><td valign="top">:</td><td><div>80</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_PROTOCOL</td><td valign="top">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_SIGNATURE</td><td valign="top">:</td><td><div>&lt;address&gt;Apache/2.2.14 (Ubuntu) Server at localhost Port 80&lt;/address&gt;\n</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_SOFTWARE</td><td valign="top">:</td><td><div>Apache/2.2.14 (Ubuntu)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.application_group</td><td valign="top">:</td><td><div>www.finholt.dev|</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.callable_object</td><td valign="top">:</td><td><div>application</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.handler_script</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.input_chunked</td><td valign="top">:</td><td><div>0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.listener_host</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.listener_port</td><td valign="top">:</td><td><div>80</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.process_group</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.request_handler</td><td valign="top">:</td><td><div>wsgi-script</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.script_reloading</td><td valign="top">:</td><td><div>1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.version</td><td valign="top">:</td><td><div><table><tr><td><div>3</div></td></tr><tr><td><div>3</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.errors</td><td valign="top">:</td><td><div>&lt;mod_wsgi.Log object at 0x21b825e8&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.file_wrapper</td><td valign="top">:</td><td><div>&lt;built-in method file_wrapper of mod_wsgi.Adapter object at 0x2144cf08&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.input</td><td valign="top">:</td><td><div>&lt;cStringIO.StringO object at 0x21ad3dc0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.multiprocess</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.multithread</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.run_once</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.url_scheme</td><td valign="top">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.version</td><td valign="top">:</td><td><div>1</div></td></tr></table></div></td></tr></table></div></td></tr></table></div>'
+tRp58
+sS'frames'
+p59
+(lp60
+(dp61
+S'file'
+p62
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/restricted.py'
+p63
+sS'dump'
+p64
+(dp65
+S'environment'
+p66
+S"{'A': <class 'gluon.html.A'>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, 'CAT': <class 'gluon.html.CAT'>, 'CENTER': <class 'gluon.html.CENTER'>, 'CLEANUP': <class 'gluon.validators.CLEANUP'>, ...}"
+p67
+sS'ccode'
+p68
+S'<code object <module> at 0x21fc40f8, file "/home...s/SeniorProject/controllers/default.py", line 15>'
+p69
+ssS'lnum'
+p70
+I212
+sS'lines'
+p71
+(dp72
+I207
+S'    try:'
+p73
+sI208
+S'        if isinstance(code, types.CodeType):'
+p74
+sI209
+S'            ccode = code'
+p75
+sI210
+S'        else:'
+p76
+sI211
+S'            ccode = compile2(code, layer)'
+p77
+sI212
+S'        exec ccode in environment'
+p78
+sI213
+S'    except HTTP:'
+p79
+sI214
+S'        raise'
+p80
+sI215
+S'    except RestrictedError:'
+p81
+sI216
+S'        # do not encapsulate (obfuscate) the original RestrictedError'
+p82
+ssS'call'
+p83
+S"(code='# -*- coding: utf-8 -*-\\n# this file is released ...n()\\n\\nresponse._vars=response._caller(create_odt)\\n', environment={'A': <class 'gluon.html.A'>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, 'CAT': <class 'gluon.html.CAT'>, 'CENTER': <class 'gluon.html.CENTER'>, 'CLEANUP': <class 'gluon.validators.CLEANUP'>, ...}, layer='/home/seniorproj/Documents/finholt-senior-projec...applications/SeniorProject/controllers/default.py')"
+p84
+sS'func'
+p85
+S'restricted'
+p86
+sa(dp87
+g62
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/controllers/default.py'
+p88
+sg64
+(dp89
+sg70
+I451
+sg71
+(dp90
+I448
+S"    renderer = appy.appy.pod.renderer.Renderer('rfiTemplate.odt', globals(), 'result.odt')"
+p91
+sI449
+S'    renderer.run()'
+p92
+sI440
+S"    dtResp = dict['responseDate']"
+p93
+sI441
+S'    responseDate = "%s/%s/%s" % (dtResp.month,dtResp.day,dtResp.year)'
+p94
+sI442
+S''
+sI443
+S'    import sys as s'
+p95
+sI444
+S'    #print s.modules.keys()'
+p96
+sI445
+S''
+sI446
+S'    print dir(appy.pod.renderer)'
+p97
+sI447
+S''
+ssg83
+S'()'
+p98
+sg85
+S'<module>'
+p99
+sa(dp100
+g62
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/globals.py'
+p101
+sg64
+(dp102
+S'self'
+p103
+S'undefined'
+p104
+sS'f'
+S'<function create_odt>'
+p105
+ssg70
+I193
+sg71
+(dp106
+I192
+S'        self._vars = None'
+p107
+sI193
+S'        self._caller = lambda f: f()'
+p108
+sI194
+S'        self._view_environment = None'
+p109
+sI195
+S'        self._custom_commit = None'
+p110
+sI196
+S'        self._custom_rollback = None'
+p111
+sI197
+S''
+sI188
+S'        self.menu = []             # used by the default view layout'
+p112
+sI189
+S'        self.files = []            # used by web2py_ajax.html'
+p113
+sI190
+S'        self.generic_patterns = []  # patterns to allow generic views'
+p114
+sI191
+S"        self.delimiters = ('{{', '}}')"
+p115
+ssg83
+S'(f=<function create_odt>)'
+p116
+sg85
+S'<lambda>'
+p117
+sa(dp118
+g62
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/controllers/default.py'
+p119
+sg64
+(dp120
+S'builtindir'
+p121
+S'<built-in function dir>'
+p122
+sS'appy.pod'
+p123
+g104
+sS'appy'
+p124
+S"<module 'applications.SeniorProject.modules.appy...ications/SeniorProject/modules/appy/__init__.py'>"
+p125
+ssg70
+I446
+sg71
+(dp126
+I448
+S"    renderer = appy.appy.pod.renderer.Renderer('rfiTemplate.odt', globals(), 'result.odt')"
+p127
+sI449
+S'    renderer.run()'
+p128
+sI440
+S"    dtResp = dict['responseDate']"
+p129
+sI441
+S'    responseDate = "%s/%s/%s" % (dtResp.month,dtResp.day,dtResp.year)'
+p130
+sI442
+S''
+sI443
+S'    import sys as s'
+p131
+sI444
+S'    #print s.modules.keys()'
+p132
+sI445
+S''
+sI446
+S'    print dir(appy.pod.renderer)'
+p133
+sI447
+S''
+ssg83
+S'()'
+p134
+sg85
+S'create_odt'
+p135
+sasS'pyver'
+p136
+S'Python 2.7.2: /usr/local/bin/python (prefix: /usr/local)'
+p137
+sS'session'
+p138
+g57
+(S's\x1a\x00\x00\x00<div><table></table></div>'
+tRp139
+sS'etype'
+p140
+S"<type 'exceptions.AttributeError'>"
+p141
+sS'date'
+p142
+S'Thu Mar  7 15:34:59 2013'
+p143
+sS'response'
+p144
+g57
+(S's\xb9+\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top">body</td><td valign="top">:</td><td><div>&lt;cStringIO.StringO object at 0x21d9de40&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cookies</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">session_id_seniorproject</td><td valign="top">:</td><td><div>127.0.0.1-49cd90d3-fc76-4cd6-a57f-b43c17ef8687<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div>/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">delimiters</td><td valign="top">:</td><td><div><table><tr><td><div>{{</div></td></tr><tr><td><div>}}</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">files</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">flash</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">generic_patterns</td><td valign="top">:</td><td><div><table><tr><td><div>*</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">google_analytics_id</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">headers</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">X-Powered-By</td><td valign="top">:</td><td><div>web2py</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">menu</td><td valign="top">:</td><td><div><table><tr><td><div><table><tr><td><div>Home</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/SeniorProject/default/index</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div><span style="color:yellow">web2py</span></div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>None</div></td></tr><tr><td><div><table><tr><td><div><table><tr><td><div>My Sites</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/site</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>This App</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/design/SeniorProject</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Controller&#x27;&gt;, False, &#x27;/admin/default/edit/SeniorProject/controllers/default.py&#x27;), (&lt;lazyT &#x27;View&#x27;&gt;, False, &#x27;/admin/default/edit/SeniorProject/views/default/create_odt.html&#x27;), (&lt;lazyT &#x27;Layout&#x27;&gt;, False, &#x27;/admin/default/edit/SeniorProject/views/layout.html&#x27;), (&lt;lazyT &#x27;Stylesheet&#x27;&gt;, False, &#x27;/admin/default/edit/SeniorProject/static/css/web2py.css&#x27;), (&lt;lazyT &#x27;DB Model&#x27;&gt;, False, &#x27;/admin/default/edit/SeniorProject/models/db.py&#x27;), (&lt;lazyT &#x27;Menu Model&#x27;&gt;, False, &#x27;/admin/default/edit/SeniorProject/models/menu.py&#x27;), (&lt;lazyT &#x27;Database&#x27;&gt;, False, &#x27;/SeniorProject/appadmin/index&#x27;), (&lt;lazyT &#x27;Errors&#x27;&gt;, False, &#x27;/admin/default/errors/SeniorProject&#x27;), (&lt;lazyT &#x27;About&#x27;&gt;, False, &#x27;/admin/default/about/SeniorProject&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>web2py.com</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Download&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/download&#x27;), (&lt;lazyT &#x27;Support&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/support&#x27;), (&lt;lazyT &#x27;Demo&#x27;&gt;, False, &#x27;http://web2py.com/demo_admin&#x27;), (&lt;lazyT &#x27;Quick Examples&#x27;&gt;, False, &#x27;http://web2py.com/examples/default/examples&#x27;), (&lt;lazyT &#x27;FAQ&#x27;&gt;, False, &#x27;http://web2py.com/AlterEgo&#x27;), (&lt;lazyT &#x27;Videos&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/videos/&#x27;), (&lt;lazyT &#x27;Free Applications&#x27;&gt;, False, &#x27;http://web2py.com/appliances&#x27;), (&lt;lazyT &#x27;Plugins&#x27;&gt;, False, &#x27;http://web2py.com/plugins&#x27;), (&lt;lazyT &#x27;Layouts&#x27;&gt;, False, &#x27;http://web2py.com/layouts&#x27;), (&lt;lazyT &#x27;Recipes&#x27;&gt;, False, &#x27;http://web2pyslices.com/&#x27;), (&lt;lazyT &#x27;Semantic&#x27;&gt;, False, &#x27;http://web2py.com/semantic&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Documentation</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Preface&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/00&#x27;), (&lt;lazyT &#x27;Introduction&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/01&#x27;), (&lt;lazyT &#x27;Python&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/02&#x27;), (&lt;lazyT &#x27;Overview&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/03&#x27;), (&lt;lazyT &#x27;The Core&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/04&#x27;), (&lt;lazyT &#x27;The Views&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/05&#x27;), (&lt;lazyT &#x27;Database&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/06&#x27;), (&lt;lazyT &#x27;Forms and Validators&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/07&#x27;), (&lt;lazyT &#x27;Email and SMS&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/08&#x27;), (&lt;lazyT &#x27;Access Control&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/09&#x27;), (&lt;lazyT &#x27;Services&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/10&#x27;), (&lt;lazyT &#x27;Ajax Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/11&#x27;), (&lt;lazyT &#x27;Components and Plugins&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/12&#x27;), (&lt;lazyT &#x27;Deployment Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/13&#x27;), (&lt;lazyT &#x27;Other Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/14&#x27;), (&lt;lazyT &#x27;Buy this book&#x27;&gt;, False, &#x27;http://stores.lulu.com/web2py&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Community</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>None</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Groups&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/usergroups&#x27;), (&lt;lazyT &#x27;Twitter&#x27;&gt;, False, &#x27;http://twitter.com/web2py&#x27;), (&lt;lazyT &#x27;Live Chat&#x27;&gt;, False, &#x27;http://webchat.freenode.net/?channels=web2py&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Plugins</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>None</div></td></tr><tr><td><div>[(&#x27;plugin_wiki&#x27;, False, &#x27;http://web2py.com/examples/default/download&#x27;), (&lt;lazyT &#x27;Other Plugins&#x27;&gt;, False, &#x27;http://web2py.com/plugins&#x27;), (&lt;lazyT &#x27;Layout Plugins&#x27;&gt;, False, &#x27;http://web2py.com/layouts&#x27;)]</div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">meta</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">author</td><td valign="top">:</td><td><div>Your Name &lt;you@example.com&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">copyright</td><td valign="top">:</td><td><div>Copyright 2011</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">description</td><td valign="top">:</td><td><div>a cool new app</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">generator</td><td valign="top">:</td><td><div>Web2py Web Framework</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">keywords</td><td valign="top">:</td><td><div>web2py, python, framework</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">models_to_run</td><td valign="top">:</td><td><div><table><tr><td><div>^\\w+\\.py$</div></td></tr><tr><td><div>^default/\\w+\\.py$</div></td></tr><tr><td><div>^default/create_odt/\\w+\\.py$</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">postprocessing</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_cookie_expires</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_data_name</td><td valign="top">:</td><td><div>session_data_seniorproject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_file</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_filename</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/sessions/127.0.0.1-49cd90d3-fc76-4cd6-a57f-b43c17ef8687</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id</td><td valign="top">:</td><td><div>127.0.0.1-49cd90d3-fc76-4cd6-a57f-b43c17ef8687</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id_name</td><td valign="top">:</td><td><div>session_id_seniorproject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_new</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_storage_type</td><td valign="top">:</td><td><div>file</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">status</td><td valign="top">:</td><td><div>200</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">subtitle</td><td valign="top">:</td><td><div>customize me!</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">title</td><td valign="top">:</td><td><div>Seniorproject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">view</td><td valign="top">:</td><td><div>default/create_odt.html</div></td></tr></table></div>'
+tRp145
+sS'locals'
+p146
+(dp147
+S'grids'
+p148
+S"'long'"
+p149
+sS'datetime'
+p150
+S"<type 'datetime.datetime'>"
+p151
+sS'contractorSuggestion'
+p152
+S"'Sample Contractor Suggestion'"
+p153
+sS'requestReferredTo'
+p154
+S"'Chris Colantti, Horty Elving'"
+p155
+sS'drawingNum'
+p156
+S'123L'
+p157
+sS'dtResp'
+p158
+S'datetime.date(2013, 2, 21)'
+p159
+sS'dtSent'
+p160
+S'datetime.date(2013, 2, 12)'
+p161
+sS'appy'
+p162
+S"<module 'applications.SeniorProject.modules.appy...ications/SeniorProject/modules/appy/__init__.py'>"
+p163
+sS'detailNum'
+p164
+S'1234L'
+p165
+sS'owner'
+p166
+S"'Winneskiek Medical Center'"
+p167
+sS'sheetName'
+p168
+S"'H-2'"
+p169
+sS'dict'
+p170
+S'{\'dateRec\': datetime.date(2013, 2, 15), \'dateSent\': datetime.date(2013, 2, 12), \'description\': \'This is a sample description\', \'detailNum\': 1234L, \'drawingNum\': 123L, \'grids\': \'long\', \'id\': 1L, \'projectNum\': \'67\', \'reply\': "Someone\'s reply", \'reqRefTo\': \'Chris Colantti, Horty Elving\', ...}'
+p171
+sS'rfiNumber'
+p172
+S"'23'"
+p173
+sS'reply'
+p174
+S'"Someone\'s reply"'
+p175
+sS'responseBy'
+p176
+S"'Scott Gerike'"
+p177
+sS'sectionPage'
+p178
+S'4321L'
+p179
+sS'rfiDescription'
+p180
+S"'This is a sample description'"
+p181
+sS'specNum'
+p182
+S'15890L'
+p183
+sS'responseDate'
+p184
+S"'2/21/2013'"
+p185
+sS'DateSent'
+p186
+S"'2/12/2013'"
+p187
+sS'dtRec'
+p188
+S'datetime.date(2013, 2, 15)'
+p189
+sS'project'
+p190
+S"'Hemodialysis Unit and Clinic Expansion'"
+p191
+sS'DateReceived'
+p192
+S"'2/15/2013'"
+p193
+sS's'
+S"<module 'sys' (built-in)>"
+p194
+sS'requestBy'
+p195
+S"'Finholt Construction, Inc.'"
+p196
+sssS'traceback'
+p197
+S'Traceback (most recent call last):\n  File "/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/restricted.py", line 212, in restricted\n    exec ccode in environment\n  File "/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/controllers/default.py", line 451, in <module>\n  File "/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/globals.py", line 193, in <lambda>\n    self._caller = lambda f: f()\n  File "/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/controllers/default.py", line 446, in create_odt\n    print dir(appy.pod.renderer)\nAttributeError: \'module\' object has no attribute \'pod\'\n'
+p198
+s.

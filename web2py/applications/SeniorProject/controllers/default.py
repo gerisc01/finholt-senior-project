@@ -13,6 +13,7 @@
 #import httplib2 
 #import urllib2
 import flickrapi
+import appy
 #import ctypes
 
 
@@ -93,7 +94,6 @@ def uploadPhotoToFlickr(photoForm):
     
     #Create a new row in our database with all the same info as the deleted row, but without the photo file
     db.Photos.insert(projectNum=projNum, flickrURL=flickrUrl, title=title, description=descr)
-
 
 @auth.requires_login()
 def index():
@@ -265,7 +265,7 @@ def manageusers():
     #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 'content': lambda row, rc:     IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
     #table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"})
     return dict(table=table, footer=footer, header=header, css=css)
-
+    
 def showform():
     displayForm = request.vars.displayForm
     form = None
@@ -301,6 +301,7 @@ def showform():
                 header=header,
                 css=css)
 
+
 @auth.requires_login()
 def formtable():
     formType = request.vars.formType
@@ -316,6 +317,7 @@ def formtable():
     
     elif formType == "RFI":
         rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
+        db.RFI.rfiNum.represent=lambda rfiNum: A(str(rfiNum), _href=URL("default","create_odt",args=[int(rfiNum)]),_target="_blank")
         table = SQLTABLE(rows,_width="800px",       
             columns=["RFI.rfiNum","RFI.dateSent","RFI.reqRefTo","RFI.dateRec","RFI.responseBy","RFI.responseDate","RFI.statusFlag"],headers=
             {"RFI.rfiNum":"RFI #","RFI.dateSent":"Date Sent","RFI.reqRefTo":"Request Referred To","RFI.dateRec":"Date Received","RFI.responseDate":"Response Date","RFI.responseBy":"Response By","RFI.statusFlag":"Status Flag"})
@@ -375,3 +377,96 @@ def getUserRole(id):
         return "Admin"
     else:
         return "General"
+
+def get_data(row_id):
+    import MySQLdb
+
+    db = MySQLdb.connect(host="10.24.6.23",user="seniorproj",passwd="web2py2012",db="finholt")
+    cur = db.cursor()
+
+    # Getting the rows from the database
+
+    cur.execute("SELECT * FROM RFI WHERE rfiNum = %s;",(row_id))
+    columns = cur.description
+    row = cur.fetchall()
+
+    dict = {}
+
+    for i in range(len(columns)):
+        dict[columns[i][0]] = row[0][i]
+
+    return dict
+
+def create_odt():
+    import subprocess
+    import os
+    from datetime import datetime
+    import time
+    appy = local_import('appy.pod.renderer')
+
+    phpscript = os.path.join(request.folder, 'static', 'php', 'result.odt')
+    subprocess.Popen("rm " + phpscript, shell=True)
+
+    # giving the program enough time to delete the old result.odt
+    time.sleep(1)
+ 
+    dictionary = get_data(request.args[0])
+
+    appyDict = {}
+    appyDict['rfiNumber'] = dictionary['rfiNum']
+
+    # Need to add database places for these and then add the dictionary
+    appyDict['project'] = 'Hemodialysis Unit and Clinic Expansion'
+    appyDict['owner'] = 'Winneskiek Medical Center'
+
+    appyDict['requestBy'] = dictionary['requestBy']
+
+    dtSent = dictionary['dateSent']
+    if dtSent != None:
+        appyDict['DateSent'] = "%s/%s/%s" % (dtSent.month,dtSent.day,dtSent.year)
+    else:
+        appyDict['DateSent'] = "None"
+
+    appyDict['requestReferredTo'] = dictionary['reqRefTo']
+
+    dtRec = dictionary['dateRec']
+    if dtRec != None:
+        appyDict['DateReceived'] = "%s/%s/%s" % (dtRec.month,dtRec.day,dtRec.year)
+    else:
+        appyDict['DateReceived'] = "None"
+
+    appyDict['drawingNum'] = dictionary['drawingNum']
+
+    appyDict['detailNum'] = dictionary['detailNum']
+
+    appyDict['specNum'] = dictionary['specSection']
+    appyDict['sheetName'] = dictionary['sheetName']
+
+    appyDict['grids'] = dictionary['grids']
+    appyDict['sectionPage'] = dictionary['sectionPage']
+
+    appyDict['rfiDescription'] = dictionary['description']
+
+    appyDict['contractorSuggestion'] = dictionary['suggestion']
+
+    appyDict['reply'] = dictionary['reply']
+
+    appyDict['responseBy'] = dictionary['responseBy']
+
+    dtResp = dictionary['responseDate']
+    if dtResp != None:
+        appyDict['responseDate'] = "%s/%s/%s" % (dtResp.month,dtResp.day,dtResp.year)
+    else:
+        appyDict['responseDate']
+
+    myfile = os.path.join(request.folder, 'static','php', 'rfiTemplate.odt')
+    newfile = os.path.join(request.folder, 'static','php', 'result.odt')
+    
+    renderer = appy.Renderer(myfile, appyDict, newfile)
+    renderer.run()
+
+    phpscript = os.path.join(request.folder, 'static', 'php', 'rfi.php')
+    proc = subprocess.Popen("php " + phpscript, shell=True, stdout=subprocess.PIPE)
+    resp = proc.stdout.read()
+
+    return dict(html=HTML('',XML(resp)))

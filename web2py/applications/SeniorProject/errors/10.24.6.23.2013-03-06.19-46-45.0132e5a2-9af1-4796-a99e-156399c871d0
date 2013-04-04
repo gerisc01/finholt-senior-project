@@ -1,0 +1,600 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.IOError'> [Errno 13] Permission denied: '/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/databases/sql.log'"
+p3
+sS'layer'
+p4
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/models/db.py'
+p5
+sS'code'
+p6
+S'# -*- coding: utf-8 -*-\n\n#########################################################################\n## This scaffolding model makes your app work on Google App Engine too\n## File is released under public domain and you can use without limitations\n#########################################################################\n\n## if SSL/HTTPS is properly configured and you want all HTTP requests to\n## be redirected to HTTPS, uncomment the line below:\n# request.requires_https()\n\nif not request.env.web2py_runtime_gae:\n    ## if NOT running on Google App Engine use SQLite or other DB\n    ##db = DAL(\'sqlite://storage.sqlite\')\n    db = DAL(\'mysql://seniorproj:web2py2012@10.24.6.23/finholt\')\nelse:\n    ## connect to Google BigTable (optional \'google:datastore://namespace\')\n    db = DAL(\'google:datastore\')\n    ## store sessions and tickets there\n    session.connect(request, response, db = db)\n    ## or store session in Memcache, Redis, etc.\n    ## from gluon.contrib.memdb import MEMDB\n    ## from google.appengine.api.memcache import Client\n    ## session.connect(request, response, db = MEMDB(Client()))\n\n## by default give a view/generic.extension to all actions from localhost\n## none otherwise. a pattern can be \'controller/function.extension\'\nresponse.generic_patterns = [\'*\'] if request.is_local else []\n## (optional) optimize handling of static files\n# response.optimize_css = \'concat,minify,inline\'\n# response.optimize_js = \'concat,minify,inline\'\n\n#########################################################################\n## Here is sample code if you need for\n## - email capabilities\n## - authentication (registration, login, logout, ... )\n## - authorization (role based authorization)\n## - services (xml, csv, json, xmlrpc, jsonrpc, amf, rss)\n## - old style crud actions\n## (more options discussed in gluon/tools.py)\n#########################################################################\n\nfrom gluon.tools import Auth, Crud, Service, PluginManager, prettydate\nauth = Auth(db, hmac_key=Auth.get_or_create_key())\ncrud, service, plugins = Crud(db), Service(), PluginManager()\n\ndb.define_table(\n    auth.settings.table_user_name,\n    Field(\'first_name\', label=\'First Name\', length=128, default=\'\'),\n    Field(\'last_name\', label=\'Last Name\', length=128, default=\'\'),\n    Field(\'email\', label=\'Email\',length=128, default=\'\', unique=True),\n    Field(\'password\', \'password\', length=512,            \n          readable=False, label=\'Password\'),\n    Field(\'phone\',label="Phone Number"),\n    Field(\'registration_key\', length=512,                # required\n          writable=False, readable=False, default=\'\'),\n    Field(\'reset_password_key\', length=512,              # required\n          writable=False, readable=False, default=\'\'),\n    Field(\'registration_id\', length=512,                 # required\n          writable=False, readable=False, default=\'\'),\n    Field(\'role\', length=512, label="Role"))\n\ncustom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table\ncustom_auth_table.first_name.requires = \\\n  IS_NOT_EMPTY(error_message=auth.messages.is_empty)\ncustom_auth_table.last_name.requires = \\\n  IS_NOT_EMPTY(error_message=auth.messages.is_empty)\ncustom_auth_table.password.requires = [IS_STRONG(), CRYPT()]\ncustom_auth_table.email.requires = [\n  IS_EMAIL(error_message=auth.messages.invalid_email),\n  IS_NOT_IN_DB(db, custom_auth_table.email)]\n\n## create all tables needed by auth if not custom tables\nauth.define_tables()\n\n## configure email\nmail=auth.settings.mailer\nmail.settings.server = \'logging\' or \'smtp.gmail.com:587\'\nmail.settings.sender = \'you@gmail.com\'\nmail.settings.login = \'username:password\'\n\n## configure auth policy\ngeneralAuth = auth.id_group(role="General");\nif auth.id_group(role="General")<=0:\n    generalAuth = auth.add_group(role="General")\nif auth.id_group(role="Admin")<=0:\n    adminAuth = auth.add_group(role="Admin")\nauth.settings.registration_requires_verification = False\nauth.settings.registration_requires_approval = False\nauth.settings.reset_password_requires_verification = True\n##auth.settings.everybody_group_id = 5\n\n## if you need to use OpenID, Facebook, MySpace, Twitter, Linkedin, etc.\n## register with janrain.com, write your domain:api_key in private/janrain.key\nfrom gluon.contrib.login_methods.rpx_account import use_janrain\nuse_janrain(auth,filename=\'private/janrain.key\')\n\n#########################################################################\n## Define your tables below (or better in another model file) for example\n##\n## >>> db.define_table(\'mytable\',Field(\'myfield\',\'string\'))\n##\n## Fields can be \'string\',\'text\',\'password\',\'integer\',\'double\',\'boolean\'\n##       \'date\',\'time\',\'datetime\',\'blob\',\'upload\', \'reference TABLENAME\'\n## There is an implicit \'id integer autoincrement\' field\n## Consult manual for more options, validators, etc.\n##\n## More API examples for controllers:\n##\n## >>> db.mytable.insert(myfield=\'value\')\n## >>> rows=db(db.mytable.myfield==\'value\').select(db.mytable.ALL)\n## >>> for row in rows: print row.id, row.myfield\n#########################################################################\n\ndb.define_table("Project", Field(\'name\',\'string\'), Field(\'openDate\',\'date\'), Field(\'closedDate\',\'date\'), Field(\'projNum\', \'integer\'), Field(\'archived\',\'boolean\',readable=False, writable=False, default=False))\n\ndb.define_table("ProjectUser", Field(\'userRole\',\'string\'), Field(\'projectId\',\'string\'))\n\n#db.define_table("User", Field(\'name\',\'string\'), Field(\'role\',\'string\'))          More stuff? Taken care of already?\n\ndb.define_table("CCD", Field(\'ccdNum\',\'string\'), Field(\'projectNum\',\'string\'), Field(\'file\',\'upload\'))\n\ndb.define_table("Submittal", Field(\'statusFlag\',\'string\'), Field(\'projectNum\',\'string\'), Field(\'assignedTo\',\'string\'), Field(\'submittal\',\'upload\'))\n\ndb.define_table("RFI", Field(\'rfiNum\',\'string\'), Field(\'requestBy\',\'string\'), Field(\'dateSent\',\'date\'), Field(\'reqRefTo\',\'string\'), Field(\'dateRec\',\'date\'), Field(\'drawingNum\',\'integer\'), Field(\'detailNum\',\'integer\'), Field(\'specSection\',\'integer\'), Field(\'sheetName\',\'string\'), Field(\'grids\',\'string\'), Field(\'sectionPage\',\'integer\'), Field(\'description\',\'text\'), Field(\'suggestion\',\'text\'), Field(\'reply\',\'text\'), Field(\'responseBy\',\'string\'), Field(\'responseDate\',\'date\'), Field(\'statusFlag\',\'string\'),Field(\'projectNum\',\'string\'))\n\ndb.define_table("ProposalRequest", Field(\'reqNum\',\'string\'), Field(\'amendNum\',\'string\'), Field(\'projectNum\',\'string\'), Field(\'subject\',\'text\'), Field(\'propDate\',\'date\'), Field(\'sentTo\',\'string\'), Field(\'cc\',\'string\'), Field(\'description\',\'text\'))\n\ndb.define_table("Proposal", Field(\'reqNum\',\'integer\'), Field(\'propDate\',\'date\'), Field(\'file\',\'upload\'),Field(\'projectNum\',\'string\'))\n\ndb.define_table("MeetingMinutes", Field(\'meetDate\',\'date\'), Field(\'file\',\'upload\'))\n\ndb.define_table("PhotoToken", Field(\'token\',\'string\'))\n\ndb.define_table("Photos", Field(\'projectNum\',\'string\'), Field(\'flickrURL\',\'string\'), Field(\'title\',\'string\'), Field(\'description\',\'text\'), Field(\'photo\',\'upload\', autodelete=True))'
+p7
+sS'snapshot'
+p8
+(dp9
+S'exception'
+p10
+(dp11
+S'__getslice__'
+p12
+S"<method-wrapper '__getslice__' of exceptions.IOError object>"
+p13
+sS'__str__'
+p14
+S"<method-wrapper '__str__' of exceptions.IOError object>"
+p15
+sS'__reduce__'
+p16
+S'<built-in method __reduce__ of exceptions.IOError object>'
+p17
+sS'__dict__'
+p18
+S'{}'
+p19
+sS'__sizeof__'
+p20
+S'<built-in method __sizeof__ of exceptions.IOError object>'
+p21
+sS'__init__'
+p22
+S"<method-wrapper '__init__' of exceptions.IOError object>"
+p23
+sS'__setattr__'
+p24
+S"<method-wrapper '__setattr__' of exceptions.IOError object>"
+p25
+sS'__reduce_ex__'
+p26
+S'<built-in method __reduce_ex__ of exceptions.IOError object>'
+p27
+sS'__new__'
+p28
+S'<built-in method __new__ of type object>'
+p29
+sS'errno'
+p30
+S'13'
+p31
+sS'__format__'
+p32
+S'<built-in method __format__ of exceptions.IOError object>'
+p33
+sS'__class__'
+p34
+S"<type 'exceptions.IOError'>"
+p35
+sS'filename'
+p36
+S"'/home/seniorproj/Documents/finholt-senior-projec...b2py/applications/SeniorProject/databases/sql.log'"
+p37
+sS'__doc__'
+p38
+S"'I/O operation failed.'"
+p39
+sS'__getitem__'
+p40
+S"<method-wrapper '__getitem__' of exceptions.IOError object>"
+p41
+sS'__setstate__'
+p42
+S'<built-in method __setstate__ of exceptions.IOError object>'
+p43
+sS'__getattribute__'
+p44
+S"<method-wrapper '__getattribute__' of exceptions.IOError object>"
+p45
+sS'args'
+p46
+S"(13, 'Permission denied')"
+p47
+sS'__subclasshook__'
+p48
+S'<built-in method __subclasshook__ of type object>'
+p49
+sS'__unicode__'
+p50
+S'<built-in method __unicode__ of exceptions.IOError object>'
+p51
+sS'strerror'
+p52
+S"'Permission denied'"
+p53
+sS'__delattr__'
+p54
+S"<method-wrapper '__delattr__' of exceptions.IOError object>"
+p55
+sS'__repr__'
+p56
+S"<method-wrapper '__repr__' of exceptions.IOError object>"
+p57
+sS'__hash__'
+p58
+S"<method-wrapper '__hash__' of exceptions.IOError object>"
+p59
+ssS'evalue'
+p60
+S"[Errno 13] Permission denied: '/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/databases/sql.log'"
+p61
+sS'request'
+p62
+cgluon.html
+XML_unpickle
+p63
+(S's\xe8I\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top">ajax</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">application</td><td valign="top">:</td><td><div>SeniorProject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">args</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">body</td><td valign="top">:</td><td><div>&lt;cStringIO.StringO object at 0x23888680&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cid</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">client</td><td valign="top">:</td><td><div>10.24.6.23</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">controller</td><td valign="top">:</td><td><div>default</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cookies</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">env</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">app_folders</td><td valign="top">:</td><td><div>set([&#x27;/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">applications_parent</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">db_sessions</td><td valign="top">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">debugging</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">document_root</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">gateway_interface</td><td valign="top">:</td><td><div>CGI/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">gluon_parent</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept</td><td valign="top">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept_encoding</td><td valign="top">:</td><td><div>gzip, deflate</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept_language</td><td valign="top">:</td><td><div>en-US,en;q=0.5</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_connection</td><td valign="top">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_host</td><td valign="top">:</td><td><div>10.24.6.23</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_user_agent</td><td valign="top">:</td><td><div>Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:19.0) Gecko/20100101 Firefox/19.0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_jython</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_pypy</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_application_group</td><td valign="top">:</td><td><div>www.finholt.dev|</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_callable_object</td><td valign="top">:</td><td><div>application</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_handler_script</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_input_chunked</td><td valign="top">:</td><td><div>0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_listener_host</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_listener_port</td><td valign="top">:</td><td><div>80</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_process_group</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_request_handler</td><td valign="top">:</td><td><div>wsgi-script</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_script_reloading</td><td valign="top">:</td><td><div>1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi_version</td><td valign="top">:</td><td><div><table><tr><td><div>3</div></td></tr><tr><td><div>3</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path_info</td><td valign="top">:</td><td><div>/SeniorProject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path_translated</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/wsgihandler.py/SeniorProject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">query_string</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">remote_addr</td><td valign="top">:</td><td><div>10.24.6.23</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">remote_port</td><td valign="top">:</td><td><div>32805</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">request_method</td><td valign="top">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">request_uri</td><td valign="top">:</td><td><div>/SeniorProject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">script_filename</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/wsgihandler.py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">script_name</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_addr</td><td valign="top">:</td><td><div>10.24.6.23</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_admin</td><td valign="top">:</td><td><div>[no address given]</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_name</td><td valign="top">:</td><td><div>10.24.6.23</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_port</td><td valign="top">:</td><td><div>80</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_protocol</td><td valign="top">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_signature</td><td valign="top">:</td><td><div>&lt;address&gt;Apache/2.2.14 (Ubuntu) Server at 10.24.6.23 Port 80&lt;/address&gt;\n</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_software</td><td valign="top">:</td><td><div>Apache/2.2.14 (Ubuntu)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_path</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_version</td><td valign="top">:</td><td><div><table><tr><td><div>2</div></td></tr><tr><td><div>4</div></td></tr><tr><td><div>2</div></td></tr><tr><td><div>stable</div></td></tr><tr><td><div>datetime.datetime(2013, 3, 4, 3, 26, 21)</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_errors</td><td valign="top">:</td><td><div>&lt;mod_wsgi.Log object at 0x230594f8&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_file_wrapper</td><td valign="top">:</td><td><div>&lt;built-in method file_wrapper of mod_wsgi.Adapter object at 0x2264eec0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_input</td><td valign="top">:</td><td><div>&lt;mod_wsgi.Input object at 0x226e02a0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_multiprocess</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_multithread</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_run_once</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_url_scheme</td><td valign="top">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_version</td><td valign="top">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>1</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">extension</td><td valign="top">:</td><td><div>html</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">folder</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">function</td><td valign="top">:</td><td><div>index</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">get_vars</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">global_settings</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">app_folders</td><td valign="top">:</td><td><div>set([&#x27;/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">applications_parent</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">db_sessions</td><td valign="top">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">debugging</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">gluon_parent</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_jython</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_pypy</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">local_hosts</td><td valign="top">:</td><td><div><table><tr><td><div>WS4234</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>10.24.6.23</div></td></tr><tr><td><div>127.0.1.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_version</td><td valign="top">:</td><td><div><table><tr><td><div>2</div></td></tr><tr><td><div>4</div></td></tr><tr><td><div>2</div></td></tr><tr><td><div>stable</div></td></tr><tr><td><div>datetime.datetime(2013, 3, 4, 3, 26, 21)</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_https</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_local</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_restful</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">now</td><td valign="top">:</td><td><div>datetime.datetime(2013, 3, 6, 19, 46, 45, 803257)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">post_vars</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">raw_args</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">raw_extension</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">url</td><td valign="top">:</td><td><div>/SeniorProject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">utcnow</td><td valign="top">:</td><td><div>datetime.datetime(2013, 3, 7, 1, 46, 45, 803270)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">uuid</td><td valign="top">:</td><td><div>SeniorProject/10.24.6.23.2013-03-06.19-46-45.0132e5a2-9af1-4796-a99e-156399c871d0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">vars</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">environ</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">DOCUMENT_ROOT</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">GATEWAY_INTERFACE</td><td valign="top">:</td><td><div>CGI/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT</td><td valign="top">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT_ENCODING</td><td valign="top">:</td><td><div>gzip, deflate</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT_LANGUAGE</td><td valign="top">:</td><td><div>en-US,en;q=0.5</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_CONNECTION</td><td valign="top">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_HOST</td><td valign="top">:</td><td><div>10.24.6.23</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_USER_AGENT</td><td valign="top">:</td><td><div>Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:19.0) Gecko/20100101 Firefox/19.0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">PATH_INFO</td><td valign="top">:</td><td><div>/SeniorProject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">PATH_TRANSLATED</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/wsgihandler.py/SeniorProject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">QUERY_STRING</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REMOTE_ADDR</td><td valign="top">:</td><td><div>10.24.6.23</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REMOTE_PORT</td><td valign="top">:</td><td><div>32805</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REQUEST_METHOD</td><td valign="top">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REQUEST_URI</td><td valign="top">:</td><td><div>/SeniorProject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SCRIPT_FILENAME</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/wsgihandler.py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SCRIPT_NAME</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_ADDR</td><td valign="top">:</td><td><div>10.24.6.23</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_ADMIN</td><td valign="top">:</td><td><div>[no address given]</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_NAME</td><td valign="top">:</td><td><div>10.24.6.23</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_PORT</td><td valign="top">:</td><td><div>80</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_PROTOCOL</td><td valign="top">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_SIGNATURE</td><td valign="top">:</td><td><div>&lt;address&gt;Apache/2.2.14 (Ubuntu) Server at 10.24.6.23 Port 80&lt;/address&gt;\n</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_SOFTWARE</td><td valign="top">:</td><td><div>Apache/2.2.14 (Ubuntu)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.application_group</td><td valign="top">:</td><td><div>www.finholt.dev|</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.callable_object</td><td valign="top">:</td><td><div>application</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.handler_script</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.input_chunked</td><td valign="top">:</td><td><div>0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.listener_host</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.listener_port</td><td valign="top">:</td><td><div>80</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.process_group</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.request_handler</td><td valign="top">:</td><td><div>wsgi-script</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.script_reloading</td><td valign="top">:</td><td><div>1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mod_wsgi.version</td><td valign="top">:</td><td><div><table><tr><td><div>3</div></td></tr><tr><td><div>3</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.errors</td><td valign="top">:</td><td><div>&lt;mod_wsgi.Log object at 0x230594f8&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.file_wrapper</td><td valign="top">:</td><td><div>&lt;built-in method file_wrapper of mod_wsgi.Adapter object at 0x2264eec0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.input</td><td valign="top">:</td><td><div>&lt;cStringIO.StringO object at 0x23888680&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.multiprocess</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.multithread</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.run_once</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.url_scheme</td><td valign="top">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.version</td><td valign="top">:</td><td><div>1</div></td></tr></table></div></td></tr></table></div></td></tr></table></div>'
+tRp64
+sS'frames'
+p65
+(lp66
+(dp67
+S'file'
+p68
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/restricted.py'
+p69
+sS'dump'
+p70
+(dp71
+S'environment'
+p72
+S"{'A': <class 'gluon.html.A'>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, 'CAT': <class 'gluon.html.CAT'>, 'CENTER': <class 'gluon.html.CENTER'>, 'CLEANUP': <class 'gluon.validators.CLEANUP'>, ...}"
+p73
+sS'ccode'
+p74
+S'<code object <module> at 0x236de728, file "/home...pplications/SeniorProject/models/db.py", line 12>'
+p75
+ssS'lnum'
+p76
+I212
+sS'lines'
+p77
+(dp78
+I207
+S'    try:'
+p79
+sI208
+S'        if isinstance(code, types.CodeType):'
+p80
+sI209
+S'            ccode = code'
+p81
+sI210
+S'        else:'
+p82
+sI211
+S'            ccode = compile2(code, layer)'
+p83
+sI212
+S'        exec ccode in environment'
+p84
+sI213
+S'    except HTTP:'
+p85
+sI214
+S'        raise'
+p86
+sI215
+S'    except RestrictedError:'
+p87
+sI216
+S'        # do not encapsulate (obfuscate) the original RestrictedError'
+p88
+ssS'call'
+p89
+S'(code="# -*- coding: utf-8 -*-\\n\\n#######################...text\'), Field(\'photo\',\'upload\', autodelete=True))", environment={\'A\': <class \'gluon.html.A\'>, \'Auth\': <class \'gluon.tools.Auth\'>, \'B\': <class \'gluon.html.B\'>, \'BEAUTIFY\': <class \'gluon.html.BEAUTIFY\'>, \'BODY\': <class \'gluon.html.BODY\'>, \'BR\': <class \'gluon.html.BR\'>, \'BUTTON\': <class \'gluon.html.BUTTON\'>, \'CAT\': <class \'gluon.html.CAT\'>, \'CENTER\': <class \'gluon.html.CENTER\'>, \'CLEANUP\': <class \'gluon.validators.CLEANUP\'>, ...}, layer=\'/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/models/db.py\')'
+p90
+sS'func'
+p91
+S'restricted'
+p92
+sa(dp93
+g68
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/models/db.py'
+p94
+sg70
+(dp95
+S'Field'
+p96
+S"<class 'gluon.dal.Field'>"
+p97
+sS'length'
+p98
+S'undefined'
+p99
+sS'label'
+p100
+g99
+ssg76
+I61
+sg77
+(dp101
+I64
+S'custom_auth_table.first_name.requires = \\'
+p102
+sI65
+S'  IS_NOT_EMPTY(error_message=auth.messages.is_empty)'
+p103
+sI56
+S"          writable=False, readable=False, default=''),"
+p104
+sI57
+S"    Field('reset_password_key', length=512,              # required"
+p105
+sI58
+S"          writable=False, readable=False, default=''),"
+p106
+sI59
+S"    Field('registration_id', length=512,                 # required"
+p107
+sI60
+S"          writable=False, readable=False, default=''),"
+p108
+sI61
+S'    Field(\'role\', length=512, label="Role"))'
+p109
+sI62
+S''
+sI63
+S'custom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table'
+p110
+ssg89
+S'()'
+p111
+sg91
+S'<module>'
+p112
+sa(dp113
+g68
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/dal.py'
+p114
+sg70
+(dp115
+S'fields'
+p116
+S'(<gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>)'
+p117
+sS'self'
+p118
+S'<DAL uri="mysql://seniorproj:******@10.24.6.23/finholt">'
+p119
+sS'args'
+p120
+g19
+sS'tablename'
+p121
+S"'auth_user'"
+p122
+sS'table'
+p123
+g99
+sS'self.lazy_define_table'
+p124
+S'<bound method DAL.lazy_define_table of <DAL uri="mysql://seniorproj:******@10.24.6.23/finholt">>'
+p125
+ssg76
+I7651
+sg77
+(dp126
+I7648
+S'            self._LAZY_TABLES[tablename] = (tablename,fields,args)'
+p127
+sI7649
+S'            table = None'
+p128
+sI7650
+S'        else:'
+p129
+sI7651
+S'            table = self.lazy_define_table(tablename,*fields,**args)'
+p130
+sI7652
+S'        if not tablename in self.tables:'
+p131
+sI7653
+S'            self.tables.append(tablename)'
+p132
+sI7654
+S'        return table'
+p133
+sI7655
+S''
+sI7646
+S'                    % (tablename,invalid_args))'
+p134
+sI7647
+S'        if self._lazy_tables and not tablename in self._LAZY_TABLES:'
+p135
+ssg89
+S'(self=<DAL uri="mysql://seniorproj:******@10.24.6.23/finholt">, tablename=\'auth_user\', *fields=(<gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>), **args={})'
+p136
+sg91
+S'define_table'
+p137
+sa(dp138
+g68
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/dal.py'
+p139
+sg70
+(dp140
+S'polymodel'
+p141
+S'None'
+p142
+ssg76
+I7688
+sg77
+(dp143
+I7683
+S'            try:'
+p144
+sI7684
+S'                GLOBAL_LOCKER.acquire()'
+p145
+sI7685
+S'                self._lastsql = self._adapter.create_table('
+p146
+sI7686
+S'                    table,migrate=migrate,'
+p147
+sI7687
+S'                    fake_migrate=fake_migrate,'
+p148
+sI7688
+S'                    polymodel=polymodel)'
+p149
+sI7689
+S'            finally:'
+p150
+sI7690
+S'                GLOBAL_LOCKER.release()'
+p151
+sI7691
+S'        else:'
+p152
+sI7692
+S'            table._dbt = None'
+p153
+ssg89
+S'(self=<DAL uri="mysql://seniorproj:******@10.24.6.23/finholt">, tablename=\'auth_user\', *fields=(<gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>, <gluon.dal.Field object>), **args={})'
+p154
+sg91
+S'lazy_define_table'
+p155
+sa(dp156
+g68
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/dal.py'
+p157
+sg70
+(dp158
+S'table'
+p159
+S'<Table auth_user (id,first_name,last_name,email,...ion_key,reset_password_key,registration_id,role)>'
+p160
+sS'self'
+p161
+S'<gluon.dal.MySQLAdapter object>'
+p162
+sS'logfile'
+p163
+g99
+sS'table._loggername'
+p164
+S"'/home/seniorproj/Documents/finholt-senior-projec...b2py/applications/SeniorProject/databases/sql.log'"
+p165
+sS'self.file_open'
+p166
+S'<bound method MySQLAdapter.file_open of <gluon.dal.MySQLAdapter object>>'
+p167
+ssg76
+I953
+sg77
+(dp168
+I948
+S'            table._dbt = pjoin('
+p169
+sI949
+S"                dbpath, '%s_%s.table' % (table._db._uri_hash, tablename))"
+p170
+sI950
+S''
+sI951
+S'        if table._dbt:'
+p171
+sI952
+S"            table._loggername = pjoin(dbpath, 'sql.log')"
+p172
+sI953
+S"            logfile = self.file_open(table._loggername, 'a')"
+p173
+sI954
+S'        else:'
+p174
+sI955
+S'            logfile = None'
+p175
+sI956
+S'        if not table._dbt or not self.file_exists(table._dbt):'
+p176
+sI957
+S'            if table._dbt:'
+p177
+ssg89
+S'(self=<gluon.dal.MySQLAdapter object>, table=<Table auth_user (id,first_name,last_name,email,...ion_key,reset_password_key,registration_id,role)>, migrate=True, fake_migrate=False, polymodel=None)'
+p178
+sg91
+S'create_table'
+p179
+sa(dp180
+g68
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/dal.py'
+p181
+sg70
+(dp182
+S'mode'
+p183
+S"'a'"
+p184
+sS'portalocker.LockedFile'
+p185
+S"<class 'gluon.portalocker.LockedFile'>"
+p186
+sS'global portalocker'
+p187
+S"<module 'gluon.portalocker' from '/home/seniorpr...holt-senior-project/web2py/gluon/portalocker.py'>"
+p188
+sS'fileobj'
+p189
+g99
+sS'filename'
+p190
+S"'/home/seniorproj/Documents/finholt-senior-projec...b2py/applications/SeniorProject/databases/sql.log'"
+p191
+ssg76
+I695
+sg77
+(dp192
+I690
+S"    def file_open(self, filename, mode='rb', lock=True):"
+p193
+sI691
+S'        """'
+p194
+sI692
+S'        to be used ONLY for files that on GAE may not be on filesystem'
+p195
+sI693
+S'        """'
+p196
+sI694
+S'        if have_portalocker and lock:'
+p197
+sI695
+S'            fileobj = portalocker.LockedFile(filename,mode)'
+p198
+sI696
+S'        else:'
+p199
+sI697
+S'            fileobj = open(filename,mode)'
+p200
+sI698
+S'        return fileobj'
+p201
+sI699
+S''
+ssg89
+S"(self=<gluon.dal.MySQLAdapter object>, filename='/home/seniorproj/Documents/finholt-senior-projec...b2py/applications/SeniorProject/databases/sql.log', mode='a', lock=True)"
+p202
+sg91
+S'file_open'
+p203
+sa(dp204
+g68
+S'/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/portalocker.py'
+p205
+sg70
+(dp206
+S'mode.replace'
+p207
+S'<built-in method replace of str object>'
+p208
+sS'self'
+p209
+S'<gluon.portalocker.LockedFile object>'
+p210
+sS'filename'
+p211
+S"'/home/seniorproj/Documents/finholt-senior-projec...b2py/applications/SeniorProject/databases/sql.log'"
+p212
+sS'mode'
+p213
+S"'a'"
+p214
+sS'self.file'
+p215
+S'None'
+p216
+sS'builtinopen'
+p217
+S'<built-in function open>'
+p218
+ssg76
+I121
+sg77
+(dp219
+I116
+S'        self.file = None'
+p220
+sI117
+S"        if 'r' in mode:"
+p221
+sI118
+S'            self.file = open(filename, mode)'
+p222
+sI119
+S'            lock(self.file, LOCK_SH)'
+p223
+sI120
+S"        elif 'w' in mode or 'a' in mode:"
+p224
+sI121
+S"            self.file = open(filename, mode.replace('w', 'a'))"
+p225
+sI122
+S'            lock(self.file, LOCK_EX)'
+p226
+sI123
+S"            if not 'a' in mode:"
+p227
+sI124
+S'                self.file.seek(0)'
+p228
+sI125
+S'                self.file.truncate()'
+p229
+ssg89
+S"(self=<gluon.portalocker.LockedFile object>, filename='/home/seniorproj/Documents/finholt-senior-projec...b2py/applications/SeniorProject/databases/sql.log', mode='a')"
+p230
+sg91
+g22
+sasS'pyver'
+p231
+S'Python 2.7.2: /usr/local/bin/python (prefix: /usr/local)'
+p232
+sS'session'
+p233
+g63
+(S's\x1a\x00\x00\x00<div><table></table></div>'
+tRp234
+sS'etype'
+p235
+S"<type 'exceptions.IOError'>"
+p236
+sS'date'
+p237
+S'Wed Mar  6 19:46:46 2013'
+p238
+sS'response'
+p239
+g63
+(S's~\x10\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top">body</td><td valign="top">:</td><td><div>&lt;cStringIO.StringO object at 0x22cc07c0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cookies</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">session_id_seniorproject</td><td valign="top">:</td><td><div>10.24.6.23-3ae4cc7c-b530-47d3-bd99-cd63f69d9bb7<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div>/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">delimiters</td><td valign="top">:</td><td><div><table><tr><td><div>{{</div></td></tr><tr><td><div>}}</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">files</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">flash</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">generic_patterns</td><td valign="top">:</td><td><div><table><tr><td><div>*</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">headers</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">X-Powered-By</td><td valign="top">:</td><td><div>web2py</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">menu</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">meta</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">models_to_run</td><td valign="top">:</td><td><div><table><tr><td><div>^\\w+\\.py$</div></td></tr><tr><td><div>^default/\\w+\\.py$</div></td></tr><tr><td><div>^default/index/\\w+\\.py$</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">postprocessing</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_cookie_expires</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_data_name</td><td valign="top">:</td><td><div>session_data_seniorproject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_filename</td><td valign="top">:</td><td><div>/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/sessions/10.24.6.23-3ae4cc7c-b530-47d3-bd99-cd63f69d9bb7</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id</td><td valign="top">:</td><td><div>10.24.6.23-3ae4cc7c-b530-47d3-bd99-cd63f69d9bb7</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id_name</td><td valign="top">:</td><td><div>session_id_seniorproject</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_new</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_storage_type</td><td valign="top">:</td><td><div>file</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">status</td><td valign="top">:</td><td><div>200</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">view</td><td valign="top">:</td><td><div>default/index.html</div></td></tr></table></div>'
+tRp240
+sS'locals'
+p241
+(dp242
+S'self'
+p243
+S'<gluon.portalocker.LockedFile object>'
+p244
+sS'mode'
+p245
+S"'a'"
+p246
+sg36
+S"'/home/seniorproj/Documents/finholt-senior-projec...b2py/applications/SeniorProject/databases/sql.log'"
+p247
+sssS'traceback'
+p248
+S'Traceback (most recent call last):\n  File "/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/restricted.py", line 212, in restricted\n    exec ccode in environment\n  File "/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/models/db.py", line 61, in <module>\n    Field(\'role\', length=512, label="Role"))\n  File "/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/dal.py", line 7651, in define_table\n    table = self.lazy_define_table(tablename,*fields,**args)\n  File "/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/dal.py", line 7688, in lazy_define_table\n    polymodel=polymodel)\n  File "/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/dal.py", line 953, in create_table\n    logfile = self.file_open(table._loggername, \'a\')\n  File "/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/dal.py", line 695, in file_open\n    fileobj = portalocker.LockedFile(filename,mode)\n  File "/home/seniorproj/Documents/finholt-senior-project/web2py/gluon/portalocker.py", line 121, in __init__\n    self.file = open(filename, mode.replace(\'w\', \'a\'))\nIOError: [Errno 13] Permission denied: \'/home/seniorproj/Documents/finholt-senior-project/web2py/applications/SeniorProject/databases/sql.log\'\n'
+p249
+s.

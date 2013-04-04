@@ -1,0 +1,326 @@
+<tal:comment replace="nothing">
+  This macro contains global page-related Javascripts.
+</tal:comment>
+<div metal:define-macro="prologue">
+  <tal:comment replace="nothing">Javascript messages</tal:comment>
+  <script language="javascript" tal:content="tool/getJavascriptMessages"></script>
+
+  <tal:comment replace="nothing">Global form for deleting an object</tal:comment>
+  <form id="deleteForm" method="post" action="do">
+    <input type="hidden" name="action" value="Delete"/>
+    <input type="hidden" name="objectUid"/>
+  </form>
+  <tal:comment replace="nothing">Global form for generating a document from a pod template.</tal:comment>
+  <form name="podTemplateForm" method="post"
+        tal:attributes="action python: tool.absolute_url() + '/generateDocument'">
+    <input type="hidden" name="objectUid"/>
+    <input type="hidden" name="fieldName"/>
+    <input type="hidden" name="podFormat"/>
+    <input type="hidden" name="askAction"/>
+    <input type="hidden" name="queryData"/>
+  </form>
+</div>
+
+<tal:comment replace="nothing">
+  This macro shows the content of page. Because a page is a layouted object,
+  we simply call the macro that displays a layouted object.
+    contextObj         The Zope object for which this page must be shown
+    layoutType         The kind of layout: "view"? "edit"? "cell"?
+    layout             The layout object that will dictate how object content
+                       will be rendered.
+</tal:comment>
+<metal:show define-macro="show">
+  <metal:layout use-macro="context/ui/widgets/show/macros/layout"/>
+</metal:show>
+
+<tal:comment replace="nothing">
+  This macro displays all widgets of a given page. It requires:
+    contextObj         The Zope object for which widgets must be shown
+    page               We show widgets of a given page
+    layoutType         We must know if we must render the widgets in a "view",
+                       "edit" or "cell" layout
+</tal:comment>
+<table metal:define-macro="widgets"
+       tal:attributes="width layout/width">
+  <tr tal:repeat="widget groupedWidgets">
+    <td tal:condition="python: widget['type'] == 'group'">
+      <metal:call use-macro="app/ui/widgets/show/macros/group"/>
+    </td>
+    <td tal:condition="python: widget['type'] != 'group'">
+      <metal:call use-macro="app/ui/widgets/show/macros/field"/>
+    </td>
+  </tr>
+</table>
+
+<tal:comment replace="nothing">
+  This macro displays an object's history. It is used by macro "header" below.
+</tal:comment>
+<metal:history define-macro="objectHistory"
+      tal:define="startNumber request/startNumber|python:0;
+                  startNumber python: int(startNumber);
+                  batchSize   python: int(request.get('maxPerPage'));
+                  historyInfo python: contextObj.getHistory(startNumber, batchSize=batchSize);
+                  objs        historyInfo/events;
+                  totalNumber historyInfo/totalNumber;
+                  ajaxHookId  python:'appyHistory';
+                  navBaseCall python: 'askObjectHistory(\'%s\',\'%s\',%d,**v**)' % (ajaxHookId, contextObj.absolute_url(),batchSize);
+                  tool        contextObj/getTool;
+                  _           python: tool.translate">
+
+  <tal:comment replace="nothing">Table containing the history</tal:comment>
+  <tal:history condition="objs">
+  <metal:nav use-macro="context/ui/navigate/macros/appyNavigate"/>
+  <table width="100%" class="history">
+    <tr>
+      <th tal:attributes="align dleft" tal:content="python: _('object_action')"></th>
+      <th tal:attributes="align dleft" tal:content="python: _('object_author')"></th>
+      <th tal:attributes="align dleft" tal:content="python: _('action_date')"></th>
+      <th tal:attributes="align dleft" tal:content="python: _('action_comment')"></th>
+    </tr>
+    <tal:event repeat="event objs">
+    <tr tal:define="odd repeat/event/odd;
+                    rhComments event/comments|nothing;
+                    state event/review_state|nothing;
+                    isDataChange python: event['action'] == '_datachange_'"
+        tal:attributes="class python:test(odd, 'even', 'odd')" valign="top">
+      <td tal:condition="isDataChange" tal:content="python: _('data_change')"></td>
+      <td tal:condition="not: isDataChange"
+          tal:content="python: _(contextObj.getWorkflowLabel(event['action']))"/>
+      <td tal:define="actorId python:event.get('actor')"
+          tal:content="python: tool.getUserName(actorId)"/>
+      <td tal:content="python: tool.formatDate(event['time'], withHour=True)"/>
+      <td tal:condition="not: isDataChange">
+        <tal:c condition="rhComments"
+               content="structure python: contextObj.formatText(rhComments)"/>
+        <span tal:condition="not: rhComments">-</span>
+      </td>
+      <td tal:condition="isDataChange">
+        <tal:comment replace="nothing">
+          Display the previous values of the fields whose value were modified in this change.</tal:comment>
+        <table class="appyChanges" width="100%">
+          <tr>
+            <th tal:attributes="align dleft" width="30%" tal:content="python: _('modified_field')"></th>
+            <th tal:attributes="align dleft" width="70%" tal:content="python: _('previous_value')"></th>
+          </tr>
+          <tr tal:repeat="change event/changes/items" valign="top">
+            <tal:change define="appyType python:contextObj.getAppyType(change[0], asDict=True);">
+            <td tal:content="structure python: _(appyType['labelId'])"></td>
+            <td tal:define="appyValue python: contextObj.getFormattedFieldValue(change[0], change[1][0]);
+                            severalValues python: (appyType['multiplicity'][1] &gt; 1) or (appyType['multiplicity'][1] == None)">
+              <span tal:condition="not: severalValues" tal:replace="appyValue"></span>
+              <ul tal:condition="python: severalValues">
+                <li tal:repeat="av appyValue" tal:content="av"></li>
+              </ul>
+            </td>
+            </tal:change>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    </tal:event>
+  </table>
+  </tal:history>
+</metal:history>
+
+<tal:comment replace="nothing">
+  This macro displays an object's state(s). It is used by macro "header" below.
+</tal:comment>
+<metal:states define-macro="states"
+              tal:define="showAllStatesInPhase python: tool.getAttr('showAllStatesInPhaseFor' + contextObj.meta_type);
+                          states python: contextObj.getAppyStates(phase, currentOnly=not showAllStatesInPhase)"
+              tal:condition="python: test(showAllStatesInPhase, len(states)&gt;1, True)">
+  <table>
+    <tr>
+      <tal:state repeat="stateInfo states">
+        <td class="state"
+            tal:content="python: _(contextObj.getWorkflowLabel(stateInfo['name']))">
+        </td>
+        <td tal:condition="python: stateInfo['name'] != states[-1]['name']">
+          <img tal:attributes="src string: $appUrl/ui/nextState.png"/>
+        </td>
+      </tal:state>
+    </tr>
+  </table>
+</metal:states>
+
+<tal:comment replace="nothing">
+  This macro displays an object's transitions(s). It is used by macro "header" below.
+</tal:comment>
+<metal:transitions define-macro="transitions"
+                   tal:define="transitions contextObj/getAppyTransitions"
+                   tal:condition="transitions">
+  <form id="triggerTransitionForm" method="post"
+        tal:attributes="action python: contextObj.absolute_url() + '/do'">
+    <input type="hidden" name="action" value="Trigger"/>
+    <input type="hidden" name="workflow_action"/>
+    <table>
+      <tr valign="middle">
+        <tal:comment replace="nothing">Input field for storing comment</tal:comment>
+        <textarea id="comment" name="comment" cols="30" rows="3" style="display:none"></textarea>
+        <tal:comment replace="nothing">Buttons for triggering transitions</tal:comment>
+        <td tal:attributes="align dright" tal:repeat="transition transitions">
+          <tal:comment replace="nothing">Real button</tal:comment>
+          <input type="button" tal:condition="transition/may_trigger"
+                 tal:attributes="value transition/title;
+                                 onClick python: 'triggerTransition(\'%s\',\'%s\')' % (transition['name'],transition['confirm']);"/>
+          <tal:comment replace="nothing">Fake button, explaining why the transition can't be triggered</tal:comment>
+          <div class="fakeButton" tal:condition="not: transition/may_trigger">
+            <acronym tal:content="transition/title"
+                     tal:attributes="title transition/reason"></acronym>
+          </div>
+        </td>
+    </tr>
+    </table>
+  </form>
+</metal:transitions>
+
+<tal:comment replace="nothing">
+   This macros displays the page header, containing object title,
+   workflow-related info, object history, etc.
+</tal:comment>
+<div metal:define-macro="header"
+     tal:define="showWorkflow python: tool.getAttr('showWorkflowFor' + contextObj.meta_type);
+                 hasHistory contextObj/hasHistory;
+                 historyMaxPerPage options/maxPerPage|python: 5;
+                 historyExpanded python: request.get('appyHistory', 'collapsed') == 'expanded';
+                 _ python: tool.translate;
+                 creator contextObj/Creator"
+     tal:condition="not: contextObj/isTemporary">
+
+    <tal:comment replace="nothing">Information that is common to all tabs (object title, state, etc)</tal:comment>
+    <table width="100%" class="summary">
+      <tr>
+        <tal:comment replace="nothing">Title</tal:comment>
+        <td colspan="2" class="objectTitle"
+            tal:content="python: contextObj.getFieldValue('title', layoutType='view')"></td>
+      </tr>
+      <tr class="underTitle">
+        <td colspan="2" class="by">
+          <tal:comment replace="nothing">Creator and last modification date</tal:comment>
+            <tal:comment replace="nothing">Plus/minus icon for accessing history</tal:comment>
+            <tal:accessHistory condition="hasHistory">
+            <img style="cursor:pointer" onClick="toggleCookie('appyHistory')"
+                 tal:attributes="src python:test(historyExpanded, 'ui/collapse.gif', 'ui/expand.gif');
+                                 align dleft"
+                 id="appyHistory_img"/>&nbsp;
+            <span tal:replace="python: _('object_history')"></span> ||&nbsp;
+            </tal:accessHistory>
+
+            <tal:comment replace="nothing">Show document creator</tal:comment>
+            <span class="by" tal:condition="python: creator != 'Anonymous User'">
+             <tal:by replace="python: _('object_created_by')"/>
+             <tal:creator replace="python: tool.getUserName(creator)"/> &mdash;
+            </span>
+            <tal:comment replace="nothing">Show creation date</tal:comment>
+            <tal:by replace="python: _('object_created_on')"/>
+            <span tal:replace="python: tool.formatDate(contextObj.created, withHour=True)"></span>
+        </td>
+      </tr>
+      <tal:comment replace="nothing">Object history</tal:comment>
+      <tr tal:condition="hasHistory" class="underTitle">
+        <td colspan="2">
+          <span id="appyHistory"
+                tal:attributes="style python:test(historyExpanded, 'display:block', 'display:none')">
+          <div tal:define="ajaxHookId python: contextObj.UID() + '_history';"
+               tal:attributes="id ajaxHookId">
+             <script tal:content="python: 'askObjectHistory(\'%s\',\'%s\',%d,0)' % (ajaxHookId, contextObj.absolute_url(),historyMaxPerPage)">
+             </script>
+          </div>
+          </span>
+        </td>
+      </tr>
+      <tal:comment replace="nothing">Workflow-related information and actions</tal:comment>
+      <tr tal:condition="python: showWorkflow and contextObj.getWorkflowLabel()" class="workflow">
+        <td colspan="2">
+          <table width="100%">
+            <tr>
+              <td><metal:states use-macro="here/ui/page/macros/states"/></td>
+              <td tal:attributes="align dright"><metal:states use-macro="here/ui/page/macros/transitions"/></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+</div>
+
+<tal:comment replace="nothing">The page footer.</tal:comment>
+<metal:footer define-macro="footer">
+<script language="javascript">
+<!--
+  initSlaves();
+-->
+</script>
+</metal:footer>
+
+<tal:comment replace="nothing">
+  This macro shows the range of buttons (next, previous, save,...).
+</tal:comment>
+<div metal:define-macro="buttons"
+     tal:define="previousPage   python: contextObj.getPreviousPage(phaseInfo, page)[0];
+                 nextPage       python: contextObj.getNextPage(phaseInfo, page)[0];
+                 isEdit         python: layoutType == 'edit';
+                 pageInfo       python: phaseInfo['pagesInfo'][page]">
+  <br/>
+  <tal:previous condition="python: previousPage and pageInfo['showPrevious']">
+    <tal:button condition="isEdit">
+      <input type="image" name="buttonPrevious"
+             tal:attributes="src string:$appUrl/ui/previous.png;
+                             title python: _('page_previous')"/>
+      <input type="hidden" name="previousPage"  tal:attributes="value previousPage"/>
+    </tal:button>
+    <tal:link condition="not: isEdit">
+      <a tal:attributes="href python: contextObj.getUrl(page=previousPage)">
+        <img tal:attributes="src string:$appUrl/ui/previous.png;
+                             title python: _('page_previous')"/>
+      </a>
+    </tal:link>
+  </tal:previous>
+
+  <tal:save condition="python: isEdit and pageInfo['showSave']">
+    <input type="image" name="buttonOk"
+           tal:attributes="src string:$appUrl/ui/save.png;
+                           title python: _('object_save')"/>
+  </tal:save>
+
+  <tal:cancel condition="python: isEdit and pageInfo['showCancel']">
+    <input type="image" name="buttonCancel"
+           tal:attributes="src string:$appUrl/ui/cancel.png;
+                           title python: _('object_cancel')"/>
+  </tal:cancel>
+
+  <tal:edit condition="python: not isEdit and pageInfo['showOnEdit']">
+    <img style="cursor:pointer"
+         tal:attributes="onClick python: 'href: window.location=\'%s\'' % contextObj.getUrl(mode='edit', page=page);
+                         title python: _('object_edit');
+                         src string: $appUrl/ui/editBig.png"
+         tal:condition="contextObj/mayEdit"/>
+  </tal:edit>
+
+  <tal:refresh condition="contextObj/isDebug">
+    <img title="Refresh" style="cursor:pointer; vertical-align:top"
+         tal:attributes="onClick python: 'href: window.location=\'%s\'' % contextObj.getUrl(mode=layoutType, page=page, refresh='yes');
+                         src string: $appUrl/ui/refresh.png"/>
+  </tal:refresh>
+
+  <tal:next condition="python: nextPage and pageInfo['showNext']">
+    <tal:button condition="isEdit">
+      <input type="image" name="buttonNext"
+             tal:attributes="src string:$appUrl/ui/next.png;
+                             title python: _('page_next')"/>
+      <input type="hidden" name="nextPage"  tal:attributes="value nextPage"/>
+    </tal:button>
+    <tal:link condition="not: isEdit">
+      <a tal:attributes="href python: contextObj.getUrl(page=nextPage)">
+        <img tal:attributes="src string:$appUrl/ui/next.png;
+                             title python: _('page_next')"/>
+      </a>
+    </tal:link>
+  </tal:next>
+</div>
+
+<tal:comment replace="nothing">
+  This macro displays the global message on the page.
+</tal:comment>
+<metal:message define-macro="message" tal:define="messages tool/consumeMessages" tal:condition="messages">
+  <div class="message" tal:content="structure messages"></div>
+</metal:message>

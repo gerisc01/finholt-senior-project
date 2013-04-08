@@ -3,7 +3,6 @@
 
 <head>
 <title>Finholt Construction</title>
-<cfheader name="Content-Type" value="application/rss+xml">
 <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
@@ -88,26 +87,25 @@ $("#content table").dataTable(
     <hr>
     <div id="projectsidebar">
     </div>
-    <div id="newsfeed">
+        <div id="content">
        {{if entries != None:}}
-           <table border='5px'>         
-              {{for rss in entries:}}
-              <tr>
-                <td id='creator'>{{=T(rss.creator)}}</td>
-                <td id='created_on'>{{=T(str(rss.created_on))}}</td>
-              </tr>
-              <tr>
-                <td id='descrip'>{{=T(rss.description)}}</td>            
-              </tr>
+                  
+              {{for item in entries:}}
+                <div id="newsfeed">
+                <b id='project'>{{=T(project.name)}}</b>
+                <b id='created'>{{=T('written by ' + item.creator + ' created on ' + str(item.created_on))}}</b>
+                <hr>
+                <p id='descrip'>{{=T(item.description)}}</p>            
+                </div>
               {{pass}}             
-           </table>
+           
        {{else:}}
-           <tr>
-               <td>The newsfeed for this project is currently empty</td>
-           </tr>
+           <div id="newsfeed">
+               The newsfeed for this project is currently empty
+           </div>
            {{pass}}
-    </div>
-    
+           
+        </div>
     {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
         {{include "adminSidebar.html"}}
     {{pass}}

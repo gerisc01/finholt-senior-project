@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 <link rel="icon" type="image/ico" href="{{=URL('static','favicon.png')}}"/>
-<link rel="SHORTCUT ICON" type="image/ico" href="{{=URL('static','favicon.ico')}}"/>
+<link rel="SHORTCUT ICON" type="image/ico" href="{{=URL('static','favicon.png')}}"/>
 
 {{include 'web2py_ajax.html'}}
 <script src="{{=URL('static','js/modernizr.custom.js')}}"></script>   
@@ -70,7 +70,24 @@ $('#projectsidebar').bind(
 
     </div>
     <div id="content">
-      Welcome to Finholt Construction!
+      
+      {{if entries != None:}}
+                  
+              {{for item in entries:}}
+                <div id="newsfeed">
+                <b id='project'>{{=T(db(db.Project.projNum == item.projectNum).select().first().name)}}</b>
+                <b id='created'>{{=T('written by ' + item.creator + ' created on ' + str(item.created_on))}}</b>
+                <hr>
+                <p id='descrip'>{{=T(item.description)}}</p>            
+                </div>
+              {{pass}}             
+           
+       {{else:}}
+           <div id="newsfeed">
+               The newsfeed is currently empty
+           </div>
+           {{pass}}
+      
     </div>
     {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
         {{include "adminSidebar.html"}}

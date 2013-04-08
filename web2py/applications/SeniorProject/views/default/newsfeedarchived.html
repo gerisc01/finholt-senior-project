@@ -64,17 +64,25 @@ $('#projectsidebar').bind(
     <hr>
     <div id="projectsidebar">
     </div>
-    <div id="newsfeed">
-       <table border='5px'>
-          {{for rss in entries:}}
-          <tr>
-            <td id='creator'>{{=T(rss.creator)}}</td>
-            <td id='descrip'>{{=T(rss.description)}}</td>
-            <td id='created_on'>{{=T(str(rss.created_on))}}</td>
-          </tr>
-          {{pass}} 
-       </table>
-    </div>
+    <div id="content">
+       {{if entries != None:}}
+                  
+              {{for item in entries:}}
+                <div id="newsfeed">
+                <b id='project'>{{=T(project.name)}}</b>
+                <b id='created'>{{=T('written by ' + item.creator + ' created on ' + str(item.created_on))}}</b>
+                <hr>
+                <p id='descrip'>{{=T(item.description)}}</p>            
+                </div>
+              {{pass}}             
+           
+       {{else:}}
+           <div id="newsfeed">
+               The newsfeed for this project is currently empty
+           </div>
+           {{pass}}
+           
+        </div>
 
 </body>
 </html>

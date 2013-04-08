@@ -101,15 +101,23 @@ def index():
     """
     example action using the internationalization operator T and flash
     rendered by views/default/index.html or views/generic.html
-    """
-    
+    """ 
     response.flash = "Welcome " + auth.user.first_name + "!"
+    projectNums = []
+    for project in projects:
+        projectNums.append(project.projNum) 
+        
+    entries = db(db.NewsFeed.projectNum.belongs(projectNums)).select(orderby=~db.NewsFeed.created_on)
+    if entries == None or len(entries) == 0:
+        entries = None
+    
     return dict(
                 projects=projects,
                 myProfileForm=myProfileForm,
                 header=header,
                 footer=footer,
-                css=css)
+                css=css,
+                entries=entries)
 
 def user():
     """
@@ -318,15 +326,16 @@ def viewArchive():
     project = db(db.Project.id == request.args(0)).select().first()
     return dict(project=project, header=header_archived, css=css)
 
-@auth.requires_login()    
+@auth.requires_login()
 def newsfeed():
-    entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select()   
+    project = db(db.Project.projNum == request.vars.projectNum).select().first()
+    entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select(orderby=~db.NewsFeed.created_on)
     if entries == None or len(entries) == 0:
-        entries = None   
-    return dict(entries=entries, fullTable=True, projects=projects, myProfileForm=myProfileForm, header=header, footer=footer, css=css)
+        entries = None
+    return dict(entries=entries, fullTable=True, project=project, projects=projects, myProfileForm=myProfileForm, header=header, footer=footer, css=css)
 
-@auth.requires_login() 
-@auth.requires_membership('Admin')   
+@auth.requires_login()
+@auth.requires_membership('Admin')
 def newsfeedarchived():
     project = db(db.Project.projNum == request.vars.projectNum).select().first()
     entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select()   

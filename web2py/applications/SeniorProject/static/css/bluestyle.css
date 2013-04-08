@@ -3,6 +3,24 @@ html{
     height: 100%;
 }
 
+#newsfeed {
+    max-width: 600px;
+    padding: 20px;
+    float: left;
+}
+
+#newsfeed b:project {
+    color:yellow
+}
+
+#newsfeed b:created {
+
+}
+
+#newsfeed p:descrip {
+
+}
+
 #projectsidebar{
     border-right:5px solid #104E8B;
     width:160px;

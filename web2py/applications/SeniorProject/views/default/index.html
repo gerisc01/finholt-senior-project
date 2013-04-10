@@ -61,7 +61,6 @@ $('#projectsidebar').bind(
     {{=header}}
 
     <ul id = "projecttabs">
-        <li>Calendar</li>
         <li id="MyProfile">My Profile</li>
     </ul>
     <hr>
@@ -84,7 +83,7 @@ $('#projectsidebar').bind(
            
        {{else:}}
            <div id="newsfeed">
-               The newsfeed is currently empty
+               Your newsfeed is currently empty.
            </div>
            {{pass}}
       
@@ -92,17 +91,6 @@ $('#projectsidebar').bind(
     {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
         {{include "adminSidebar.html"}}
     {{pass}}
-    <div id="adminsidebar">
-    
-    <ul>
-        <li><a href="{{=URL('default','createproject')}}">Add Project</a></li>
-        <li><a href="{{=URL('default','manageprojects')}}">Manage Projects</a></li>
-        <li><a href="{{=URL('default','archiveprojects')}}">Archived Projects</a></li>
-        <li><a href="{{=URL('default','manageusers')}}">Manage Users</a></li>
-    </ul>
-    
-
-    </div>
 
     {{=footer}}
 </body>

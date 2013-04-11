@@ -188,7 +188,7 @@ def register():
     if form.process().accepted:
        response.flash = str(request.vars.first_name) + ' created as user'
     elif form.errors:
-       response.flash = 'form has errors'
+       response.flash = 'Form has errors'
     else:
        response.flash = 'Please create a user'
        
@@ -288,7 +288,7 @@ def deleteusers():
      if table.process().accepted:
        response.flash = str(request.vars.first_name) + ' deleted as user'
      elif table.errors:
-       response.flash = 'form has errors'
+       response.flash = 'Form has errors'
      else:
        response.flash = 'Select users to delete'
      
@@ -312,7 +312,7 @@ def createproject():
     if form.process().accepted:
        response.flash = str(request.vars.name) + ' has been created'
     elif form.errors:
-       response.flash = 'form has errors'
+       response.flash = 'Form has errors'
     else:
        response.flash = 'Please create a project'
        
@@ -336,7 +336,7 @@ def manageprojects():
         if table.process().accepted:
            response.flash = str(request.vars.name) + ' has been archived'
         elif table.errors:
-           response.flash = 'form has errors'
+           response.flash = 'Form has errors'
         else:
            response.flash = 'Select a project to archive'
         
@@ -385,12 +385,25 @@ def viewArchive():
 def newsfeed():
     project = db(db.Project.projNum == request.vars.projectNum).select().first() #Get the current project
     
+    #Create an SQLFORM for the user to make a new status update
+    form = SQLFORM(db.NewsFeed, labels={'description':'New Status Update'}, fields=['description'])
+    form.vars.projectNum = request.vars.projectNum                        #Initialize the project number to be the current project's number
+    form.vars.type = "human"                                              #Initialize the type to be" human"
+    form.vars.created_on = datetime.today()                               #Initialize the time created to be the current date and time
+    form.vars.creator = auth.user.first_name + " " + auth.user.last_name  #Initiaize the creator to be the current user
+    
+    if form != None:
+        if form.process().accepted:
+            response.flash = T('Status created successfully')
+        elif form.errors:
+            response.flash = 'Form has errors'
+                
     #Get all the newsfeed entries, in order, with the most recent entry first
     entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select(orderby=~db.NewsFeed.created_on) 
     if entries == None or len(entries) == 0:                                     #If there are no entries, set entries to None
         entries = None
         
-    return dict(entries=entries, fullTable=True, project=project, projects=projects, myProfileForm=myProfileForm, header=header, footer=footer, css=css)
+    return dict(form=form, entries=entries, fullTable=True, project=project, projects=projects, myProfileForm=myProfileForm, header=header, footer=footer, css=css)
 
 #This is called when a user clicks on "News Feed" on an archived project's sidebar. It returns a dictionary used by the view default/newsfeedarchived.html
 @auth.requires_login()
@@ -474,7 +487,7 @@ def showform():
         
     if form != None:
         if form.process().accepted:
-            response.flash = T('form accepted')
+            response.flash = T('Form accepted')
             if displayForm == "Photo":    #If the form submitted is a photo form, we need to upload it to flickr and delete the photo from our database
                 uploadPhotoToFlickr(form)
             elif displayForm == "RFI":    #If the form submitted is an RFI form, we need to put the name of person the RFI is referred to instead of the id
@@ -488,13 +501,13 @@ def showform():
                 
             #Now create a new newsfeed update noting the new submission
             description = "A new " + displayForm + " has been added."
-            db.NewsFeed.insert(projectNum=form.vars.projectNum, type="document", created_on=datetime.today(), description=description, creator="")
+            db.NewsFeed.insert(projectNum=form.vars.projectNum, type="document", created_on=datetime.today(), description=description, creator=auth.user.first_name + " " + auth.user.last_name)
             db.commit()
             
         elif form.errors:
-            response.flash = 'form has errors'
+            response.flash = 'Form has errors'
         else:
-            response.flash = 'please fill out the form'
+            response.flash = 'Please fill out the form'
             
     return dict(displayForm=displayForm,
                 form=form,
@@ -694,9 +707,9 @@ def replyRFI():
             redirect(URL('default', 'formtable', vars=dict(formType='RFI', projectNum=str(replyRfiForm.vars.projectNum))))  #Redirect to the RFI table                    
         
         elif replyRfiForm.errors:
-            response.flash = 'form has errors'
+            response.flash = 'Form has errors'
         else:
-            response.flash = 'please fill out the form'
+            response.flash = 'Please fill out the form'
             
     return dict(replyRfiForm=replyRfiForm, css=css, header=header, footer=footer)
 
@@ -717,9 +730,9 @@ def changePropReq():
             #Redirect to the Proposal Request table
             redirect(URL('default', 'formtable', vars=dict(formType='ProposalRequest', projectNum=str(changePropReqForm.vars.projectNum))))                      
         elif changePropReqForm.errors:
-            response.flash = 'form has errors'
+            response.flash = 'Form has errors'
         else:
-            response.flash = 'please fill out the form'
+            response.flash = 'Please fill out the form'
             
     return dict(changePropReqForm=changePropReqForm, css=css, header=header, footer=footer)  
 

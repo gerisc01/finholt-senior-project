@@ -27,28 +27,23 @@ $("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_
 var data = [];
 
 {{for index  in range(len(projects)):}}
-  data.push({label:"Project "+"{{=T(projects[index].name)}}",id:{{=int(projects[index].id)}}, children:[
+  data.push({label:"Project "+"{{=T(projects[index].name)}}", children:[
   {label:"<a href='{{=URL('default','newsfeed',vars=dict(formType='NewsFeed',projectNum=projects[index].projNum))}}'>News Feed</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].projNum))}}'>RFIs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].projNum))}}'>Submittals</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].projNum))}}'>CCDs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].projNum))}}'>Proposal Requests</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=projects[index].projNum))}}'>Proposals</a>"},
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].projNum))}}'>Meeting Minutes</a>"}, 
-  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].projNum))}}'>Photos</a>"} ]});
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].projNum))}}'>Meeting Minutes</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].projNum))}}'>Photos</a>"}  ]});
   {{pass}} 
-;
-
-
+  
 $(function() {
     $('#projectsidebar').tree({
         data: data,
         autoEscape:false
     });
-    var node = $('#projectsidebar').tree('getNodeById', {{=int(request.vars.projectNum[-1])}});
-$('#projectsidebar').tree('openNode', node);
 });
-
 $('#projectsidebar').bind(
     'tree.click',
     function(event) {
@@ -57,11 +52,6 @@ $('#projectsidebar').bind(
         $('#projectsidebar').tree('toggle', node);
     }
 );
-
-{{if fullTable==True:}}
-$("#content table").dataTable(
-  );
-{{pass}}
 
 });
 </script>
@@ -87,8 +77,11 @@ $("#content table").dataTable(
     <hr>
     <div id="projectsidebar">
     </div>
-    <div id="content">
-       {{if entries != None:}}
+    <div id="content">        
+        <div class="createStatus" onclick="jQuery('.hiddenForm').slideToggle()">Create a Status</div>
+        <div class="hiddenForm"><script>jQuery('.hiddenForm').hide()</script>{{=form}}</div>
+        
+        {{if entries != None:}}
                   
               {{for item in entries:}}
                 <div id="newsfeed">

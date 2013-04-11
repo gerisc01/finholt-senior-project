@@ -118,7 +118,7 @@ photoTypes = '(jpeg|png)'
 
 db.define_table("Project", Field('name','string'), Field('openDate','date'), Field('closedDate','date'), Field('projNum', 'integer'), Field('archived','boolean',readable=False, writable=False, default=False))
 
-db.define_table("NewsFeed", Field('projectNum','string'), Field('type','string'), Field('created_on','datetime'), Field('description','string'), Field('creator','string'))
+db.define_table("NewsFeed", Field('projectNum','string'), Field('type','string'), Field('created_on','datetime'), Field('description','text'), Field('creator','string'))
 
 db.define_table("CCD", Field('ccdNum','string'), Field('projectNum','string'), Field('file','upload',requires=IS_UPLOAD_FILENAME(extension=uploadTypes)))
 

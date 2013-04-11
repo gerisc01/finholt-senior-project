@@ -87,15 +87,15 @@ $("#content table").dataTable(
     <hr>
     <div id="projectsidebar">
     </div>
-        <div id="content">
+    <div id="content">
        {{if entries != None:}}
                   
               {{for item in entries:}}
                 <div id="newsfeed">
-                <b id='project'>{{=T(project.name)}}</b>
-                <b id='created'>{{=T('written by ' + item.creator + ' created on ' + str(item.created_on))}}</b>
+                <b class='project'>{{=T(project.name)}}</b>
+                <b class='created'>{{=T('written by ' + item.creator + ' created on ' + str(item.created_on))}}</b>
                 <hr>
-                <p id='descrip'>{{=T(item.description)}}</p>            
+                <p class="descrip">{{=T(item.description)}}</p>            
                 </div>
               {{pass}}             
            
@@ -104,8 +104,7 @@ $("#content table").dataTable(
                The newsfeed for this project is currently empty
            </div>
            {{pass}}
-           
-        </div>
+    </div>
     {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
         {{include "adminSidebar.html"}}
     {{pass}}

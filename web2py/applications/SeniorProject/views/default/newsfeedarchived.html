@@ -3,7 +3,6 @@
 
 <head>
 <title>Senior Project</title>
-<cfheader name="Content-Type" value="application/rss+xml">
 <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
@@ -69,10 +68,10 @@ $('#projectsidebar').bind(
                   
               {{for item in entries:}}
                 <div id="newsfeed">
-                <b id='project'>{{=T(project.name)}}</b>
-                <b id='created'>{{=T('written by ' + item.creator + ' created on ' + str(item.created_on))}}</b>
+                <b class='project'>{{=T(project.name)}}</b>
+                <b class='created'>{{=T('written by ' + item.creator + ' created on ' + str(item.created_on))}}</b>
                 <hr>
-                <p id='descrip'>{{=T(item.description)}}</p>            
+                <p class='descrip'{{=T(item.description)}}</p>            
                 </div>
               {{pass}}             
            
@@ -81,8 +80,6 @@ $('#projectsidebar').bind(
                The newsfeed for this project is currently empty
            </div>
            {{pass}}
-           
-        </div>
-
+    </div>
 </body>
 </html>

@@ -69,15 +69,15 @@ $('#projectsidebar').bind(
               {{for item in entries:}}
                 <div id="newsfeed">
                 <b class='project'>{{=T(project.name)}}</b>
-                <b class='created'>{{=T('written by ' + item.creator + ' created on ' + str(item.created_on))}}</b>
+                <b class='created'>{{=T('written by ' + item.creator + ' on ' + str(item.created_on))}}</b>
                 <hr>
                 <p class="descrip">{{=T(item.description)}}</p>            
                 </div>
               {{pass}}            
            
        {{else:}}
-           <div id="newsfeed">
-               The newsfeed for this project is currently empty
+           <div>
+               The newsfeed for this project is currently empty.
            </div>
            {{pass}}
     </div>

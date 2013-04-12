@@ -205,12 +205,12 @@ def register():
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def changepermissions():
-     #Get all the users except the current user (don't want a user to change his own permissions)
-     rows = db(db.auth_user.id != auth.user.id).select()     
+     #Get all the users in alphabetical order, except the current user (don't want a user to change his own permissions)
+     rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)     
      #Represent the user's id as a dropdown with the values of Admin or General, with the current value as the user's current group membership
      db.auth_user.id.represent = lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id) 
      #Create a table with all the users and their current memberships
-     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
+     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
  
      if table.accepts(request.vars): 
         for item in request.vars.keys():               #For each user selected..
@@ -235,11 +235,11 @@ def changepermissions():
 @auth.requires_membership("Admin")
 @auth.requires_login()
 def addtoproject():
-    rows = db(db.auth_user.id>0).select()     #Get all the users of the site
+    rows = db(db.auth_user.id > 0).select(orderby=db.auth_user.last_name)        #Get all the users of the site (in alphabetical order)
     #Represent the user's id as checkboxes of possible projects for the user to be added to
     db.auth_user.id.represent = lambda id: DIV('', XML(getAllProjectsHtml(id)), _name='%i'%id) 
     #Create a table of the information
-    table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Add To","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}), INPUT(_type='submit')) 
+    table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Add To","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}), INPUT(_type='submit')) 
     
     if table.accepts(request.vars):
         for userid in request.vars.keys():           #For each user selected..
@@ -257,11 +257,11 @@ def addtoproject():
 @auth.requires_membership("Admin")
 @auth.requires_login()
 def deletefromproject():
-    rows = db(db.auth_user.id > 0).select()     #Get all the users of the site
+    rows = db(db.auth_user.id > 0).select(orderby=db.auth_user.last_name)    #Get all the users of the site (in alphabetical order)
     #Represents the user's id as checkboxes of all the user's associated projects
     db.auth_user.id.represent = lambda id: DIV('', XML(getUsersProjectsHtml(id)), _name='%i'%id) 
     #Create a table of the information
-    table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove From","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
+    table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Remove From","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
    
     if table.accepts(request.vars): 
         for userid in request.vars.keys():                                    #For each user selected..
@@ -280,10 +280,11 @@ def deletefromproject():
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def deleteusers():
-     rows = db(db.auth_user.id != auth.user.id).select()  #Get all the users on the site, except the current user (don't want someone to delete himself)
+     #Get all the users on the site in alphabetical order, except the current user (don't want someone to delete himself)
+     rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)  
      db.auth_user.id.represent = lambda id: DIV(id, INPUT (_type='checkbox',_name='%i'%id)) #Create a checkbox for each user
      #Create a table of the information
-     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}), INPUT(_type='submit'))
+     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}), INPUT(_type='submit'))
      
      if table.process().accepted:
        response.flash = str(request.vars.first_name) + ' deleted as user'
@@ -307,7 +308,7 @@ def deleteusers():
 @auth.requires_membership('Admin')
 def createproject():
     #Create a form for inserting a new project into the database
-    form = SQLFORM(db.Project, labels={'openDate':'Open Date', 'closedDate':'Closed Date', 'projNum':'Project Number'})
+    form = SQLFORM(db.Project, labels={'projNum':'Project Number', 'openDate':'Open Date', 'closedDate':'Closed Date'})
     
     if form.process().accepted:
        response.flash = str(request.vars.name) + ' has been created'
@@ -368,7 +369,7 @@ def archiveprojects():
                         'selected': False #aggregate class selected to this column
                        }]
         #Create a table of the archived projects, with the rightmost column containing the extracolumn
-        table = SQLTABLE(rows, columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"], headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"}, extracolumns=extracolumn)
+        table = SQLTABLE(rows, columns=["Project.name","Project.owner","Project.projNum",'Project.openDate',"Project.closedDate"], headers={"Project.name":"Project Name", "Project.owner":"Owner", "Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}, extracolumns=extracolumn)
     
     return dict(table=table, footer=footer, header=header, css=css)
 
@@ -435,13 +436,16 @@ def showform():
         #Create a dropdown of all the users' names for the Request Referred To field
         db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
         #Create a form with the RFI fields specified by the fields parameter
-        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'projectName':'Project Name', 'owner':'Owner', 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','projectName','owner','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
+        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
         
-        rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()    #Get all the RFI's for the current project
+        currentProj = db(db.Projet.projNum == str(request.vars.projectnum)).select().first()
+        rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()    #Get all the RFI's for the current project       
         form.vars.rfiNum = len(rows) + 1               #Initialize the form's RFI number to be one more than the current number of RFIs
         form.vars.requestBy = auth.user.first_name + " " + auth.user.last_name #Initialize the form's RequestBy field to be the current user
-        form.vars.statusFlag = "Outstanding"           #Initialize the status flag (this field isn't displayed on the screen)
+        form.vars.statusFlag = "Outstanding"           #Set the status flag (this field isn't displayed on the screen)
         form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number 
+        form.vars.projectName = currentProj.name       #Set the form's project name to be the current project's name (not displayed)
+        form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
                 
     elif displayForm == "Submittal":
         #Create a dropdown for the submittal type
@@ -458,16 +462,21 @@ def showform():
         #Create a form with the Proposal Request fields specified by the fields parameter   
         form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'}, fields =[ 'reqNum','amendNum','projectNum','subject','propDate','sentTo','cc','description'])
         
+        currentProj = db(db.Projet.projNum == str(request.vars.projectnum)).select().first()
         rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select() #Get all the ProposalRequests for the current project
         form.vars.reqNum = len(rows) + 1               #Initialize the request number to be one more than the current number of proposal requests
-        form.vars.statusFlag = "Open"                  #Initialize the status flag (this field isn't displayed on the screen)       
+        form.vars.statusFlag = "Open"                  #Set the status flag (this field isn't displayed on the screen)       
         form.vars.creator = auth.user.id               #Initialize the creator to be the current user's id (this field also isn't displayed)
         form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
+        form.vars.projectName = currentProj.projName   #Set the form's project name to be the current project's name (not displayed)
+        form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
         
     elif displayForm == "Proposal":
-        therows = len(db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select(db.ProposalRequest.reqNum))
-        mylist = list(range(1,therows+1))
-        db.Proposal.propReqRef.requires = IS_IN_SET(mylist) #Create a dropdown for the Proposal Request Reference #
+        propReqs = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
+        propNumList = []
+        for propReq in propReqs:
+            propNumList.append(propReq.reqNum)                   #Get all the Proposal Request numbers for the project
+        db.Proposal.propReqRef.requires = IS_IN_SET(propNumList) #Create a dropdown for the Proposal Request Reference #
         #Create a form with all the Proposal fields 
         form = SQLFORM(db.Proposal, labels={'propNum':'Proposal #', 'propReqRef':'Proposal Request Reference #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
         
@@ -639,7 +648,7 @@ def formtable():
         extracolumn = [{'label':'Change Status',
                 'class': '', #class name of the header
                 'width': '', #width in pixels or %
-                'content':lambda row, rc: A("Make Change", _href=URL('default','changePropReq',args=row.id)) if auth.user.id == row.creator else A(" "),
+                'content':lambda row, rc: A("Change", _href=URL('default','changePropReq',args=row.id)) if auth.user.id == row.creator else A(" "),
                 'selected': False #aggregate class selected to this column
                 }]
         #Create a table of the Proposal Requests
@@ -789,8 +798,8 @@ def create_odt():
     appyDict['rfiNumber'] = dictionary['rfiNum']
 
     # Need to add database places for these and then add the dictionary
-    appyDict['project'] = 'Hemodialysis Unit and Clinic Expansion'
-    appyDict['owner'] = 'Winneskiek Medical Center'
+    appyDict['project'] = dictionary['projectName']
+    appyDict['owner'] = dictionary['owner']
 
     appyDict['requestBy'] = dictionary['requestBy']
 

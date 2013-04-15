@@ -3,6 +3,14 @@ html{
     height: 100%;
 }
 
+#filter {
+    max-width: 500px;
+    margin:2px;
+    padding:10px;
+    padding-bottom:15px;
+    float: left;
+}
+
 #newsfeed {
     max-width: 500px;
     min-width: 500px;
@@ -185,4 +193,12 @@ a:link {
     color: black;
 }
 
-li {cursor: hand; cursor: pointer;}
+li#Calendar {
+    cursor: hand;
+    cursor: pointer;
+}
+
+li#MyProfile {
+    cursor: hand;
+    cursor: pointer;
+}

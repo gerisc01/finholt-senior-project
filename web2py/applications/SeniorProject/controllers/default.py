@@ -438,7 +438,7 @@ def showform():
         #Create a form with the RFI fields specified by the fields parameter
         form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
         
-        currentProj = db(db.Projet.projNum == str(request.vars.projectnum)).select().first()
+        currentProj = db(db.Project.projNum == str(request.vars.projectNum)).select().first()
         rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()    #Get all the RFI's for the current project       
         form.vars.rfiNum = len(rows) + 1               #Initialize the form's RFI number to be one more than the current number of RFIs
         form.vars.requestBy = auth.user.first_name + " " + auth.user.last_name #Initialize the form's RequestBy field to be the current user
@@ -462,13 +462,13 @@ def showform():
         #Create a form with the Proposal Request fields specified by the fields parameter   
         form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'}, fields =[ 'reqNum','amendNum','projectNum','subject','propDate','sentTo','cc','description'])
         
-        currentProj = db(db.Projet.projNum == str(request.vars.projectnum)).select().first()
+        currentProj = db(db.Project.projNum == str(request.vars.projectNum)).select().first()
         rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select() #Get all the ProposalRequests for the current project
         form.vars.reqNum = len(rows) + 1               #Initialize the request number to be one more than the current number of proposal requests
         form.vars.statusFlag = "Open"                  #Set the status flag (this field isn't displayed on the screen)       
         form.vars.creator = auth.user.id               #Initialize the creator to be the current user's id (this field also isn't displayed)
         form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
-        form.vars.projectName = currentProj.projName   #Set the form's project name to be the current project's name (not displayed)
+        form.vars.projectName = currentProj.name   #Set the form's project name to be the current project's name (not displayed)
         form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
         
     elif displayForm == "Proposal":
@@ -509,6 +509,8 @@ def showform():
                 row.update_record(assignedTo= assignTo.first_name + " " + assignTo.last_name)
                 
             #Now create a new newsfeed update noting the new submission
+            if displayForm == "MeetingMinutes":
+                displayForm = "Plan for World Domination"
             description = "A new " + displayForm + " has been added."
             db.NewsFeed.insert(projectNum=form.vars.projectNum, type="document", created_on=datetime.today(), description=description, creator=auth.user.first_name + " " + auth.user.last_name)
             db.commit()

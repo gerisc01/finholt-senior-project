@@ -19,6 +19,7 @@
   <script src="{{=URL('static','jqTree/tree.jquery.js')}}"></script>
 <script type="text/javascript">
 $(document).ready(function(){
+
 $("#MyProfile").click(function(){
 $("#content").html('{{=myProfileForm}}')
 $("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
@@ -53,6 +54,25 @@ $('#projectsidebar').bind(
     }
 );
 
+//Function for the none filter (for the newsfeed)
+$('#none').change(function() {   
+    jQuery('.human').show()
+    jQuery('.document').show()
+    
+});
+
+//Function for the human filter (for the newsfeed)
+$('#human').change(function() {
+    jQuery('.human').show()
+    jQuery('.document').hide()
+});
+
+//Function for the document filter (for the newsfeed)
+$('#document').change(function () {
+    jQuery('.human').hide()
+    jQuery('.document').show()
+});
+
 });
 </script>
 
@@ -63,7 +83,7 @@ $('#projectsidebar').bind(
    {{=header}}
    
    <ul id = "projecttabs">
-        <li>Calendar</li>
+        <li id="Calendar">Calendar</li>
         <li id="CCD"><a href='{{=URL('default','showform',vars=dict(displayForm='CCD',projectNum=request.vars.projectNum))}}'>Upload CCD</a></li>
         <li id="RFI"><a href='{{=URL('default','showform',vars=dict(displayForm='RFI',projectNum=request.vars.projectNum))}}'>Generate RFI</a></li>
         <li id="Submittal"><a href='{{=URL('default','showform',vars=dict(displayForm='Submittal',projectNum=request.vars.projectNum))}}'>Upload Submittal</a></li>
@@ -79,12 +99,19 @@ $('#projectsidebar').bind(
     </div>
     <div id="content">        
         <div class="createStatus" onclick="jQuery('.hiddenForm').slideToggle()">Create a Status</div>
-        <div class="hiddenForm"><script>jQuery('.hiddenForm').hide()</script>{{=form}}</div>
+        <div class="hiddenForm"><script>jQuery('.hiddenForm').hide()</script>{{=form}}</div>             
         
         {{if entries != None:}}
+        
+              <div id="filter">
+                  <b>Filter Newsfeed:</b> 
+                  <input type="radio" name="group" id="none" checked>No Filter</input> 
+                  <input type="radio" name="group" id="human">Personal Statuses</input> 
+                  <input type="radio" name="group" id="document">Document-Only Statuses</input>
+              </div>
                   
               {{for item in entries:}}
-                <div id="newsfeed">
+                <div id="newsfeed" class={{=T(item.type)}}>
                 <b class='project'>{{=T(project.name)}}</b>
                 <b class='created'>{{=T('written by ' + item.creator + ' on ' + str(item.created_on))}}</b>
                 <hr>

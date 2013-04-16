@@ -39,48 +39,6 @@ def getUser():
     if auth.user != None:
         user = db(db.auth_user.id == auth.user.id).select().first()
     return user
-if not db(db.PhotoToken).isempty():
-    # We have a token, but it might not be valid
-    try:
-        flickr.auth_checkToken()
-    except flickrapi.FlickrError:
-        db(db.PhotoToken.id > 0).delete()
-if db(db.PhotoToken).isempty():                #we don't have the token yet
-    if request.vars.frob:                      #if the frob is in the request 
-        db.PhotoToken[0] = {"token" : flickr.get_token(request.vars.frob)}    #insert a new row into the database with the token
-    else:
-        url = flickr.web_login_url('write')    #get the url to go to in order to authenticate
-        br = mechanize.Browser()
-        # Browser options
-        br.set_handle_equiv(True)
-        br.set_handle_gzip(True)
-        br.set_handle_redirect(True)
-        br.set_handle_referer(True)
-        br.set_handle_robots(False)
-
-        # Cookie Jar
-        cj = cookielib.LWPCookieJar()
-        br.set_cookiejar(cj)
-#Returns all the non-archived projects the specified user is associated with (the parameter passed in is a user object)
-def getProjectsForUser(user):
-    projects = []
-    if user != None and user.projects != None:
-        for proj in user.projects:    #user.projects is a list of the project id's that the user is associated with
-            rows = db((db.Project.archived == False) & (db.Project.id == proj)).select() 
-            if len(projects) == 0:
-                projects = rows
-            else:
-                projects = projects & rows    
-    return projects
-
-        # Follows refresh 0 but not hangs on refresh > 0
-        br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
-        r = br.open(url)
-        br.select_form("login_form")
-        br.form["login"]="alyssealyssetest"
-        br.form["passwd"]="finholt1"
-        br.find_control(".persistent").items[0].selected=True
-        br.submit()                        #redirect to that website
 
 
 if auth.user != None:
@@ -96,6 +54,20 @@ def getProfileFormForUser(user):
     else:                   #Display the form with no fields filled in 
         myProfileForm = SQLFORM(db.auth_user, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
     return myProfileForm
+
+def getProjectsForUser(user):
+    projects = []
+    if user != None and user.projects != None:
+        if auth.has_membership(user_id=user.id, role="Admin"):
+            projects = db(db.Project.archived == False).select()
+        else:
+            for item in user.projects:
+                rows = db((db.Project.archived == False) & (db.Project.projNum == item)).select()
+                if len(projects) ==0:
+                    projects = rows
+                else:
+                    projects= projects & rows   
+    return projects
 
 #Checks if the current token is valid; if not, then redirects to flickr to be authenticated and get a token
 def setUpFlickrStuff():   
@@ -117,7 +89,28 @@ def setUpFlickrStuff():
             db.PhotoToken[0] = {"token" : flickr.get_token(request.vars.frob)}    #Insert a new row into the database with the new token
         else:
             url = flickr.web_login_url('write')     #Get the url to go to in order to authenticate
-            redirect(url)                           #Redirect to that website
+            br = mechanize.Browser()
+            # Browser options
+            br.set_handle_equiv(True)
+            br.set_handle_gzip(True)
+            br.set_handle_redirect(True)
+            br.set_handle_referer(True)
+            br.set_handle_robots(False)
+
+            # Cookie Jar
+            cj = cookielib.LWPCookieJar()
+            br.set_cookiejar(cj)
+    #Returns all the non-archived projects the specified user is associated with (the parameter passed in is a user object)
+
+
+            # Follows refresh 0 but not hangs on refresh > 0
+            br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
+            r = br.open(url)
+            br.select_form("login_form")
+            br.form["login"]="alyssealyssetest"
+            br.form["passwd"]="finholt1"
+            br.find_control(".persistent").items[0].selected=True
+            br.submit()                                 #Redirect to that website
             
             
 #Do all the set-up/initializing that is necessary for using the site (calling the above functions)   
@@ -150,7 +143,8 @@ def uploadPhotoToFlickr(photoForm):
 #Returns a dictionary used by the view default/index.html (which is the home screen)
 @auth.requires_login()
 def index():
-    response.flash = "Welcome " + auth.user.first_name + "!"    #Welcome the user to the site
+    #response.flash = "Welcome " + auth.user.first_name + "!"    #Welcome the user to the site
+    response.flash = "Erik Smellz"
     projectNums = []                                            #Get the project numbers of all the projects the user is associated with
     for project in projects:
         projectNums.append(project.projNum) 

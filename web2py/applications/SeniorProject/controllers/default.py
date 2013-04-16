@@ -372,7 +372,9 @@ def manageprojects():
     else:   #There is at least one on-going project
         db.Project.id.represent = lambda id: DIV(id, INPUT(_type='checkbox',_name='%i'%id)) #Represent the project id as a checkbox
         #Create a table of all the non-archived projects, each with a checkbox for the option to archive
-        table = FORM(SQLTABLE(rows, columns=["Project.id","Project.name","Project.projNum",'Project.openDate',"Project.closedDate"], headers={"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}), INPUT(_type='submit')) 
+        table = FORM(SQLTABLE(rows, columns=["Project.id","Project.name","Project.projNum",'Project.openDate',"Project.closedDate"], headers={"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}), INPUT(_type='submit'))
+        
+        table["_onsubmit"] = "return confirm('Are you sure you want to archive this project?');"
         
         if table.process().accepted:
            response.flash = str(request.vars.name) + ' has been archived'

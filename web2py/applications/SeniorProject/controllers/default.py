@@ -13,9 +13,9 @@
 import flickrapi
 import appy
 from datetime import datetime
-
 import mechanize
 import cookielib
+
 #Flickr API keys
 KEY = '614fd86a34a00d38293c7e803d14c3ab'
 SECRET_KEY = 'ad86826c3187eb4d'
@@ -26,12 +26,6 @@ header = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg')), _href=URL('d
 header_archived = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg'))), _id="header")
 footer = DIV(A("Home Page", _href=URL('default','index')), TD("------"), A("Log out", _href=URL('default','user', args='logout')), _id="footer")
 css = "/SeniorProject/static/css/bluestyle.css"
-    
-if not db(db.PhotoToken).isempty():
-    tok = (db.PhotoToken(db.PhotoToken.id>0)).token
-    flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY, token = tok)     #create a flickr object
-else:
-    flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY)
 
 #Returns the current user (object) of the site
 def getUser():
@@ -40,12 +34,6 @@ def getUser():
         user = db(db.auth_user.id == auth.user.id).select().first()
     return user
 
-
-if auth.user != None:
-    record = auth.user.id     #Gets the info for the current user
-    myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
-else: 
-    myProfileForm = SQLFORM(db.auth_user, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
 #Returns the form that will be displayed when the "My Profile" tab is clicked (the paratmeter passed in is a user object)
 def getProfileFormForUser(user):
     if user != None:        #We will display the form with the user's current information filled in
@@ -55,6 +43,7 @@ def getProfileFormForUser(user):
         myProfileForm = SQLFORM(db.auth_user, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
     return myProfileForm
 
+#Returns all the non-archived projects the specified user is associated with (the parameter passed in is a user object)
 def getProjectsForUser(user):
     projects = []
     if user != None and user.projects != None:
@@ -100,8 +89,6 @@ def setUpFlickrStuff():
             # Cookie Jar
             cj = cookielib.LWPCookieJar()
             br.set_cookiejar(cj)
-    #Returns all the non-archived projects the specified user is associated with (the parameter passed in is a user object)
-
 
             # Follows refresh 0 but not hangs on refresh > 0
             br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
@@ -122,29 +109,32 @@ setUpFlickrStuff()                          #Make sure all the flickr stuff is g
 
 #Called when a new photoForm is submitted (called from showform when the photoForm is accepted)
 def uploadPhotoToFlickr(photoForm):
-    #Get the info from the submitted photo form
-    photoWeb2pyId = photoForm.vars.id
-    projNum = photoForm.vars.projectNum
-    title = photoForm.vars.title
-    descr = photoForm.vars.description
-    name = "applications/SeniorProject/uploads/" + photoForm.vars.photo
+    try:
+        #Get the info from the submitted photo form
+        photoWeb2pyId = photoForm.vars.id
+        projNum = photoForm.vars.projectNum
+        title = photoForm.vars.title
+        descr = photoForm.vars.description
+        name = "applications/SeniorProject/uploads/" + photoForm.vars.photo
+        
+        #Upload the photo to flickr and get the id of the photo in order to construct the url of the photo
+        idElement = flickr.upload(filename=name, title=title, description=descr)
+        id = idElement.find('photoid').text
+        flickrUrl =  "http://www.flickr.com/photos/"+USER_ID+"/"+str(id)+"/"  
     
-    #Upload the photo to flickr and get the id of the photo in order to construct the url of the photo
-    idElement = flickr.upload(filename=name, title=title, description=descr)
-    id = idElement.find('photoid').text
-    flickrUrl =  "http://www.flickr.com/photos/"+USER_ID+"/"+str(id)+"/"  
-
-    #Delete the corresponding row in our database (because we don't want to store the actual photo no our server)
-    db(db.Photos.id == photoWeb2pyId).delete()
-    
-    #Create a new row in our database with all the same info as the deleted row, but without the photo file
-    db.Photos.insert(projectNum=projNum, flickrURL=flickrUrl, title=title, description=descr)
+        #Delete the corresponding row in our database (because we don't want to store the actual photo no our server)
+        db(db.Photos.id == photoWeb2pyId).delete()        
+        
+        #Create a new row in our database with all the same info as the deleted row, but without the photo file
+        db.Photos.insert(projectNum=projNum, flickrURL=flickrUrl, title=title, description=descr)
+    except:
+        response.flash = "Upload failed"
+        redirect(URL('default','showform', vars=dict(displayForm="Photo", projectNum=projNum)))
 
 #Returns a dictionary used by the view default/index.html (which is the home screen)
 @auth.requires_login()
 def index():
-    #response.flash = "Welcome " + auth.user.first_name + "!"    #Welcome the user to the site
-    response.flash = "Erik Smellz"
+    response.flash = "Welcome " + auth.user.first_name + "!"    #Welcome the user to the site
     projectNums = []                                            #Get the project numbers of all the projects the user is associated with
     for project in projects:
         projectNums.append(project.projNum) 
@@ -552,7 +542,9 @@ def showform():
                 
             #Now create a new newsfeed update noting the new submission
             if displayForm == "MeetingMinutes":
-                displayForm = "Plan for World Domination"
+                displayForm = "Meeting Minutes document"
+            elif displayForm == "ProposalRequest":
+                displayForm = "Proposal Request"
             description = "A new " + displayForm + " has been added."
             db.NewsFeed.insert(projectNum=form.vars.projectNum, type="document", created_on=datetime.today(), description=description, creator=auth.user.first_name + " " + auth.user.last_name)
             db.commit()

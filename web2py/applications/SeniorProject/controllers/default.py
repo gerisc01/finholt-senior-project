@@ -281,7 +281,7 @@ def addtoproject():
     if table.accepts(request.vars):
         for userid in request.vars.keys():           #For each user selected..
             if userid.isdigit():
-                projectList = []
+                projectList = db(db.auth_user.id == int(userid)).select().first().projects
                 if type(request.vars[userid]) is list:
                     for item in request.vars[userid]:
                         projectList.append(int(item))

@@ -46,7 +46,7 @@ $(function() {
         data: data,
         autoEscape:false
     });
-    var node = $('#projectsidebar').tree('getNodeById', {{=int(request.vars.projectNum)}});
+    var node = $('#projectsidebar').tree('getNodeById', {{=int(request.vars.projectNum[0])}});
 $('#projectsidebar').tree('openNode', node);
 });
 

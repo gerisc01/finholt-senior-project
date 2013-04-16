@@ -8,52 +8,71 @@
 ## - download is for downloading files uploaded in the db (does streaming)
 ## - call exposes all registered services (none by default)
 #########################################################################
-
 import flickrapi
-
-
-#Flickr API keys
-KEY = '614fd86a34a00d38293c7e803d14c3ab'
-SECRET_KEY = 'ad86826c3187eb4d'
-USER_ID = '93142072@N05'
-
-    
-if not db(db.PhotoToken).isempty():
-    tok = (db.PhotoToken(db.PhotoToken.id>0)).token
-    flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY, token = tok)     #create a flickr object
-else:
-    flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY)
-
-if not db(db.PhotoToken).isempty():
-    # We have a token, but it might not be valid
-    try:
-        flickr.auth_checkToken()
-    except flickrapi.FlickrError:
-        db(db.PhotoToken.id > 0).delete()
-if db(db.PhotoToken).isempty():                #we don't have the token yet
-    if request.vars.frob:                      #if the frob is in the request 
-        db.PhotoToken[0] = {"token" : flickr.get_token(request.vars.frob)}    #insert a new row into the database with the token
-    else:
-        url = flickr.web_login_url('write')    #get the url to go to in order to authenticate
-        redirect(url)                          #redirect to that website
-
-
-if auth.user != None:
-    record = auth.user.id     #Gets the info for the current user
-    myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
-else: 
-    myProfileForm = SQLFORM(db.auth_user, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
-
-projects = None
-
-
-
-
+import appy
 
 header = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg')), _href=URL('default','index')), _id="header")
 header_archived = DIV(A(IMG(_src=URL('static','images/bluebannertext.jpg'))), _id="header")
-footer = DIV(A("Home Page", _href=URL('default','index')), _id="footer")
+footer = DIV(A("Home Page", _href=URL('default','index')), TD("------"), A("Log out", _href=URL('default','user', args='logout')), _id="footer")
 css = "/SeniorProject/static/css/bluestyle.css"
+
+def getUser():
+    user = None
+    if auth.user != None:
+        user = db(db.auth_user.id == auth.user.id).select().first()
+    return user
+ 
+def getProjectsForUser(user):
+    projects = []
+    if user != None and user.projects != None:
+        for item in user.projects:
+            rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
+            if len(projects) == 0:
+                projects = rows
+            else:
+                projects= projects & rows    
+    return projects
+   
+def getProfileFormForUser(user):
+    if user != None:
+        record = user.id    #Gets the info for the current user    
+        myProfileForm = SQLFORM(db.auth_user, record, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
+    else: 
+        myProfileForm = SQLFORM(db.auth_user, showid=False, labels={'first_name':'First Name', 'last_name':'Last Name', 'email':'E-mail', 'phone':'Phone Number', 'password':'New Password'}, fields = ['first_name','last_name','email','phone'],_id="profileForm")
+    return myProfileForm
+   
+def setUpFlickrStuff():
+    #Flickr API keys
+    KEY = '614fd86a34a00d38293c7e803d14c3ab'
+    SECRET_KEY = 'ad86826c3187eb4d'
+    USER_ID = '93142072@N05'    
+        
+    if not db(db.PhotoToken).isempty():
+        tok = (db.PhotoToken(db.PhotoToken.id>0)).token
+        flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY, token = tok)     #create a flickr object
+    else:
+        flickr = flickrapi.FlickrAPI(KEY, SECRET_KEY)
+    
+    if not db(db.PhotoToken).isempty():
+        # We have a token, but it might not be valid
+        try:
+            flickr.auth_checkToken()
+        except flickrapi.FlickrError:
+            db(db.PhotoToken.id > 0).delete()
+    if db(db.PhotoToken).isempty():                #we don't have the token yet
+        if request.vars.frob:                      #if the frob is in the request 
+            db.PhotoToken[0] = {"token" : flickr.get_token(request.vars.frob)}    #insert a new row into the database with the token
+        else:
+            url = flickr.web_login_url('write')    #get the url to go to in order to authenticate
+            redirect(url)                          #redirect to that website
+            
+            
+#Do all the set-up/initializing that is necessary    
+user = getUser()
+projects = getProjectsForUser(user)
+myProfileForm = getProfileFormForUser(user)
+setUpFlickrStuff()
+
 
 def uploadPhotoToFlickr(photoForm):
     #MessageBox = ctypes.windll.user32.MessageBoxA
@@ -77,30 +96,14 @@ def uploadPhotoToFlickr(photoForm):
     #Create a new row in our database with all the same info as the deleted row, but without the photo file
     db.Photos.insert(projectNum=projNum, flickrURL=flickrUrl, title=title, description=descr)
 
-
 @auth.requires_login()
 def index():
     """
     example action using the internationalization operator T and flash
     rendered by views/default/index.html or views/generic.html
-<<<<<<< HEAD
     """
-    user = db(db.auth_user.id ==auth.user.id).select().first()
-    projects = None
-    for item in user.projects:
-        rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
-        if projects == None:
-            projects = rows
-        else:
-            projects= projects & rows
     
-
-    response.flash = "Erik Smellz"
-=======
-    """    
-     
     response.flash = "Welcome " + auth.user.first_name + "!"
->>>>>>> d2539007ff16ddcb1960a8a5d467e221daf9d54f
     return dict(
                 projects=projects,
                 myProfileForm=myProfileForm,
@@ -160,6 +163,7 @@ def data():
     """
     return dict(form=crud(), css=css, footer=footer)
 
+@auth.requires_login()
 @auth.requires_membership('Admin')
 def register():
     form = SQLFORM(db.auth_user)
@@ -181,7 +185,7 @@ def register():
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def changepermissions():
-     rows=db(db.auth_user.id>0).select() 
+     rows=db(db.auth_user.id != auth.user.id).select() 
      db.auth_user.id.represent=lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id)
      table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
  
@@ -220,9 +224,9 @@ def addtoproject():
 @auth.requires_membership("Admin")
 @auth.requires_login()
 def deletefromproject():
-    rows=db(db.auth_user.id>0).select() 
+    rows = db(db.auth_user.id > 0).select() 
     db.auth_user.id.represent=lambda id: DIV('', XML(getUsersProjectsHtml(id)), _name='%i'%id)
-    table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove From","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
+    table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove From","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
     if table.accepts(request.vars): 
         for userid in request.vars.keys():
             if userid.isdigit():
@@ -238,9 +242,9 @@ def deletefromproject():
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def deleteusers():
-     rows=db(db.auth_user.id>0).select() 
+     rows = db(db.auth_user.id != auth.user.id).select() 
      db.auth_user.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
-     table=FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
+     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.first_name','auth_user.last_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
      if table.process().accepted:
        response.flash = str(request.vars.first_name) + ' deleted as user'
      elif table.errors:
@@ -272,20 +276,23 @@ def createproject():
 @auth.requires_membership('Admin')
 def manageprojects():
     table = None
-    rows = db(db.Project.archived == False).select()    
-    db.Project.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
-    table = FORM(SQLTABLE(rows,columns=["Project.id","Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}),INPUT(_type='submit'))
-    if table.process().accepted:
-       response.flash = str(request.vars.name) + ' has been archived'
-    elif table.errors:
-       response.flash = 'form has errors'
-    else:
-       response.flash = 'Select a project to archive'
-    if table.accepts(request.vars):
-        for pID in request.vars.keys():
-            if pID.isdigit():
-                db(db.Project.id ==int(pID)).update(archived=True)
-        redirect(URL('default','manageprojects'))
+    rows = db(db.Project.archived == False).select() 
+    if len(rows) == 0:
+        table = "There are currently no non-archived projects"
+    else:   
+        db.Project.id.represent=lambda id: DIV(id,INPUT (_type='checkbox',_name='%i'%id)) 
+        table = FORM(SQLTABLE(rows,columns=["Project.id","Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}),INPUT(_type='submit'))
+        if table.process().accepted:
+           response.flash = str(request.vars.name) + ' has been archived'
+        elif table.errors:
+           response.flash = 'form has errors'
+        else:
+           response.flash = 'Select a project to archive'
+        if table.accepts(request.vars):
+            for pID in request.vars.keys():
+                if pID.isdigit():
+                    db(db.Project.id ==int(pID)).update(archived=True)
+            redirect(URL('default','manageprojects'))
     return dict(table=table, footer=footer, header=header,css=css)
     
 @auth.requires_login()
@@ -293,37 +300,42 @@ def manageprojects():
 def archiveprojects():
     table = None
     rows = db(db.Project.archived == True).select()
-    extracolumns = [{'label':'View Archived Project',
-                'class': '', #class name of the header
-                'width':'', #width in pixels or %
-                'content':lambda row, rc: A("View", _href=URL('default','viewArchive', args=row.id), _target='new'),
-                'selected': False #agregate class selected to this column
-                }]
-    table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"},extracolumns=extracolumns)
+    if len(rows) == 0:
+        table = "There are no projects that have been achived"
+    else:
+        extracolumns = [{'label':'View Archived Project',
+                    'class': '', #class name of the header
+                    'width':'', #width in pixels or %
+                    'content':lambda row, rc: A("View", _href=URL('default','viewArchive', args=row.id), _target='new'),
+                    'selected': False #agregate class selected to this column
+                    }]
+        table = SQLTABLE(rows,columns=["Project.name","Project.projNum",'Project.openDate',"Project.closedDate"],headers={"Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #", "Project.archived":"Archived"},extracolumns=extracolumns)
     return dict(table=table, footer=footer, header=header, css=css)
     
+@auth.requires_login()
+@auth.requires_membership('Admin')
 def viewArchive():
     project = db(db.Project.id == request.args(0)).select().first()
     return dict(project=project, header=header_archived, css=css)
-    
+
+@auth.requires_login()    
 def newsfeed():
-    entries = db().select(db.NewsFeed.ALL)  
+    entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select()   
+    if entries == None or len(entries) == 0:
+        entries = None   
     return dict(entries=entries, fullTable=True, projects=projects, myProfileForm=myProfileForm, header=header, footer=footer, css=css)
-    
+
+@auth.requires_login() 
+@auth.requires_membership('Admin')   
 def newsfeedarchived():
     project = db(db.Project.projNum == request.vars.projectNum).select().first()
-    entries = db().select(db.NewsFeed.ALL)   
+    entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select()   
+    if entries == None or len(entries) == 0:
+        entries = None   
     return dict(entries=entries, fullTable=True, project=project, header=header_archived, css=css)  
 
+@auth.requires_login() 
 def showform():
-    user = db(db.auth_user.id ==auth.user.id).select().first()
-    projects = None
-    for item in user.projects:
-        rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
-        if projects == None:
-            projects = rows
-        else:
-            projects= projects & rows
     displayForm = request.vars.displayForm
     form = None
     if displayForm == "CCD":
@@ -333,7 +345,7 @@ def showform():
         form.vars.projectNum = request.vars.projectNum
     elif displayForm == "RFI":
         db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
-        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
+        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'projectName':'Project Name', 'owner':'Owner', 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','projectName','owner','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
         rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
         form.vars.rfiNum = len(rows) + 1
         form.vars.requestBy = auth.user.first_name
@@ -392,20 +404,10 @@ def showform():
                 header=header,
                 css=css)
 
+
 @auth.requires_login()
-<<<<<<< HEAD
-def formtable():
-    user = db(db.auth_user.id ==auth.user.id).select().first()
-    projects = None
-    for item in user.projects:
-        rows = db((db.Project.archived == False) & (db.Project.id == item)).select()
-        if projects == None:
-            projects = rows
-        else:
-            projects= projects & rows
-=======
+@auth.requires_membership('Admin') 
 def formtablearchived():
->>>>>>> d2539007ff16ddcb1960a8a5d467e221daf9d54f
     formType = request.vars.formType
     project =  db(db.Project.projNum == request.vars.projectNum).select().first()
     table = None
@@ -420,6 +422,7 @@ def formtablearchived():
     
     elif formType == "RFI":
         rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()
+        db.RFI.rfiNum.represent=lambda rfiNum: A(str(rfiNum), _href=URL("default","create_odt",args=[int(rfiNum)]),_target="_blank")
         table = SQLTABLE(rows,_width="800px",       
             columns=["RFI.rfiNum","RFI.dateSent","RFI.reqRefTo","RFI.responseDate"],headers=
             {"RFI.rfiNum":"RFI #","RFI.dateSent":"Date Sent","RFI.reqRefTo":"Request Referred To","RFI.responseDate":"Response Date"})
@@ -592,6 +595,99 @@ def getUserRole(id):
     else:
         return "General"
 
+def get_data(row_id):
+    import MySQLdb
+
+    db = MySQLdb.connect(host="10.24.6.23",user="seniorproj",passwd="web2py2012",db="finholt")
+    cur = db.cursor()
+
+    # Getting the rows from the database
+
+    cur.execute("SELECT * FROM RFI WHERE rfiNum = %s;",(row_id))
+    columns = cur.description
+    row = cur.fetchall()
+
+    dict = {}
+
+    for i in range(len(columns)):
+        dict[columns[i][0]] = row[0][i]
+
+    return dict
+
+def create_odt():
+    import subprocess
+    import os
+    from datetime import datetime
+    import time
+    appy = local_import('appy.pod.renderer')
+
+    phpscript = os.path.join(request.folder, 'static', 'php', 'result.odt')
+    subprocess.Popen("rm " + phpscript, shell=True)
+
+    # giving the program enough time to delete the old result.odt
+    time.sleep(1)
+ 
+    dictionary = get_data(request.args[0])
+
+    appyDict = {}
+    appyDict['rfiNumber'] = dictionary['rfiNum']
+
+    # Need to add database places for these and then add the dictionary
+    appyDict['project'] = 'Hemodialysis Unit and Clinic Expansion'
+    appyDict['owner'] = 'Winneskiek Medical Center'
+
+    appyDict['requestBy'] = dictionary['requestBy']
+
+    dtSent = dictionary['dateSent']
+    if dtSent != None:
+        appyDict['DateSent'] = "%s/%s/%s" % (dtSent.month,dtSent.day,dtSent.year)
+    else:
+        appyDict['DateSent'] = "None"
+
+    appyDict['requestReferredTo'] = dictionary['reqRefTo']
+
+    dtRec = dictionary['dateRec']
+    if dtRec != None:
+        appyDict['DateReceived'] = "%s/%s/%s" % (dtRec.month,dtRec.day,dtRec.year)
+    else:
+        appyDict['DateReceived'] = "None"
+
+    appyDict['drawingNum'] = dictionary['drawingNum']
+
+    appyDict['detailNum'] = dictionary['detailNum']
+
+    appyDict['specNum'] = dictionary['specSection']
+    appyDict['sheetName'] = dictionary['sheetName']
+
+    appyDict['grids'] = dictionary['grids']
+    appyDict['sectionPage'] = dictionary['sectionPage']
+
+    appyDict['rfiDescription'] = dictionary['description']
+
+    appyDict['contractorSuggestion'] = dictionary['suggestion']
+
+    appyDict['reply'] = dictionary['reply']
+
+    appyDict['responseBy'] = dictionary['responseBy']
+
+    dtResp = dictionary['responseDate']
+    if dtResp != None:
+        appyDict['responseDate'] = "%s/%s/%s" % (dtResp.month,dtResp.day,dtResp.year)
+    else:
+        appyDict['responseDate']
+
+    myfile = os.path.join(request.folder, 'static','php', 'rfiTemplate.odt')
+    newfile = os.path.join(request.folder, 'static','php', 'result.odt')
+    
+    renderer = appy.Renderer(myfile, appyDict, newfile)
+    renderer.run()
+
+    phpscript = os.path.join(request.folder, 'static', 'php', 'rfi.php')
+    proc = subprocess.Popen("php " + phpscript, shell=True, stdout=subprocess.PIPE)
+    resp = proc.stdout.read()
+
+    return dict(html=HTML('',XML(resp)))
+
 def getAllProjectsHtml(id):
     html=''
     projects = db(db.Project.archived == False).select()
@@ -609,7 +705,6 @@ def getAllProjectsHtml(id):
 
 def getUsersProjectsHtml(id):
     html = ''
-
     
     user = db(db.auth_user.id == id).select().first()
     if user.projects != None and len(user.projects)>=1:
@@ -619,3 +714,4 @@ def getUsersProjectsHtml(id):
     else:
         html = "<p>Not on any projects</p>"
     return html
+

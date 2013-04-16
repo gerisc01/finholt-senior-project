@@ -157,7 +157,12 @@ CREATE TABLE MeetingMinutes(
     file CHAR(512)
 );
 success!
+<<<<<<< HEAD
+<<<<<<< Updated upstream
+timestamp: 2013-03-05T15:30:35.786379
+=======
 timestamp: 2013-03-21T15:32:56.848376
+>>>>>>> 436c0f0564419629d87508247adfa290f357de73
 CREATE TABLE PhotoToken(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     token CHAR(512)
@@ -172,4 +177,180 @@ CREATE TABLE Photos(
     description TEXT,
     photo CHAR(512)
 );
+=======
+timestamp: 2013-02-12T15:52:41.655345
+CREATE TABLE auth_user(
+    id INT AUTO_INCREMENT NOT NULL,
+    first_name VARCHAR(128),
+    last_name VARCHAR(128),
+    email VARCHAR(128) UNIQUE,
+    password VARCHAR(255),
+    phone VARCHAR(255),
+    registration_key VARCHAR(255),
+    reset_password_key VARCHAR(255),
+    registration_id VARCHAR(255),
+    role VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:41.840564
+CREATE TABLE auth_group(
+    id INT AUTO_INCREMENT NOT NULL,
+    role VARCHAR(255),
+    description LONGTEXT,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:41.928575
+CREATE TABLE auth_membership(
+    id INT AUTO_INCREMENT NOT NULL,
+    user_id INT, INDEX user_id__idx (user_id), FOREIGN KEY (user_id) REFERENCES auth_user(id) ON DELETE CASCADE,
+    group_id INT, INDEX group_id__idx (group_id), FOREIGN KEY (group_id) REFERENCES auth_group(id) ON DELETE CASCADE,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:42.087345
+CREATE TABLE auth_permission(
+    id INT AUTO_INCREMENT NOT NULL,
+    group_id INT, INDEX group_id__idx (group_id), FOREIGN KEY (group_id) REFERENCES auth_group(id) ON DELETE CASCADE,
+    name VARCHAR(255),
+    table_name VARCHAR(255),
+    record_id INT,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:42.179073
+CREATE TABLE auth_event(
+    id INT AUTO_INCREMENT NOT NULL,
+    time_stamp DATETIME,
+    client_ip VARCHAR(255),
+    user_id INT, INDEX user_id__idx (user_id), FOREIGN KEY (user_id) REFERENCES auth_user(id) ON DELETE CASCADE,
+    origin VARCHAR(255),
+    description LONGTEXT,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:42.270537
+CREATE TABLE auth_cas(
+    id INT AUTO_INCREMENT NOT NULL,
+    user_id INT, INDEX user_id__idx (user_id), FOREIGN KEY (user_id) REFERENCES auth_user(id) ON DELETE CASCADE,
+    created_on DATETIME,
+    service VARCHAR(255),
+    ticket VARCHAR(255),
+    renew CHAR(1),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:42.438233
+CREATE TABLE Project(
+    id INT AUTO_INCREMENT NOT NULL,
+    name VARCHAR(255),
+    openDate DATE,
+    closedDate DATE,
+    projNum INT,
+    archived CHAR(1),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:42.561295
+CREATE TABLE ProjectUser(
+    id INT AUTO_INCREMENT NOT NULL,
+    userRole VARCHAR(255),
+    projectId VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:42.644830
+CREATE TABLE CCD(
+    id INT AUTO_INCREMENT NOT NULL,
+    ccdNum VARCHAR(255),
+    projectNum VARCHAR(255),
+    file VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:42.770086
+CREATE TABLE Submittal(
+    id INT AUTO_INCREMENT NOT NULL,
+    statusFlag VARCHAR(255),
+    projectNum VARCHAR(255),
+    assignedTo VARCHAR(255),
+    submittal VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:42.855390
+CREATE TABLE RFI(
+    id INT AUTO_INCREMENT NOT NULL,
+    rfiNum VARCHAR(255),
+    requestBy VARCHAR(255),
+    dateSent DATE,
+    reqRefTo VARCHAR(255),
+    dateRec DATE,
+    drawingNum INT,
+    detailNum INT,
+    specSection INT,
+    sheetName VARCHAR(255),
+    grids VARCHAR(255),
+    sectionPage INT,
+    description LONGTEXT,
+    suggestion LONGTEXT,
+    reply LONGTEXT,
+    responseBy VARCHAR(255),
+    responseDate DATE,
+    statusFlag VARCHAR(255),
+    projectNum VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:42.929136
+CREATE TABLE ProposalRequest(
+    id INT AUTO_INCREMENT NOT NULL,
+    reqNum VARCHAR(255),
+    amendNum VARCHAR(255),
+    projectNum VARCHAR(255),
+    subject LONGTEXT,
+    propDate DATE,
+    sentTo VARCHAR(255),
+    cc VARCHAR(255),
+    description LONGTEXT,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:43.003610
+CREATE TABLE Proposal(
+    id INT AUTO_INCREMENT NOT NULL,
+    reqNum INT,
+    propDate DATE,
+    file VARCHAR(255),
+    projectNum VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-02-12T15:52:43.108926
+CREATE TABLE MeetingMinutes(
+    id INT AUTO_INCREMENT NOT NULL,
+    meetDate DATE,
+    file VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+>>>>>>> Stashed changes
+success!
+timestamp: 2013-03-06T14:32:39.244504
+CREATE TABLE PhotoToken(
+    id INT AUTO_INCREMENT NOT NULL,
+    token VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-03-06T14:32:39.499546
+CREATE TABLE Photos(
+    id INT AUTO_INCREMENT NOT NULL,
+    projectNum VARCHAR(255),
+    flickrURL VARCHAR(255),
+    title VARCHAR(255),
+    description LONGTEXT,
+    photo VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
 success!

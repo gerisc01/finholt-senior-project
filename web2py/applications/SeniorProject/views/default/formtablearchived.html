@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
+<link rel="icon" type="image/ico" href="{{=URL('static','favicon.png')}}"/>
+
 {{include 'web2py_ajax.html'}}
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
   <script src="{{=URL('static','js/jquery.js')}}"></script> 
@@ -19,7 +21,6 @@ $(document).ready(function(){
 
 var data = [];
 
-
 data.push(
 {label:"<a href='{{=URL('default','newsfeedarchived',vars=dict(formType='NewsFeed',projectNum=project.projNum))}}'>News Feed</a>"},
 {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='RFI',projectNum=project.projNum))}}'>RFIs</a>"},
@@ -31,7 +32,6 @@ data.push(
 {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Photo',projectNum=project.projNum))}}'>Photos</a>"});
 
 {{pass}}
-
 
 $(function() {
     $('#projectsidebar').tree({
@@ -59,7 +59,6 @@ $("#content table").dataTable(
 {{pass}}
 
 });
-
 </script>
 
 </head>

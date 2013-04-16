@@ -1,15 +1,20 @@
 <html>
 <head>
   <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
+  <link rel="icon" type="image/ico" href="{{=URL('static','favicon.png')}}"/>  
+{{include "web2py_ajax.html"}}
 </head>
+
 <body>
+<div class="flash">{{=response.flash or ''}}</div>
 <h2>{{=T( request.args(0).replace('_',' ').capitalize() )}}</h2>
 <div id="web2py_user_form">
   {{=form}}
   {{if request.args(0)=='login':}}
   {{if not 'register' in auth.settings.actions_disabled:}}
   <br/>
-  <a href="{{=URL(args='request_reset_password')}}">{{=T('Lost Password')}}</a>
+  <a href="{{=URL(args='request_reset_password')}}">Forgot Password</a>
   {{pass}}
   {{pass}}
 </div>

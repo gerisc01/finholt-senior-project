@@ -12,6 +12,7 @@
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
     db = DAL('sqlite://storage.sqlite')
+    ##db = DAL('mysql://seniorproj:web2py2012@10.24.6.23/finholt')
 else:
     ## connect to Google BigTable (optional 'google:datastore://namespace')
     db = DAL('google:datastore')
@@ -115,19 +116,17 @@ use_janrain(auth,filename='private/janrain.key')
 uploadTypes = '(pdf|txt|doc|docx)'
 photoTypes = '(jpeg|png)'
 
-db.define_table("Project", Field('name','string'), Field('openDate','date'), Field('closedDate','date'), Field('projNum', 'integer'), Field('archived','boolean',readable=False, writable=False, default=False))
+db.define_table("Project", Field('projNum', 'integer'), Field('name','string'), Field('owner', 'string'), Field('openDate','date'), Field('closedDate','date'), Field('archived','boolean',readable=False, writable=False, default=False))
 
-db.define_table("ProjectUser", Field('userRole','string'), Field('projectId','string'))
-
-db.define_table("NewsFeed", Field('projectNum','string'), Field('type','string'), Field('created_on','datetime'), Field('description','string'), Field('creator','string'))
+db.define_table("NewsFeed", Field('projectNum','string'), Field('type','string'), Field('created_on','datetime'), Field('description','text'), Field('creator','string'))
 
 db.define_table("CCD", Field('ccdNum','string'), Field('projectNum','string'), Field('file','upload',requires=IS_UPLOAD_FILENAME(extension=uploadTypes)))
 
 db.define_table("Submittal", Field('statusFlag','string'), Field('projectNum','string'), Field('assignedTo','string'), Field('submittal','upload',requires=IS_UPLOAD_FILENAME(extension=uploadTypes)), Field('subType','string'), Field('sectNum','integer'))
 
-db.define_table("RFI", Field('rfiNum','string'), Field('requestBy','string'), Field('dateSent','date'), Field('reqRefTo','string'), Field('drawingNum','integer'), Field('detailNum','integer'), Field('specSection','integer'), Field('sheetName','string'), Field('grids','string'), Field('sectionPage','integer'), Field('description','text'), Field('suggestion','text'), Field('reply','text'), Field('responseBy','date'), Field('responseDate','date'), Field('statusFlag','string'),Field('projectNum','string'))
+db.define_table("RFI", Field('rfiNum','string'), Field('requestBy','string'), Field('dateSent','date'), Field('reqRefTo','string'), Field('drawingNum','integer'), Field('detailNum','integer'), Field('specSection','integer'), Field('sheetName','string'), Field('grids','string'), Field('sectionPage','integer'), Field('description','text'), Field('suggestion','text'), Field('reply','text'), Field('responseBy','date'), Field('responseDate','date'), Field('statusFlag','string'),Field('projectNum','string'), Field('projectName','string'), Field('owner','string'))
 
-db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','string'), Field('projectNum','string'), Field('subject','text'), Field('propDate','date'), Field('sentTo','string'), Field('cc','string'), Field('description','text'), Field('statusFlag','string'),Field('creator','integer'))
+db.define_table("ProposalRequest", Field('reqNum','string'), Field('amendNum','string'), Field('projectNum','string'), Field('subject','text'), Field('propDate','date'), Field('sentTo','string'), Field('cc','string'), Field('description','text'), Field('statusFlag','string'),Field('creator','integer'), Field('projectName','string'), Field('owner','string'))
 
 db.define_table("Proposal", Field('propNum','integer'), Field('propReqRef','integer'), Field('propDate','date'), Field('file','upload',requires=IS_UPLOAD_FILENAME(extension=uploadTypes)),Field('projectNum','string'))
 

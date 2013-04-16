@@ -2,12 +2,14 @@
 <html>
 
 <head>
-<title>Senior Project</title>
+<title>Finholt Construction</title>
 <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','css/jquery.datatables.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
-  {{include 'web2py_ajax.html'}}
+<link rel="icon" type="image/ico" href="{{=URL('static','favicon.png')}}"/>
+
+{{include 'web2py_ajax.html'}}
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
   <script src="{{=URL('static','js/jquery.js')}}"></script> 
   <script src="{{=URL('static','js/jquery.ui.accordion.js')}}"></script> 
@@ -22,9 +24,7 @@ $("#content").html('{{=myProfileForm}}')
 $("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
 })
 
-
 var data = [];
-
 
 {{for index  in range(len(projects)):}}
   data.push({label:"Project "+"{{=T(projects[index].name)}}",id:{{=int(projects[index].id)}}, children:[
@@ -37,7 +37,6 @@ var data = [];
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].projNum))}}'>Meeting Minutes</a>"}, 
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].projNum))}}'>Photos</a>"} ]});
   {{pass}} 
-
 ;
 
 
@@ -61,8 +60,6 @@ $('#projectsidebar').bind(
 
 
 });
-
-
 </script>
 
 </head>
@@ -72,7 +69,7 @@ $('#projectsidebar').bind(
    {{=header}}
 
     <ul id = "projecttabs">
-        <li>Calendar</li>
+        <li id="Calendar">Calendar</li>
         <li id="CCD"><a href='{{=URL('default','showform',vars=dict(displayForm='CCD',projectNum=request.vars.projectNum))}}'>Upload CCD</a></li>
         <li id="RFI"><a href='{{=URL('default','showform',vars=dict(displayForm='RFI',projectNum=request.vars.projectNum))}}'>Generate RFI</a></li>
         <li id="Submittal"><a href='{{=URL('default','showform',vars=dict(displayForm='Submittal',projectNum=request.vars.projectNum))}}'>Upload Submittal</a></li>
@@ -90,7 +87,9 @@ $('#projectsidebar').bind(
     <div id="content">
       {{=form}}
     </div>
-    {{include 'adminSidebar.html'}}
+    {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
+        {{include "adminSidebar.html"}}
+    {{pass}}
     
 
     {{=footer}}

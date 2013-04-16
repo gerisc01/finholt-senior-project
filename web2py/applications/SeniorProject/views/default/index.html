@@ -7,28 +7,23 @@
 <link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
 <link rel="icon" type="image/ico" href="{{=URL('static','favicon.png')}}"/>
-<link rel="SHORTCUT ICON" type="image/ico" href="{{=URL('static','favicon.ico')}}"/>
-
+<link rel="SHORTCUT ICON" type="image/ico" href="{{=URL('static','favicon.png')}}"/>
 
 {{include 'web2py_ajax.html'}}
 <script src="{{=URL('static','js/modernizr.custom.js')}}"></script>   
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
   <script src="{{=URL('static','js/jquery.js')}}"></script> 
-  <script src="{{=URL('static','js/jquery.ui.accordion.js')}}"></script> 
   <script src="{{=URL('static','js/jquery-ui-1.9.0.custom.min.js')}}"></script> 
   <script src="{{=URL('static','jqTree/tree.jquery.js')}}"></script>
 <script type="text/javascript">
 $(document).ready(function(){
-
 
 $("#MyProfile").click(function(){
 $("#content").html('{{=myProfileForm}}')
 $("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
 })
 
-
 var data = [];
-
 
 {{for index  in range(len(projects)):}}
   data.push({label:"Project "+"{{=T(projects[index].name)}}", children:[
@@ -56,8 +51,26 @@ $('#projectsidebar').bind(
     }
 );
 
+//Function for the none filter (for the newsfeed)
+$('#none').change(function() {   
+    jQuery('.human').show()
+    jQuery('.document').show()
+    
 });
 
+//Function for the human filter (for the newsfeed)
+$('#human').change(function() {
+    jQuery('.human').show()
+    jQuery('.document').hide()
+});
+
+//Function for the document filter (for the newsfeed)
+$('#document').change(function () {
+    jQuery('.human').hide()
+    jQuery('.document').show()
+});
+
+});
 </script>
 
 </head>
@@ -67,7 +80,6 @@ $('#projectsidebar').bind(
     {{=header}}
 
     <ul id = "projecttabs">
-        <li>Calendar</li>
         <li id="MyProfile">My Profile</li>
     </ul>
     <hr>
@@ -76,7 +88,30 @@ $('#projectsidebar').bind(
 
     </div>
     <div id="content">
-      Welcome to Finholt Construction!
+      
+      {{if entries != None:}}
+              <div id="filter">
+                  <b>Filter Newsfeed:</b> 
+                  <input type="radio" name="group" id="none" checked>No Filter</input> 
+                  <input type="radio" name="group" id="human">Personal Statuses</input> 
+                  <input type="radio" name="group" id="document">Document-Only Statuses</input>
+              </div>
+               
+              {{for item in entries:}}
+                <div id="newsfeed" class={{=T(item.type)}}>
+                <b class='project'>{{=T(db(db.Project.projNum == item.projectNum).select().first().name)}}</b>
+                <b class='created'>{{=T('written by ' + item.creator + ' on ' + str(item.created_on))}}</b>
+                <hr>
+                <p class='descrip'>{{=T(item.description)}}</p>            
+                </div>
+              {{pass}}             
+           
+       {{else:}}
+           <div>
+               The newsfeed is currently empty.
+           </div>
+           {{pass}}
+      
     </div>
     {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
         {{include "adminSidebar.html"}}

@@ -34,7 +34,7 @@ def getUser():
         user = db(db.auth_user.id == auth.user.id).select().first()
     return user
 
-#Returns the form that will be displayed when the "My Profile" tab is clicked (the paratmeter passed in is a user object)
+#Returns the form that will be displayed when the "My Profile" tab is clicked (the parameter passed in is a user object)
 def getProfileFormForUser(user):
     if user != None:        #We will display the form with the user's current information filled in
         record = user.id    #Gets the info for the current user    
@@ -146,6 +146,11 @@ def index():
         entries = None
     elif len(entries) > 20:
         entries = entries[0:20]                                 #Only display the first 20 newsfeed entries on the homescreen
+        
+    if myProfileForm.process().accepted:
+       response.flash = "Profile updated successfully!"
+    elif myProfileForm.errors:
+       response.flash = 'Form has errors'
     
     return dict(projects=projects,
                 myProfileForm=myProfileForm,

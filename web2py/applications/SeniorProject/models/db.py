@@ -66,7 +66,9 @@ custom_auth_table.first_name.requires = \
   IS_NOT_EMPTY(error_message=auth.messages.is_empty)
 custom_auth_table.last_name.requires = \
   IS_NOT_EMPTY(error_message=auth.messages.is_empty)
-custom_auth_table.password.requires = [IS_STRONG(), CRYPT()]
+#custom_auth_table.password.requires = [IS_STRONG(), CRYPT()]
+custom_auth_table.password.requires = [CRYPT(min_length=auth.settings.password_min_length,
+              error_message=T('Password length must be at least 5'))]
 custom_auth_table.email.requires = [
   IS_EMAIL(error_message=auth.messages.invalid_email),
   IS_NOT_IN_DB(db, custom_auth_table.email)]
@@ -89,6 +91,7 @@ if auth.id_group(role="Admin")<=0:
 auth.settings.registration_requires_verification = False
 auth.settings.registration_requires_approval = False
 auth.settings.reset_password_requires_verification = True
+auth.settings.password_min_length = 5
 ##auth.settings.everybody_group_id = 5
 
 ## if you need to use OpenID, Facebook, MySpace, Twitter, Linkedin, etc.

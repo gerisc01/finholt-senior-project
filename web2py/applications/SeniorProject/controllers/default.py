@@ -98,14 +98,14 @@ def setUpFlickrStuff():
             br.form["passwd"]="finholt1"
             br.find_control(".persistent").items[0].selected=True
             br.submit()                                 #Redirect to that website
-    return(flickr)
+    return flickr
             
             
 #Do all the set-up/initializing that is necessary for using the site (calling the above functions)   
 user = getUser()                            #Get the current user of the site
 projects = getProjectsForUser(user)         #Get the projects that the user is associated with
 myProfileForm = getProfileFormForUser(user) #Get the form for the "My Profile" tab
-flickr = setUpFlickrStuff()                          #Make sure all the flickr stuff is good to go (make sure we're authenticated)
+flickr = setUpFlickrStuff()                 #Make sure all the flickr stuff is good to go (make sure we're authenticated)
 
 
 #Called when a new photoForm is submitted (called from showform when the photoForm is accepted)
@@ -242,27 +242,30 @@ def register():
 @auth.requires_membership('Admin')
 def changepermissions():
      #Get all the users in alphabetical order, except the current user (don't want a user to change his own permissions)
-     rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)     
-     #Represent the user's id as a dropdown with the values of Admin or General, with the current value as the user's current group membership
-     db.auth_user.id.represent = lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id) 
-     #Create a table with all the users and their current memberships
-     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email","auth_user.role":"Role"}),INPUT(_type='submit'))
- 
-     if table.accepts(request.vars): 
-        for item in request.vars.keys():               #For each user selected..
-            if item.isdigit():
-                if not auth.has_membership(user_id=int(item), role=request.vars[item]):
-                    if auth.has_membership(user_id=int(item), role=getUserRole(int(item))): #in case they are in their individual user group. We should only delete them from the group we are in if they are switching from General to Admin or vice versa.
-                        auth.del_membership(auth.id_group(role=getUserRole(int(item))),int(item))
-                    auth.add_membership(auth.id_group(role=request.vars[item]),int(item)) #Add the user's membership
-                    
-        session.flash = 'Permissions changed'
-        redirect(URL('default','changepermissions'))    #Redirect to the same screen so the admin can see the current permission level of every user
-        
-     elif table.errors:
-         session.flash = 'An error has occured'
-     else:
-         session.flash = 'Modify user permissions'
+     rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)    
+     if len(rows) == 0:
+         table = "There are no other users"
+     else: 
+         #Represent the user's id as a dropdown with the values of Admin or General, with the current value as the user's current group membership
+         db.auth_user.id.represent = lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id) 
+         #Create a table with all the users and their current memberships
+         table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email","auth_user.role":"Role"}),INPUT(_type='submit'))
+     
+         if table.accepts(request.vars): 
+            for item in request.vars.keys():               #For each user selected..
+                if item.isdigit():
+                    if not auth.has_membership(user_id=int(item), role=request.vars[item]):
+                        if auth.has_membership(user_id=int(item), role=getUserRole(int(item))): #in case they are in their individual user group. We should only delete them from the group we are in if they are switching from General to Admin or vice versa.
+                            auth.del_membership(auth.id_group(role=getUserRole(int(item))),int(item))
+                        auth.add_membership(auth.id_group(role=request.vars[item]),int(item)) #Add the user's membership
+                        
+            session.flash = 'Permissions changed'
+            redirect(URL('default','changepermissions'))    #Redirect to the same screen so the admin can see the current permission level of every user
+            
+         elif table.errors:
+             session.flash = 'An error has occured'
+         else:
+             session.flash = 'Modify user permissions'
      
      return dict(table=table, footer=footer, header=header, css=css)
 
@@ -373,7 +376,7 @@ def manageprojects():
         table = "There are currently no non-archived projects"
         
     else:   #There is at least one on-going project
-        db.Project.id.represent = lambda id: DIV(id, INPUT(_type='checkbox',_name='%i'%id)) #Represent the project id as a checkbox
+        db.Project.id.represent = lambda id: DIV(INPUT(_type='checkbox',_name='%i'%id)) #Represent the project id as a checkbox
         #Create a table of all the non-archived projects, each with a checkbox for the option to archive
         table = FORM(SQLTABLE(rows, columns=["Project.id","Project.name","Project.projNum",'Project.openDate',"Project.closedDate"], headers={"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}), INPUT(_type='submit'))
         
@@ -572,6 +575,11 @@ def showform():
             response.flash = 'Form has errors'
         else:
             response.flash = 'Please fill out the form'
+            
+    if myProfileForm.process().accepted:
+       response.flash = "Profile updated successfully!"
+    elif myProfileForm.errors:
+       response.flash = 'Form has errors'
             
     return dict(displayForm=displayForm,
                 form=form,

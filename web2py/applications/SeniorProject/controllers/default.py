@@ -277,6 +277,8 @@ def addtoproject():
         for userid in request.vars.keys():           #For each user selected..
             if userid.isdigit():
                 projectList = db(db.auth_user.id == int(userid)).select().first().projects
+                if projectList == None:
+                    projectList = []
                 if type(request.vars[userid]) is list:
                     for item in request.vars[userid]:
                         projectList.append(int(item))
@@ -432,10 +434,15 @@ def newsfeed():
     
     if form != None:
         if form.process().accepted:
-            response.flash = T('Status created successfully')
+            response.flash = 'Status created successfully'
         elif form.errors:
             response.flash = 'Form has errors'
-                
+            
+    if myProfileForm.process().accepted:
+       response.flash = "Profile updated successfully!"
+    elif myProfileForm.errors:
+       response.flash = 'Form has errors'    
+               
     #Get all the newsfeed entries, in order, with the most recent entry first
     entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select(orderby=~db.NewsFeed.created_on) 
     if entries == None or len(entries) == 0:                                     #If there are no entries, set entries to None
@@ -725,7 +732,12 @@ def formtable():
 
     if len(rows)==0:
         table = "There are no documents uploaded for this project section yet."
-        fullTable = False
+        fullTable = False       
+        
+    if myProfileForm.process().accepted:
+       response.flash = "Profile updated successfully!"
+    elif myProfileForm.errors:
+       response.flash = 'Form has errors'
 
     return dict(formType=formType,
                 myProfileForm=myProfileForm,
@@ -928,7 +940,7 @@ def getAllProjectsHtml(id):
             if row.projNum not in user.projects:
                 html +=  '<input value="'+str(row.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(row.projNum)+"</br>"
         else:
-            html +=  '<input value="'+str(row.id)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(row.id)+"</br>"
+            html +=  '<input value="'+str(row.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(row.projNum)+"</br>"
     
     if html =='':                                         #The user is already associated with all the projects
         html = "<p>In all projects</p>"

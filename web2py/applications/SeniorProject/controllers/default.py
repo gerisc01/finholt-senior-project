@@ -221,7 +221,6 @@ def data():
 @auth.requires_membership('Admin')
 def register():
     form = SQLFORM(db.auth_user)                                            #Create a form with the fields for a user
-    
     if form.process().accepted:
        response.flash = str(request.vars.first_name) + ' created as user'
     elif form.errors:
@@ -232,7 +231,7 @@ def register():
     if form.validate():                                                     #Add the new user with membership in the General group (rather than Admin)
         admin_user = auth.user
         auth.get_or_create_user(form.vars)
-        auth.add_membership(auth.id_group(role="General"),auth.user_id)
+        auth.add_membership(auth.id_group(role="General"), auth.user_id)
         auth.user = admin_user
         redirect(URL('default','register'))                                 #Redirect to the same screen so the admin can create more users if needed
         
@@ -247,7 +246,7 @@ def changepermissions():
      #Represent the user's id as a dropdown with the values of Admin or General, with the current value as the user's current group membership
      db.auth_user.id.represent = lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id) 
      #Create a table with all the users and their current memberships
-     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
+     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email","auth_user.role":"Role"}),INPUT(_type='submit'))
  
      if table.accepts(request.vars): 
         for item in request.vars.keys():               #For each user selected..
@@ -275,7 +274,7 @@ def addtoproject():
     #Represent the user's id as checkboxes of possible projects for the user to be added to
     db.auth_user.id.represent = lambda id: DIV('', XML(getAllProjectsHtml(id)), _name='%i'%id) 
     #Create a table of the information
-    table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Add To","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}), INPUT(_type='submit')) 
+    table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], headers={"auth_user.id":"Add To","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email","auth_user.role":"Role"}), INPUT(_type='submit')) 
     
     if table.accepts(request.vars):
         for userid in request.vars.keys():           #For each user selected..
@@ -300,7 +299,7 @@ def deletefromproject():
     #Represents the user's id as checkboxes of all the user's associated projects
     db.auth_user.id.represent = lambda id: DIV('', XML(getUsersProjectsHtml(id)), _name='%i'%id) 
     #Create a table of the information
-    table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Remove From","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit')) 
+    table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], headers={"auth_user.id":"Remove From","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email","auth_user.role":"Role"}),INPUT(_type='submit')) 
    
     if table.accepts(request.vars): 
         for userid in request.vars.keys():                                    #For each user selected..
@@ -323,24 +322,27 @@ def deletefromproject():
 def deleteusers():
      #Get all the users on the site in alphabetical order, except the current user (don't want someone to delete himself)
      rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)  
-     db.auth_user.id.represent = lambda id: DIV(id, INPUT (_type='checkbox',_name='%i'%id)) #Create a checkbox for each user
-     #Create a table of the information
-     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}), INPUT(_type='submit'))
-     
-     if table.process().accepted:
-       response.flash = str(request.vars.first_name) + ' deleted as user'
-     elif table.errors:
-       response.flash = 'Form has errors'
+     if len(rows) == 0:
+         table = "There are no other users"
      else:
-       response.flash = 'Select users to delete'
-     
-     if table.accepts(request.vars): 
-        for item in request.vars.keys():                     #For each user selected..
-            if item.isdigit():
-                db(db.auth_user.id == int(item)).delete()    #Delete the user that was selected
-                
-        session.flash = 'User deleted'
-        redirect(URL('default','deleteusers'))               #Redirect back to the same screen
+         db.auth_user.id.represent = lambda id: DIV(INPUT (_type='checkbox',_name='%i'%id)) #Create a checkbox for each user
+         #Create a table of the information
+         table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email","auth_user.role":"Role"}), INPUT(_type='submit'))
+         
+         if table.process().accepted:
+           response.flash = str(request.vars.first_name) + ' deleted as user'
+         elif table.errors:
+           response.flash = 'Form has errors'
+         else:
+           response.flash = 'Select users to delete'
+         
+         if table.accepts(request.vars): 
+            for item in request.vars.keys():                     #For each user selected..
+                if item.isdigit():
+                    db(db.auth_user.id == int(item)).delete()    #Delete the user that was selected
+                    
+            session.flash = 'User deleted'
+            redirect(URL('default','deleteusers'))               #Redirect back to the same screen
 
      return dict(table=table, footer=footer, header=header,css=css)
 
@@ -817,13 +819,11 @@ def viewPhoto():
     r = br.open(request.vars["url"])
     br.select_form("login_form")
     br.form["passwd"]="finholt1"
-    import tkMessageBox
+    #import tkMessageBox
     #tkMessageBox.showinfo(title="Greetings", message=str(br.form))
     r = br.submit()
     br.open(request.vars["url"])
-
-
-    
+   
     redirect(request.vars["url"])        
 
 #This returns a string of the opposite of the user's role (either Admin or General)
@@ -939,17 +939,20 @@ def getAllProjectsHtml(id):
     html=''
     projects = db(db.Project.archived == False).select()  #Get all the current non-archived projects
     user = db(db.auth_user.id == id).select().first()     #Get the user given the user's id
-
-    for row in projects:                                  #Find all the projects that the user is not already associated with
-        if user.projects != None:
-            if row.projNum not in user.projects:
-                html +=  '<input value="'+str(row.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(row.projNum)+"</br>"
-        else:
-            html +=  '<input value="'+str(row.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(row.projNum)+"</br>"
     
-    if html =='':                                         #The user is already associated with all the projects
-        html = "<p>In all projects</p>"
+    if getUserRole(id) == "Admin":                        #The user is an admin
+        html = "<p>Is Admin</p>"
+    else:
+        for row in projects:                              #Find all the projects that the user is not already associated with
+            if user.projects != None:
+                if row.projNum not in user.projects:
+                    html +=  '<input value="'+str(row.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(row.projNum)+"</br>"
+            else:
+                html +=  '<input value="'+str(row.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(row.projNum)+"</br>"
         
+        if html =='':                                      #The user is already associated with all the projects
+            html = "<p>In all projects</p>"
+            
     return html 
 
 #Returns the html needed for the checkboxes on the deletefromproject screen
@@ -957,11 +960,14 @@ def getUsersProjectsHtml(id):
     html = ''    
     user = db(db.auth_user.id == id).select().first()     #Get the user given the user's id
     
-    if user.projects != None and len(user.projects) >= 1: #Make a checkbox for all the projects that the user is associatewith
-        for projId in user.projects:
-            project = db((db.Project.archived == False) & (db.Project.projNum == projId)).select().first()
-            html +=  '<input value="'+str(project.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(project.projNum)+"</br>"
+    if getUserRole(id) == "Admin":                        #The user is an admin
+        html = "<p>Is Admin</p>"
     else:
-        html = "<p>Not on any projects</p>"
+        if user.projects != None and len(user.projects) >= 1: #Make a checkbox for all the projects that the user is associatewith
+            for projId in user.projects:
+                project = db((db.Project.archived == False) & (db.Project.projNum == projId)).select().first()
+                html +=  '<input value="'+str(project.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(project.projNum)+"</br>"
+        else:
+            html = "<p>Not on any projects</p>"
         
     return html

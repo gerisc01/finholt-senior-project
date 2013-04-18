@@ -98,13 +98,14 @@ def setUpFlickrStuff():
             br.form["passwd"]="finholt1"
             br.find_control(".persistent").items[0].selected=True
             br.submit()                                 #Redirect to that website
+    return(flickr)
             
             
 #Do all the set-up/initializing that is necessary for using the site (calling the above functions)   
 user = getUser()                            #Get the current user of the site
 projects = getProjectsForUser(user)         #Get the projects that the user is associated with
 myProfileForm = getProfileFormForUser(user) #Get the form for the "My Profile" tab
-setUpFlickrStuff()                          #Make sure all the flickr stuff is good to go (make sure we're authenticated)
+flickr = setUpFlickrStuff()                          #Make sure all the flickr stuff is good to go (make sure we're authenticated)
 
 
 #Called when a new photoForm is submitted (called from showform when the photoForm is accepted)
@@ -119,6 +120,7 @@ def uploadPhotoToFlickr(photoForm):
         
         #Upload the photo to flickr and get the id of the photo in order to construct the url of the photo
         idElement = flickr.upload(filename=name, title=title, description=descr)
+        
         id = idElement.find('photoid').text
         flickrUrl =  "http://www.flickr.com/photos/"+USER_ID+"/"+str(id)+"/"  
     
@@ -127,9 +129,11 @@ def uploadPhotoToFlickr(photoForm):
         
         #Create a new row in our database with all the same info as the deleted row, but without the photo file
         db.Photos.insert(projectNum=projNum, flickrURL=flickrUrl, title=title, description=descr)
+        response.flash = "Upload success"
     except:
+        db(db.Photos.id == photoWeb2pyId).delete()
         response.flash = "Upload failed"
-        redirect(URL('default','showform', vars=dict(displayForm="Photo", projectNum=projNum)))
+ 
 
 #Returns a dictionary used by the view default/index.html (which is the home screen)
 @auth.requires_login()
@@ -537,11 +541,12 @@ def showform():
         #Create a form with the Photo fields specified by the fields parameter                     
         form = SQLFORM(db.Photos, labels={'projectNum':'Project Number', 'title':'Title', 'description':'Description', 'photo':'Photo'}, fields = ['projectNum','title','description','photo'])
         form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
-        
+
     if form != None:
         if form.process().accepted:
             response.flash = T('Form accepted')
             if displayForm == "Photo":    #If the form submitted is a photo form, we need to upload it to flickr and delete the photo from our database
+
                 uploadPhotoToFlickr(form)
             elif displayForm == "RFI":    #If the form submitted is an RFI form, we need to put the name of person the RFI is referred to instead of the id
                 reqUser = db(db.auth_user.id == form.vars.reqRefTo).select().first()

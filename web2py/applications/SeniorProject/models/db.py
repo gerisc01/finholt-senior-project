@@ -117,7 +117,7 @@ use_janrain(auth,filename='private/janrain.key')
 #########################################################################
 
 uploadTypes = '(pdf|txt|doc|docx)'
-photoTypes = '(jpeg|png)'
+photoTypes = '(jpg|png)'
 
 db.define_table("Project", Field('projNum', 'integer'), Field('name','string'), Field('owner', 'string'), Field('openDate','date'), Field('closedDate','date'), Field('archived','boolean',readable=False, writable=False, default=False))
 

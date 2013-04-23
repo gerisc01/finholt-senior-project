@@ -110,7 +110,15 @@ def setUpFlickrStuff():
             br.form["login"]="alyssealyssetest"
             br.form["passwd"]="finholt1"
             br.find_control(".persistent").items[0].selected=True
-            br.submit()                                 #Redirect to that website
+            br.submit()      
+
+    thing =flickr.sign({
+        "api_key":"f8525c74b1f8dcd19791a39cbd947dd0",
+        "photo_id":"8655391465",
+        "auth_token":"72157632878384274-4abc077968f36490"  
+
+    })  
+                            #Redirect to that website
             
             
 #Do all the set-up/initializing that is necessary for using the site (calling the above functions)   
@@ -223,19 +231,22 @@ def data():
 def register():
     form = SQLFORM(db.auth_user)                                            #Create a form with the fields for a user
     
-    if form.process().accepted:
-       response.flash = str(request.vars.first_name) + ' created as user'
-    elif form.errors:
-       response.flash = 'Form has errors'
-    else:
-       response.flash = 'Please create a user'
+   # if form.process().accepted:
+    #   
+   
        
     if form.validate():                                                     #Add the new user with membership in the General group (rather than Admin)
         admin_user = auth.user
         auth.get_or_create_user(form.vars)
+        db(db.auth_membership.user_id == auth.user_id).delete()
         auth.add_membership(auth.id_group(role="General"),auth.user_id)
         auth.user = admin_user
-        redirect(URL('default','register'))                                 #Redirect to the same screen so the admin can create more users if needed
+        response.flash = str(request.vars.first_name) + ' created as user'
+        #redirect(URL('default','register'))
+    elif form.errors:
+       response.flash = 'Form has errors'
+    else:
+       response.flash = 'Please create a user'                                 #Redirect to the same screen so the admin can create more users if needed
         
     return dict(form=form, header=header, footer=footer, css=css)
 
@@ -464,15 +475,21 @@ def newsfeedarchived():
 #This is called when a user clicks on any of the tabs (to upload/generate a new document). It returns a dictionary used by the view default/showform.html
 @auth.requires_login() 
 def showform():
+    
     displayForm = request.vars.displayForm                                       #Get the type of form we want to display
     form = None                                                                  #The SQLFORM that we will display
-    
+    projNum = request.vars.projectNum
+    if type(projNum) is list:
+        projNum = projNum[-1]
+    import tkMessageBox
+    tkMessageBox.showinfo(title="Greetings", message=str(projNum)) 
+
     if displayForm == "CCD":
         #Create a form with all the CCD fields
         form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"}) 
-        rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()    #Get all the CCD's for the current project
+        rows = db(db.CCD.projectNum == str(projNum)).select()    #Get all the CCD's for the current project
         form.vars.ccdNum = len(rows) + 1               #Initialize the form's CCD number to be one more than the current number of CCDs               
-        form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
+        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
         
     elif displayForm == "RFI":
         #Create a dropdown of all the users' names for the Request Referred To field
@@ -480,12 +497,12 @@ def showform():
         #Create a form with the RFI fields specified by the fields parameter
         form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
         
-        currentProj = db(db.Project.projNum == str(request.vars.projectNum)).select().first()
-        rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()    #Get all the RFI's for the current project       
+        currentProj = db(db.Project.projNum == str(projNum)).select().first()
+        rows = db(db.RFI.projectNum == str(projNum)).select()    #Get all the RFI's for the current project       
         form.vars.rfiNum = len(rows) + 1               #Initialize the form's RFI number to be one more than the current number of RFIs
         form.vars.requestBy = auth.user.first_name + " " + auth.user.last_name #Initialize the form's RequestBy field to be the current user
         form.vars.statusFlag = "Outstanding"           #Set the status flag (this field isn't displayed on the screen)
-        form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number 
+        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number 
         form.vars.projectName = currentProj.name       #Set the form's project name to be the current project's name (not displayed)
         form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
                 
@@ -498,23 +515,23 @@ def showform():
         db.Submittal.statusFlag.requires = IS_IN_SET(['Approved','Resubmit','Approved with Comments','Submitted for Review'])
         #Create a form with all the submittal fields
         form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'subType':'Submittal Type', 'sectNum':'Section Number','assignedTo':'Assigned to'}) 
-        form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
+        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
         
     elif displayForm == "ProposalRequest":  
         #Create a form with the Proposal Request fields specified by the fields parameter   
         form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'}, fields =[ 'reqNum','amendNum','projectNum','subject','propDate','sentTo','cc','description'])
         
-        currentProj = db(db.Project.projNum == str(request.vars.projectNum)).select().first()
-        rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select() #Get all the ProposalRequests for the current project
+        currentProj = db(db.Project.projNum == str(projNum)).select().first()
+        rows = db(db.ProposalRequest.projectNum == str(projNum)).select() #Get all the ProposalRequests for the current project
         form.vars.reqNum = len(rows) + 1               #Initialize the request number to be one more than the current number of proposal requests
         form.vars.statusFlag = "Open"                  #Set the status flag (this field isn't displayed on the screen)       
         form.vars.creator = auth.user.id               #Initialize the creator to be the current user's id (this field also isn't displayed)
-        form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
+        form.vars.projectNum = projNum              #Initialize the form's project number to be the current project's number
         form.vars.projectName = currentProj.name   #Set the form's project name to be the current project's name (not displayed)
         form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
         
     elif displayForm == "Proposal":
-        propReqs = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
+        propReqs = db(db.ProposalRequest.projectNum == str(projNum)).select()
         propNumList = []
         for propReq in propReqs:
             propNumList.append(propReq.reqNum)                   #Get all the Proposal Request numbers for the project
@@ -522,19 +539,19 @@ def showform():
         #Create a form with all the Proposal fields 
         form = SQLFORM(db.Proposal, labels={'propNum':'Proposal #', 'propReqRef':'Proposal Request Reference #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
         
-        rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select() #Get all the Proposals for the current project
+        rows = db(db.Proposal.projectNum == str(projNum)).select() #Get all the Proposals for the current project
         form.vars.propNum = len(rows) + 1              #Initialize the proposal number to be one more than the current number of proposals
-        form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
+        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
         
     elif displayForm == "MeetingMinutes":
         #Create a form with all the MeetingMinutes fields
         form = SQLFORM(db.MeetingMinutes, labels={'projectNum':'Project Number','meetDate':'Meeting Date'})
-        form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
+        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
         
     elif displayForm == "Photo": 
         #Create a form with the Photo fields specified by the fields parameter                     
         form = SQLFORM(db.Photos, labels={'projectNum':'Project Number', 'title':'Title', 'description':'Description', 'photo':'Photo'}, fields = ['projectNum','title','description','photo'])
-        form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
+        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
         
     if form != None:
         if form.process().accepted:
@@ -549,14 +566,14 @@ def showform():
                 assignTo = db(db.auth_user.id == form.vars.assignedTo).select().first()
                 row = db(db.Submittal.id == form.vars.id).select().first()
                 row.update_record(assignedTo= assignTo.first_name + " " + assignTo.last_name)
-                
+            
             #Now create a new newsfeed update noting the new submission
             if displayForm == "MeetingMinutes":
                 displayForm = "Plan for World Domination"
             description = "A new " + displayForm + " has been added."
             db.NewsFeed.insert(projectNum=form.vars.projectNum, type="document", created_on=datetime.today(), description=description, creator=auth.user.first_name + " " + auth.user.last_name)
             db.commit()
-            
+            redirect(URL("default","showform", vars={"displayForm":request.vars.displayForm,"projectNum":projNum}))
         elif form.errors:
             response.flash = 'Form has errors'
         else:
@@ -568,7 +585,8 @@ def showform():
                 projects=projects,
                 footer=footer,
                 header=header,
-                css=css)
+                css=css,
+                projNum=projNum)
 
 #This is called when a user clicks on a categry in an archived project's sidebar. It returns a dictionary used by the view default/formtablearchived.html
 @auth.requires_login()

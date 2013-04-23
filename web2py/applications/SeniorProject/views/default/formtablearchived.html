@@ -20,17 +20,16 @@
 $(document).ready(function(){
 
 var data = [];
-
-data.push(
-{label:"<a href='{{=URL('default','newsfeedarchived',vars=dict(formType='NewsFeed',projectNum=project.projNum))}}'>News Feed</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='RFI',projectNum=project.projNum))}}'>RFIs</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Submittal',projectNum=project.projNum))}}'>Submittals</a>"}, 
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='CCD',projectNum=project.projNum))}}'>CCDs</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='ProposalRequest',projectNum=project.projNum))}}'>Proposal Requests</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Proposal',projectNum=project.projNum))}}'>Proposals</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='MeetingMinutes',projectNum=project.projNum))}}'>Meeting Minutes</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Photo',projectNum=project.projNum))}}'>Photos</a>"});
-
+{{if project != None:}}
+    data.push(
+    {label:"<a href='{{=URL('default','newsfeedarchived',vars=dict(formType='NewsFeed',projectNum=project.projNum))}}'>News Feed</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='RFI',projectNum=project.projNum))}}'>RFIs</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Submittal',projectNum=project.projNum))}}'>Submittals</a>"}, 
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='CCD',projectNum=project.projNum))}}'>CCDs</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='ProposalRequest',projectNum=project.projNum))}}'>Proposal Requests</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Proposal',projectNum=project.projNum))}}'>Proposals</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='MeetingMinutes',projectNum=project.projNum))}}'>Meeting Minutes</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Photo',projectNum=project.projNum))}}'>Photos</a>"});
 {{pass}}
 
 $(function() {
@@ -68,11 +67,11 @@ $("#content table").dataTable(
    {{=header}}
     <p style="text-align:center;">ARCHIVED MODE</p>
     <hr>
-    <div id="projectsidebar">    
-
-    </div>
-    <div id="content">
-      
-    </div>
+    {{if project != None:}}
+        <div id="projectsidebar"></div>
+        <div id="content"></div>
+    {{else:}}
+        <div>Not a valid project number</div>
+    {{pass}}
 </body>
 </html>

@@ -20,17 +20,16 @@
 $(document).ready(function(){
 
 var data = [];
-
-data.push(
-{label:"<a href='{{=URL('default','newsfeedarchived',vars=dict(formType='NewsFeed',projectNum=project.projNum))}}'>News Feed</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='RFI',projectNum=project.projNum))}}'>RFIs</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Submittal',projectNum=project.projNum))}}'>Submittals</a>"}, 
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='CCD',projectNum=project.projNum))}}'>CCDs</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='ProposalRequest',projectNum=project.projNum))}}'>Proposal Requests</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Proposal',projectNum=project.projNum))}}'>Proposals</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='MeetingMinutes',projectNum=project.projNum))}}'>Meeting Minutes</a>"},
-{label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Photo',projectNum=project.projNum))}}'>Photos</a>"});
-
+{{if project != None:}}
+    data.push(
+    {label:"<a href='{{=URL('default','newsfeedarchived',vars=dict(formType='NewsFeed',projectNum=project.projNum))}}'>News Feed</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='RFI',projectNum=project.projNum))}}'>RFIs</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Submittal',projectNum=project.projNum))}}'>Submittals</a>"}, 
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='CCD',projectNum=project.projNum))}}'>CCDs</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='ProposalRequest',projectNum=project.projNum))}}'>Proposal Requests</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Proposal',projectNum=project.projNum))}}'>Proposals</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='MeetingMinutes',projectNum=project.projNum))}}'>Meeting Minutes</a>"},
+    {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Photo',projectNum=project.projNum))}}'>Photos</a>"}); 
 {{pass}}
 
 $(function() {
@@ -80,31 +79,35 @@ $('#document').change(function () {
     {{=header}}
     <p style="text-align:center;">ARCHIVED MODE</p>
     <hr>
-    <div id="projectsidebar">
-    </div>
-    <div id="content">
-       {{if entries != None:}}
-              <div id="filter">
-                  <b>Filter Newsfeed:</b> 
-                  <input type="radio" name="group" id="none" checked>No Filter</input> 
-                  <input type="radio" name="group" id="human">Personal Statuses</input> 
-                  <input type="radio" name="group" id="document">Document Uploads</input>
-              </div>
-                  
-              {{for item in entries:}}
-                <div id="newsfeed" class={{=T(item.type)}}>
-                <b class='project'>{{=T(project.name)}}</b>
-                <b class='created'>{{=T('written by ' + item.creator + ' on ' + str(item.created_on))}}</b>
-                <hr>
-                <p class="descrip">{{=T(item.description)}}</p>            
-                </div>
-              {{pass}}            
-           
-       {{else:}}
-           <div>
-               The newsfeed for this project is currently empty.
-           </div>
-           {{pass}}
-    </div>
+    {{if project != None:}}
+        <div id="projectsidebar">
+        </div>
+        <div id="content">
+           {{if entries != None:}}
+                  <div id="filter">
+                      <b>Filter Newsfeed:</b> 
+                      <input type="radio" name="group" id="none" checked>No Filter</input> 
+                      <input type="radio" name="group" id="human">Personal Statuses</input> 
+                      <input type="radio" name="group" id="document">Document Uploads</input>
+                  </div>
+                      
+                  {{for item in entries:}}
+                    <div id="newsfeed" class={{=T(item.type)}}>
+                    <b class='project'>{{=T(project.name)}}</b>
+                    <b class='created'>{{=T('written by ' + item.creator + ' on ' + str(item.created_on))}}</b>
+                    <hr>
+                    <p class="descrip">{{=T(item.description)}}</p>            
+                    </div>
+                  {{pass}}            
+               
+           {{else:}}
+               <div>
+                   The newsfeed for this project is currently empty.
+               </div>
+               {{pass}}
+        </div>
+    {{else:}}
+        <div>Not a valid project number</div>
+    {{pass}}
 </body>
 </html>

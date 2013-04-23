@@ -331,6 +331,7 @@ def deleteusers():
      #Create a table of the information
      table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}), INPUT(_type='submit'))
      
+     table["_onsubmit"] = "return confirm('Are you sure you want to delete this user?');"
      if table.process().accepted:
        response.flash = str(request.vars.first_name) + ' deleted as user'
      elif table.errors:
@@ -500,9 +501,7 @@ def showform():
     projNum = request.vars.projectNum
     if type(projNum) is list:
         projNum = projNum[-1]
-    import tkMessageBox
-    tkMessageBox.showinfo(title="Greetings", message=str(projNum)) 
-
+    
     if displayForm == "CCD":
         #Create a form with all the CCD fields
         form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"}) 

@@ -433,6 +433,9 @@ def viewArchive():
 #This is called when a user clicks on "News Feed" for a project in the sidebar. It returns a dictionary used by the view default/newsfeed.html
 @auth.requires_login()
 def newsfeed():
+    projNum = request.vars.projectNum
+    if type(projNum) is list:
+        projNum = projNum[-1]
     projectNums = []
     for proj in projects:
         projectNums.append(proj.projNum)
@@ -468,7 +471,7 @@ def newsfeed():
                 entries = None
                 
             return dict(form=form, entries=entries, fullTable=True, project=project, projects=projects, myProfileForm=myProfileForm, header=header, 
-                        footer=footer, css=css)
+                        footer=footer, css=css,projNum=projNum)
         
     else:   #the user is trying to access a project he's not a part of   
         return "Access Denied"
@@ -500,8 +503,7 @@ def showform():
     projNum = request.vars.projectNum
     if type(projNum) is list:
         projNum = projNum[-1]
-    import tkMessageBox
-    tkMessageBox.showinfo(title="Greetings", message=str(projNum)) 
+     
 
     if displayForm == "CCD":
         #Create a form with all the CCD fields

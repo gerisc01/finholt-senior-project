@@ -138,8 +138,8 @@ def uploadPhotoToFlickr(photoForm):
 #Returns a dictionary used by the view default/index.html (which is the home screen)
 @auth.requires_login()
 def index():
-    #response.flash = "Welcome " + auth.user.first_name + "!"    #Welcome the user to the site
-    response.flash = "Erik Smellz"
+    response.flash = "Welcome " + auth.user.first_name + "!"    #Welcome the user to the site
+    #response.flash = "Erik Smellz"
     projectNums = []                                            #Get the project numbers of all the projects the user is associated with
     for project in projects:
         projectNums.append(project.projNum) 
@@ -435,6 +435,9 @@ def viewArchive():
 @auth.requires_login()
 def newsfeed():
     projectNums = []
+    projNum = request.vars.projectNum
+    if type(projNum) is list:
+        projNum = projNum[-1]
     for proj in projects:
         projectNums.append(proj.projNum)
         
@@ -468,7 +471,7 @@ def newsfeed():
             if entries == None or len(entries) == 0:                                     #If there are no entries, set entries to None
                 entries = None
                 
-            return dict(form=form, entries=entries, fullTable=True, project=project, projects=projects, myProfileForm=myProfileForm, header=header, 
+            return dict(form=form, projNum=projNum, entries=entries, fullTable=True, project=project, projects=projects, myProfileForm=myProfileForm, header=header, 
                         footer=footer, css=css)
         
     else:   #the user is trying to access a project he's not a part of   

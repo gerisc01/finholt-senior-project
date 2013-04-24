@@ -327,6 +327,7 @@ def deleteusers():
      #Create a table of the information
      table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}), INPUT(_type='submit'))
      
+     table["_onsubmit"] = "return confirm('Are you sure you want to delete this user?');"
      if table.process().accepted:
        response.flash = str(request.vars.first_name) + ' deleted as user'
      elif table.errors:
@@ -429,6 +430,9 @@ def viewArchive():
 #This is called when a user clicks on "News Feed" for a project in the sidebar. It returns a dictionary used by the view default/newsfeed.html
 @auth.requires_login()
 def newsfeed():
+    projNum = request.vars.projectNum
+    if type(projNum) is list:
+        projNum = projNum[-1]
     projectNums = []
     for proj in projects:
         projectNums.append(proj.projNum)
@@ -464,7 +468,7 @@ def newsfeed():
                 entries = None
                 
             return dict(form=form, entries=entries, fullTable=True, project=project, projects=projects, myProfileForm=myProfileForm, header=header, 
-                        footer=footer, css=css)
+                        footer=footer, css=css,projNum=projNum)
         
     else:   #the user is trying to access a project he's not a part of   
         return "Access Denied"
@@ -493,6 +497,55 @@ def showform():
     projNum = request.vars.projectNum
     if type(projNum) is list:
         projNum = projNum[-1]
+<<<<<<< HEAD
+=======
+    
+    if displayForm == "CCD":
+        #Create a form with all the CCD fields
+        form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"}) 
+        rows = db(db.CCD.projectNum == str(projNum)).select()    #Get all the CCD's for the current project
+        form.vars.ccdNum = len(rows) + 1               #Initialize the form's CCD number to be one more than the current number of CCDs               
+        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
+        
+    elif displayForm == "RFI":
+        #Create a dropdown of all the users' names for the Request Referred To field
+        db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
+        #Create a form with the RFI fields specified by the fields parameter
+        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
+        
+        currentProj = db(db.Project.projNum == str(projNum)).select().first()
+        rows = db(db.RFI.projectNum == str(projNum)).select()    #Get all the RFI's for the current project       
+        form.vars.rfiNum = len(rows) + 1               #Initialize the form's RFI number to be one more than the current number of RFIs
+        form.vars.requestBy = auth.user.first_name + " " + auth.user.last_name #Initialize the form's RequestBy field to be the current user
+        form.vars.statusFlag = "Outstanding"           #Set the status flag (this field isn't displayed on the screen)
+        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number 
+        form.vars.projectName = currentProj.name       #Set the form's project name to be the current project's name (not displayed)
+        form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
+                
+    elif displayForm == "Submittal":
+        #Create a dropdown for the submittal type
+        db.Submittal.subType.requires = IS_IN_SET(['Samples','Shop Drawing','Product Data'])
+        #Create a dropdown of all the users' names for the Assigned To field
+        db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
+        #Create a dropdown for the status flag
+        db.Submittal.statusFlag.requires = IS_IN_SET(['Approved','Resubmit','Approved with Comments','Submitted for Review'])
+        #Create a form with all the submittal fields
+        form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'subType':'Submittal Type', 'sectNum':'Section Number','assignedTo':'Assigned to'}) 
+        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
+        
+    elif displayForm == "ProposalRequest":  
+        #Create a form with the Proposal Request fields specified by the fields parameter   
+        form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'}, fields =[ 'reqNum','amendNum','projectNum','subject','propDate','sentTo','cc','description'])
+        
+        currentProj = db(db.Project.projNum == str(projNum)).select().first()
+        rows = db(db.ProposalRequest.projectNum == str(projNum)).select() #Get all the ProposalRequests for the current project
+        form.vars.reqNum = len(rows) + 1               #Initialize the request number to be one more than the current number of proposal requests
+        form.vars.statusFlag = "Open"                  #Set the status flag (this field isn't displayed on the screen)       
+        form.vars.creator = auth.user.id               #Initialize the creator to be the current user's id (this field also isn't displayed)
+        form.vars.projectNum = projNum              #Initialize the form's project number to be the current project's number
+        form.vars.projectName = currentProj.name   #Set the form's project name to be the current project's name (not displayed)
+        form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
+>>>>>>> 78249e728f9ea07534a31e2fa19b04dcee0241d0
         
     projectNums = []
     for proj in projects:

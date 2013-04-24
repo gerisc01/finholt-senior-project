@@ -12,7 +12,6 @@
 {{include 'web2py_ajax.html'}}
   <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
   <script src="{{=URL('static','js/jquery.js')}}"></script> 
-  <script src="{{=URL('static','js/jquery.ui.accordion.js')}}"></script> 
   <script src="{{=URL('static','js/jquery.datatables.js')}}"></script> 
   <script src="{{=URL('static','js/jquery-ui-1.9.0.custom.min.js')}}"></script> 
   <script src="{{=URL('static','jqTree/tree.jquery.js')}}"></script>
@@ -37,7 +36,7 @@ var data = [];
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].projNum))}}'>Meeting Minutes</a>"}, 
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].projNum))}}'>Photos</a>"} ]});
   {{pass}} 
-;
+
 
 
 $(function() {
@@ -60,6 +59,9 @@ $('#projectsidebar').bind(
 
 
 });
+
+;
+console.log(data);
 </script>
 
 </head>

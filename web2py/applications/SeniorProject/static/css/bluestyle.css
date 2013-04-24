@@ -124,6 +124,10 @@ p.descrip {
     color: #104E8B;
 }
 
+#content a:visited {
+    color: #104E8B;
+}
+
 #adminsidebar{
     display:inline;
     float:right;
@@ -140,12 +144,12 @@ p.descrip {
 #adminsidebar a:visited {
     color: #104E8B;
 }
-
+/**
 #adminsidebar a:hover {
     color: #104E8B;
     font-size:100%;
 }
-
+**/
 #projectForm{
     display: inline-block;
     float: left;
@@ -156,6 +160,15 @@ p.descrip {
     float: left;
     width: 900px;
 }
+
+#tablearea, table a:link{
+    color: #104E8B;
+}
+
+#tablearea table a:visited{
+    color: #104E8B;
+}
+
 table{
     border:2px solid black;
     width:100%;

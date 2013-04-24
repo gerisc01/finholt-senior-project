@@ -47,11 +47,11 @@ def getProfileFormForUser(user):
 def getProjectsForUser(user):
     projects = []
     if user != None and user.projects != None:
-        if auth.has_membership(user_id=user.id, role="Admin"):
+        if auth.has_membership(user_id=user.id, role="Admin"):    #If the user is an admin, get all the non-archived projects
             projects = db(db.Project.archived == False).select()
         else:
-            for item in user.projects:
-                rows = db((db.Project.archived == False) & (db.Project.projNum == item)).select()
+            for projNum in user.projects:
+                rows = db((db.Project.archived == False) & (db.Project.projNum == projNum)).select()
                 if len(projects) == 0:
                     projects = rows
                 else:
@@ -138,8 +138,8 @@ def uploadPhotoToFlickr(photoForm):
 #Returns a dictionary used by the view default/index.html (which is the home screen)
 @auth.requires_login()
 def index():
-    #response.flash = "Welcome " + auth.user.first_name + "!"    #Welcome the user to the site
-    response.flash = "Erik Smellz"
+    response.flash = "Welcome " + auth.user.first_name + "!"    #Welcome the user to the site
+    #response.flash = "Erik Smellz"
     projectNums = []                                            #Get the project numbers of all the projects the user is associated with
     for project in projects:
         projectNums.append(project.projNum) 
@@ -222,11 +222,7 @@ def data():
 @auth.requires_membership('Admin')
 def register():
     form = SQLFORM(db.auth_user)                                            #Create a form with the fields for a user
-    
-   # if form.process().accepted:
-    #   
    
-       
     if form.validate():                                                     #Add the new user with membership in the General group (rather than Admin)
         admin_user = auth.user
         auth.get_or_create_user(form.vars)
@@ -234,11 +230,10 @@ def register():
         auth.add_membership(auth.id_group(role="General"),auth.user_id)
         auth.user = admin_user
         response.flash = str(request.vars.first_name) + ' created as user'
-        #redirect(URL('default','register'))
     elif form.errors:
        response.flash = 'Form has errors'
     else:
-       response.flash = 'Please create a user'                                 #Redirect to the same screen so the admin can create more users if needed
+       response.flash = 'Please create a user'         
         
     return dict(form=form, header=header, footer=footer, css=css)
 
@@ -282,17 +277,18 @@ def addtoproject():
     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], headers={"auth_user.id":"Add To","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email","auth_user.role":"Role"}), INPUT(_type='submit')) 
     
     if table.accepts(request.vars):
-        for userid in request.vars.keys():           #For each user selected..
+        for userid in request.vars.keys():               #For each user selected..
             if userid.isdigit():
                 projectList = db(db.auth_user.id == int(userid)).select().first().projects
                 if projectList == None:
                     projectList = []
+                    
                 if type(request.vars[userid]) is list:
                     for item in request.vars[userid]:
                         projectList.append(int(item))
                 else:
                     projectList.append(int(request.vars[userid]))
-                db(db.auth_user.id ==int(userid)).update(projects=projectList)
+                db(db.auth_user.id == int(userid)).update(projects=projectList)
         redirect(URL('default','addtoproject'))
     return dict(table=table, footer=footer, header=header, css=css)
 
@@ -402,12 +398,12 @@ def manageprojects():
 @auth.requires_membership('Admin')
 def archiveprojects():
     table = None
-    rows = db(db.Project.archived == True).select()                #Get all the archived projects
+    rows = db(db.Project.archived == True).select()                     #Get all the archived projects
     
     if len(rows) == 0:
         table = "There are no projects that have been achived."
         
-    else:                                                          #There is at least one archived project
+    else:                                                               #There is at least one archived project
         #This column contains the option to view a project when "View" is clicked. It opens a new tab to display the selected project                                                      
         extracolumn = [{'label':'View Archived Project', #label of the entirecolumn
                         'class': '', #class name of the header
@@ -426,7 +422,7 @@ def archiveprojects():
 def viewArchive():
     #Get the archived project that the user wants to view (the "archivedprojects" method puts the project id in args)
     project = db(db.Project.id == request.args(0)).select().first() 
-    if project != None and not project.archived: 
+    if project != None and not project.archived:     #only view archived projects
         project = None
     return dict(project=project, header=header_archived, css=css)
 
@@ -440,7 +436,7 @@ def newsfeed():
     #Check if the project is in the user's projects   
     if int(request.vars.projectNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"): 
         project = db(db.Project.projNum == request.vars.projectNum).select().first() #Get the current project
-        if project.archived:    #The user is trying to access an archived project
+        if project != None and  project.archived:    #The user is trying to access an archived project
             return "The project you are trying to view has been archived. If you are an admin and would like to view the project, please go back and click \"Archived Projects.\""
             
         else:       
@@ -464,7 +460,7 @@ def newsfeed():
                        
             #Get all the newsfeed entries, in order, with the most recent entry first
             entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select(orderby=~db.NewsFeed.created_on) 
-            if entries == None or len(entries) == 0:                                     #If there are no entries, set entries to None
+            if entries == None or len(entries) == 0:                              #If there are no entries, set entries to None
                 entries = None
                 
             return dict(form=form, entries=entries, fullTable=True, project=project, projects=projects, myProfileForm=myProfileForm, header=header, 
@@ -477,16 +473,16 @@ def newsfeed():
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def newsfeedarchived():
-    project = db(db.Project.projNum == request.vars.projectNum).select().first() #Get the current project
+    project = db(db.Project.projNum == request.vars.projectNum).select().first()  #Get the current project
     entries = None
     
-    if project != None and not project.archived: 
+    if project != None and not project.archived:                                  #only allow the user to look at an archived project
         project = None
                
-    elif project != None and project.archived:    #we're looking at a valid archived project
+    elif project != None and project.archived:                                    #we're looking at a valid archived project
         #Get all the newsfeed entries, in order, with the most recent entry first
         entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select(orderby=~db.NewsFeed.created_on)   
-        if entries == None or len(entries) == 0:                                     #If there are no entries, set entries to None
+        if entries == None or len(entries) == 0:                                  #If there are no entries, set entries to None
             entries = None   
         
     return dict(entries=entries, fullTable=True, project=project, header=header_archived, css=css)  
@@ -494,119 +490,150 @@ def newsfeedarchived():
 #This is called when a user clicks on any of the tabs (to upload/generate a new document). It returns a dictionary used by the view default/showform.html
 @auth.requires_login() 
 def showform():
-    
-    displayForm = request.vars.displayForm                                       #Get the type of form we want to display
-    form = None                                                                  #The SQLFORM that we will display
     projNum = request.vars.projectNum
     if type(projNum) is list:
         projNum = projNum[-1]
-    import tkMessageBox
-    tkMessageBox.showinfo(title="Greetings", message=str(projNum)) 
-
-    if displayForm == "CCD":
-        #Create a form with all the CCD fields
-        form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"}) 
-        rows = db(db.CCD.projectNum == str(projNum)).select()    #Get all the CCD's for the current project
-        form.vars.ccdNum = len(rows) + 1               #Initialize the form's CCD number to be one more than the current number of CCDs               
-        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
         
-    elif displayForm == "RFI":
-        #Create a dropdown of all the users' names for the Request Referred To field
-        db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
-        #Create a form with the RFI fields specified by the fields parameter
-        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
+    projectNums = []
+    for proj in projects:
+        projectNums.append(proj.projNum)
         
-        currentProj = db(db.Project.projNum == str(projNum)).select().first()
-        rows = db(db.RFI.projectNum == str(projNum)).select()    #Get all the RFI's for the current project       
-        form.vars.rfiNum = len(rows) + 1               #Initialize the form's RFI number to be one more than the current number of RFIs
-        form.vars.requestBy = auth.user.first_name + " " + auth.user.last_name #Initialize the form's RequestBy field to be the current user
-        form.vars.statusFlag = "Outstanding"           #Set the status flag (this field isn't displayed on the screen)
-        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number 
-        form.vars.projectName = currentProj.name       #Set the form's project name to be the current project's name (not displayed)
-        form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
+    #Check if the project is in the user's projects   
+    if int(projNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"): 
+        project = db(db.Project.projNum == projNum).select().first() #Get the current project
+        if project != None and project.archived:    #The user is trying to access an archived project
+            return "The project you are trying to view has been archived. If you are an admin and would like to view the project, please go back and click \"Archived Projects.\""
+            
+        else:   
+            displayForm = request.vars.displayForm                                       #Get the type of form we want to display
+            form = None                                                                  #The SQLFORM that we will display
+        
+            if displayForm == "CCD":
+                #Create a form with all the CCD fields
+                form = SQLFORM(db.CCD, labels={'projectNum': "Project #", 'ccdNum':'CCD #'}, fields=['projectNum', 'ccdNum', 'file']) 
+                rows = db(db.CCD.projectNum == str(projNum)).select()    #Get all the CCD's for the current project
+                form.vars.ccdNum = len(rows) + 1               #Initialize the form's CCD number to be one more than the current number of CCDs               
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
                 
-    elif displayForm == "Submittal":
-        #Create a dropdown for the submittal type
-        db.Submittal.subType.requires = IS_IN_SET(['Samples','Shop Drawing','Product Data'])
-        #Create a dropdown of all the users' names for the Assigned To field
-        db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
-        #Create a dropdown for the status flag
-        db.Submittal.statusFlag.requires = IS_IN_SET(['Approved','Resubmit','Approved with Comments','Submitted for Review'])
-        #Create a form with all the submittal fields
-        form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'subType':'Submittal Type', 'sectNum':'Section Number','assignedTo':'Assigned to'}) 
-        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
-        
-    elif displayForm == "ProposalRequest":  
-        #Create a form with the Proposal Request fields specified by the fields parameter   
-        form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'}, fields =[ 'reqNum','amendNum','projectNum','subject','propDate','sentTo','cc','description'])
-        
-        currentProj = db(db.Project.projNum == str(projNum)).select().first()
-        rows = db(db.ProposalRequest.projectNum == str(projNum)).select() #Get all the ProposalRequests for the current project
-        form.vars.reqNum = len(rows) + 1               #Initialize the request number to be one more than the current number of proposal requests
-        form.vars.statusFlag = "Open"                  #Set the status flag (this field isn't displayed on the screen)       
-        form.vars.creator = auth.user.id               #Initialize the creator to be the current user's id (this field also isn't displayed)
-        form.vars.projectNum = projNum              #Initialize the form's project number to be the current project's number
-        form.vars.projectName = currentProj.name   #Set the form's project name to be the current project's name (not displayed)
-        form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
-        
-    elif displayForm == "Proposal":
-        propReqs = db(db.ProposalRequest.projectNum == str(projNum)).select()
-        propNumList = []
-        for propReq in propReqs:
-            propNumList.append(propReq.reqNum)                   #Get all the Proposal Request numbers for the project
-        db.Proposal.propReqRef.requires = IS_IN_SET(propNumList) #Create a dropdown for the Proposal Request Reference #
-        #Create a form with all the Proposal fields 
-        form = SQLFORM(db.Proposal, labels={'propNum':'Proposal #', 'propReqRef':'Proposal Request Reference #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
-        
-        rows = db(db.Proposal.projectNum == str(projNum)).select() #Get all the Proposals for the current project
-        form.vars.propNum = len(rows) + 1              #Initialize the proposal number to be one more than the current number of proposals
-        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
-        
-    elif displayForm == "MeetingMinutes":
-        #Create a form with all the MeetingMinutes fields
-        form = SQLFORM(db.MeetingMinutes, labels={'projectNum':'Project Number','meetDate':'Meeting Date'})
-        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
-        
-    elif displayForm == "Photo": 
-        #Create a form with the Photo fields specified by the fields parameter                     
-        form = SQLFORM(db.Photos, labels={'projectNum':'Project Number', 'title':'Title', 'description':'Description', 'photo':'Photo'}, fields = ['projectNum','title','description','photo'])
-        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
-        
-    if form != None:
-        if form.process().accepted:
-            response.flash = T('Form accepted')
-            if displayForm == "Photo":    #If the form submitted is a photo form, we need to upload it to flickr and delete the photo from our database
-                uploadPhotoToFlickr(form)
-            elif displayForm == "RFI":    #If the form submitted is an RFI form, we need to put the name of person the RFI is referred to instead of the id
-                reqUser = db(db.auth_user.id == form.vars.reqRefTo).select().first()
-                row = db(db.RFI.id == form.vars.id).select().first()
-                row.update_record(reqRefTo = reqUser.first_name + " " + reqUser.last_name)
-            elif displayForm == "Submittal": #If the form submitted is a Submittal, we need to put the name of person it is assigned to instead of the id
-                assignTo = db(db.auth_user.id == form.vars.assignedTo).select().first()
-                row = db(db.Submittal.id == form.vars.id).select().first()
-                row.update_record(assignedTo= assignTo.first_name + " " + assignTo.last_name)
-            
-            #Now create a new newsfeed update noting the new submission
-            if displayForm == "MeetingMinutes":
-                displayForm = "Plan for World Domination"
-            description = "A new " + displayForm + " has been added."
-            db.NewsFeed.insert(projectNum=form.vars.projectNum, type="document", created_on=datetime.today(), description=description, creator=auth.user.first_name + " " + auth.user.last_name)
-            db.commit()
-            redirect(URL("default","showform", vars={"displayForm":request.vars.displayForm,"projectNum":projNum}))
-        elif form.errors:
-            response.flash = 'Form has errors'
-        else:
-            response.flash = 'Please fill out the form'
-            
-    return dict(displayForm=displayForm,
-                form=form,
-                myProfileForm=myProfileForm,
-                projects=projects,
-                footer=footer,
-                header=header,
-                css=css,
-                projNum=projNum)
+            elif displayForm == "RFI":
+                #Create a dropdown of all the users' names for the Request Referred To field
+                db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
+                #Create a form with the RFI fields specified by the fields parameter
+                form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 
+                    'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 
+                    'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':
+                    'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['projectNum','rfiNum','requestBy', 'dateSent', 
+                    'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
+                
+                currentProj = db(db.Project.projNum == str(projNum)).select().first()
+                rows = db(db.RFI.projectNum == str(projNum)).select()    #Get all the RFI's for the current project       
+                form.vars.rfiNum = len(rows) + 1               #Initialize the form's RFI number to be one more than the current number of RFIs
+                form.vars.requestBy = auth.user.first_name + " " + auth.user.last_name #Initialize the form's RequestBy field to be the current user
+                form.vars.statusFlag = "Outstanding"           #Set the status flag (this field isn't displayed on the screen)
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number 
+                form.vars.projectName = currentProj.name       #Set the form's project name to be the current project's name (not displayed)
+                form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
+                        
+            elif displayForm == "Submittal":
+                #Create a dropdown for the submittal type
+                db.Submittal.subType.requires = IS_IN_SET(['Samples','Shop Drawing','Product Data'])
+                #Create a dropdown of all the users' names for the Assigned To field
+                db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
+                #Create a dropdown for the status flag
+                db.Submittal.statusFlag.requires = IS_IN_SET(['Approved','Resubmit','Approved with Comments','Submitted for Review'])
+                #Create a form with all the submittal fields
+                form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project #', 'subType':'Submittal Type', 'sectNum':'Section Number','assignedTo':'Assigned to'}, fields=['projectNum', 'subType', 'assignedTo', 'statusFlag', 'sectNum', 'submittal']) 
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
+                
+            elif displayForm == "ProposalRequest":  
+                #Create a form with the Proposal Request fields specified by the fields parameter   
+                form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 
+                    'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'}, 
+                    fields =['projectNum', 'reqNum','amendNum','subject','propDate','sentTo','cc','description'])
+                
+                currentProj = db(db.Project.projNum == str(projNum)).select().first()
+                rows = db(db.ProposalRequest.projectNum == str(projNum)).select() #Get all the ProposalRequests for the current project
+                form.vars.reqNum = len(rows) + 1               #Initialize the request number to be one more than the current number of proposal requests
+                form.vars.statusFlag = "Open"                  #Set the status flag (this field isn't displayed on the screen)       
+                form.vars.creator = auth.user.id               #Initialize the creator to be the current user's id (this field also isn't displayed)
+                form.vars.projectNum = projNum                 #Initialize the form's project number to be the current project's number
+                form.vars.projectName = currentProj.name       #Set the form's project name to be the current project's name (not displayed)
+                form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
+                
+            elif displayForm == "Proposal":
+                propReqs = db(db.ProposalRequest.projectNum == str(projNum)).select()
+                propNumList = []
+                for propReq in propReqs:
+                    propNumList.append(propReq.reqNum)                   #Get all the Proposal Request numbers for the project
+                db.Proposal.propReqRef.requires = IS_IN_SET(propNumList) #Create a dropdown for the Proposal Request Reference #
+                #Create a form with all the Proposal fields 
+                form = SQLFORM(db.Proposal, labels={'propNum':'Proposal #', 'propReqRef':'Proposal Request Reference #', 'projectNum':'Project #', 
+                    'propDate':'Proposal Date'}, fields=['projectNum','propNum','propDate','propReqRef','file'])
+                
+                rows = db(db.Proposal.projectNum == str(projNum)).select() #Get all the Proposals for the current project
+                form.vars.propNum = len(rows) + 1              #Initialize the proposal number to be one more than the current number of proposals
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
+                
+            elif displayForm == "MeetingMinutes":
+                #Create a form with all the MeetingMinutes fields
+                form = SQLFORM(db.MeetingMinutes, labels={'projectNum':'Project #','meetDate':'Meeting Date'})
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
+                
+            elif displayForm == "Photo": 
+                #Create a form with the Photo fields specified by the fields parameter                     
+                form = SQLFORM(db.Photos, labels={'projectNum':'Project #', 'title':'Title', 'description':'Description', 'photo':'Photo'}, 
+                    fields = ['projectNum','title','description','photo'])
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
+                
+            if form != None:                      
+                if form.process(onvalidation=checkValidProjNum).accepted:  #The projNum the user entered in the form is a project they are a part of
+                    response.flash = 'Form accepted'
+                    if displayForm == "Photo": #If submitted form is a photo form, need to upload it to flickr and delete the photo from our database
+                        uploadPhotoToFlickr(form)
+                    elif displayForm == "RFI": #If submitted form is an RFI form, need to put the name of person the RFI is referred to instead of the id
+                        reqUser = db(db.auth_user.id == form.vars.reqRefTo).select().first()
+                        row = db(db.RFI.id == form.vars.id).select().first()
+                        row.update_record(reqRefTo = reqUser.first_name + " " + reqUser.last_name)
+                    elif displayForm == "Submittal": #If submitted form is a Submittal, need to put the name of person it is assigned to instead of the id
+                        assignTo = db(db.auth_user.id == form.vars.assignedTo).select().first()
+                        row = db(db.Submittal.id == form.vars.id).select().first()
+                        row.update_record(assignedTo= assignTo.first_name + " " + assignTo.last_name)
+                    
+                    #Now create a new newsfeed update noting the new submission
+                    if displayForm == "ProposalRequest":
+                      displayForm = "Proposal Request"  
+                    elif displayForm == "MeetingMinutes":
+                        displayForm = "Meeting Minutes document"
+                    description = "A new " + displayForm + " has been added."
+                    db.NewsFeed.insert(projectNum=form.vars.projectNum, type="document", created_on=datetime.today(), description=description, 
+                        creator=auth.user.first_name + " " + auth.user.last_name)
+                    db.commit()
+                    redirect(URL("default","showform", vars={"displayForm":request.vars.displayForm,"projectNum":projNum}))
+            elif form.errors:
+                response.flash = 'Form has errors'
+            else:
+                response.flash = 'Please fill out the form'
+                    
+            return dict(displayForm=displayForm,
+                        form=form,
+                        myProfileForm=myProfileForm,
+                        projects=projects,
+                        footer=footer,
+                        header=header,
+                        css=css,
+                        projNum=projNum)
+                        
+    else:    #the user is trying to access a project he's not a part of   
+        return "Access Denied"
 
+#This is called by showform on validation to make sure the project number the user entered is for a project they are associated with
+def checkValidProjNum(form):
+    projectNums = []
+    for proj in projects:
+        projectNums.append(proj.projNum)
+    if not int(form.vars.projectNum) in projectNums:    #The user is trying to submit a form to a projct he's not a part of
+        form.errors.projectNum = "You do not have access to this project"  
+    
 #This is called when a user clicks on a categry in an archived project's sidebar. It returns a dictionary used by the view default/formtablearchived.html
 @auth.requires_login()
 @auth.requires_membership('Admin') 
@@ -617,18 +644,18 @@ def formtablearchived():
     fullTable = True                                                              #Keeps track if there are entries for the category or not
     rows = None
     
-    if project != None and not project.archived: 
+    if project != None and not project.archived:                                  #Only want to allow viewing of  archived projects
         project = None
     else:
         if formType == "CCD":
-            rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()     #Get all the CCDs for the current project
+            rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select() #Get all the CCDs for the current project
             for row in rows:
-                row.file = str(URL('default','download',args=row.file))[1:]           #Set the CCD's file URL
+                row.file = str(URL('default','download',args=row.file))[1:]       #Set the CCD's file URL
             #Create a table of the CCDs, displaying the values given by the columns parameter
             table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'],headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"},upload="http://127.0.0.1:8000")
         
         elif formType == "RFI":
-            rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()     #Get all the RFIs for the current project
+            rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select() #Get all the RFIs for the current project
             #Represent the RFI number as a link to view the RFI
             db.RFI.rfiNum.represent = lambda rfiNum: A(str(rfiNum), _href=URL("default","create_odt",args=[int(rfiNum)]),_target="_blank")
             #Create a table of the RFIs
@@ -669,17 +696,17 @@ def formtablearchived():
                 headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"}, upload="http://127.0.0.1:8000")
         
         elif formType == "Photo":    
-            rows = db(db.Photos.projectNum == str(request.vars.projectNum)).select()         #Get all the Photos for the current project
+            rows = db(db.Photos.projectNum == str(request.vars.projectNum)).select()    #Get all the Photos for the current project
             #Make the flickrURL a link to open the photo in flickr with a new tab
             db.Photos.flickrURL.represent = lambda flickrURL: A("View Photo", _href=flickrURL, _target="_blank")
             #Create a table of the Photos' information
             table = SQLTABLE(rows, columns=["Photos.title","Photos.description","Photos.flickrURL"], 
                 headers={"Photos.title":"Title", "Photos.description":"Description","Photos.flickrURL":"Photo"})
     
-        if rows == None:
+        if rows == None:                                                                #The url has an invalid formType
             table = "Not a valid form type"
             fullTable = False
-        elif len(rows) == 0:
+        elif len(rows) == 0:                                                            #There are no db entries for the type
             table = "There were no documents uploaded for this project section."
             fullTable = False
 
@@ -693,39 +720,43 @@ def formtablearchived():
 #This is called when a user clicks on a category for a project in the sidebar. It returns a dictionary used by the view default/formtable.html
 @auth.requires_login()
 def formtable():
+    projNum = request.vars.projectNum
+    if type(projNum) is list:                                                #If projNum is a list, get the last number
+        projNum = projNum[-1]
+        
     projectNums = []
-    for proj in projects:
+    for proj in projects:                                                    #Get the project numbers for the user's projects
         projectNums.append(proj.projNum)
         
     #Check if the project is in the user's projects  
-    if int(request.vars.projectNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"):
-        project = db(db.Project.projNum == request.vars.projectNum).select().first()             #Get the current project
-        if project.archived:        #The user is trying to access an archived project
+    if int(projNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"):
+        project = db(db.Project.projNum == projNum).select().first()         #Get the current project
+        if project != None and project.archived:                             #The user is trying to access an archived project
             return "The project you are trying to view has been archived. If you are an admin and would like to view the project, please go back and click \"Archived Projects.\""
             
         else:  
-            formType = request.vars.formType                                                     #Get the type of table to display        
-            table = None                                                                         #The SQLTABLE we will be displaying - set depending on the formType
-            fullTable = True                                                                     #Keeps track if there are entries for the category or not
+            formType = request.vars.formType                                 #Get the type of table to display        
+            table = None                                                     #The SQLTABLE we will be displaying - set depending on the formType
+            fullTable = True                                                 #Keeps track if there are entries for the category or not
             rows = None
             
             if formType == "CCD":
-                rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()            #Get all the CCDs for the current project
+                rows = db(db.CCD.projectNum == projNum).select()             #Get all the CCDs for the current project
                 for row in rows:
-                    row.file = str(URL('default','download',args=row.file))[1:]                  #Set the CCD file's URL
+                    row.file = str(URL('default','download',args=row.file))[1:]  #Set the CCD file's URL
                 #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 
                 #    'content': lambda row, rc: IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
                 #Create a table of the CCDs
                 table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'], headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"}, upload="http://127.0.0.1:8000")
             
             elif formType == "RFI":
-                rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()            #Get all the RFIs for the current project
+                rows = db(db.RFI.projectNum == str(projNum)).select()        #Get all the RFIs for the current project
                 #Create an extra column. If the user is the one who is supposed to reply to the RFI, then have a link in the column for the user to do so
                 extracolumn = [{'label':'Reply to RFI',
                         'class': '', #class name of the header
                         'width': '', #width in pixels or %
                         'content':lambda row, rc: A("Reply", _href=URL('default','replyRFI',args=row.id)) if auth.user.first_name +" " +
-                             auth.user.last_name == row.reqRefTo else A(" "),
+                             auth.user.last_name == row.reqRefTo else A(" "),  #What actually goes in the column
                         'selected': False #aggregate class selected to this column
                         }]
                 #Create a table of the RFIs, adding the extra "Reply to RFI" column on the far right
@@ -734,16 +765,16 @@ def formtable():
                     "RFI.responseDate":"Response Date","RFI.responseBy":"Need Response By","RFI.statusFlag":"Status Flag"}, extracolumns=extracolumn)
             
             elif formType == "Submittal":
-                rows = db(db.Submittal.projectNum == str(request.vars.projectNum)).select()       #Get all the Submittals for the current project
+                rows = db(db.Submittal.projectNum == projNum).select()       #Get all the Submittals for the current project
                 for row in rows:
-                    row.submittal = str(URL('default','download',args=row.submittal))[1:]         #Set the Submittals' file URL
+                    row.submittal = str(URL('default','download',args=row.submittal))[1:]  #Set the Submittals' file URL
                 #Create a table of the Submittals
                 table = SQLTABLE(rows, columns=["Submittal.assignedTo","Submittal.statusFlag","Submittal.subType","Submittal.sectNum","Submittal.submittal"],
                     headers={"Submittal.assignedTo":"Assigned To","Submittal.statusFlag":"Status Flag","Submittal.subType":"Type",
                     "Submittal.sectNum":"Section Number","Submittal.submittal":"Submitted File"}, upload="http://127.0.0.1:8000")
             
             elif formType == "ProposalRequest":
-                rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select() #Get all the Proposal Requests for the current project
+                rows = db(db.ProposalRequest.projectNum == projNum).select() #Get all the Proposal Requests for the current project
                 #Create an extra column. If the user is the creator of the request, include a link with the option to change the status of the document 
                 extracolumn = [{'label':'Change Status',
                         'class': '', #class name of the header
@@ -758,34 +789,34 @@ def formtable():
                     "ProposalRequest.propDate":"Proposal Request Date"}, extracolumns=extracolumn)
             
             elif formType == "Proposal":
-                rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select()        #Get all the Proposals for the current project
+                rows = db(db.Proposal.projectNum == projNum).select()        #Get all the Proposals for the current project
                 for row in rows:
-                    row.file = str(URL('default','download',args=row.file))[1:]                   #Set the Proposals' file URL
+                    row.file = str(URL('default','download',args=row.file))[1:]   #Set the Proposals' file URL
                 #Create a table of the Proposals
                 table = SQLTABLE(rows, columns=["Proposal.propNum","Proposal.propReqRef","Proposal.propDate","Proposal.file"],
                     headers={"Proposal.propNum":"Proposal Number","Proposal.propReqRef":"Proposal Request Reference Number",
                     "Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"}, upload="http://127.0.0.1:8000")
             
             elif formType == "MeetingMinutes":
-                rows = db(db.MeetingMinutes.projectNum == str(request.vars.projectNum)).select()  #Get all the Meeting Minutes for the current project
+                rows = db(db.MeetingMinutes.projectNum == projNum).select()  #Get all the Meeting Minutes for the current project
                 for row in rows:
-                    row.file = str(URL('default','download',args=row.file))[1:]                   #Set the Meeting Minutes' file URL
+                    row.file = str(URL('default','download',args=row.file))[1:]   #Set the Meeting Minutes' file URL
                 #Create a table of the Meeting Minutes
                 table = SQLTABLE(rows, columns=["MeetingMinutes.meetDate","MeetingMinutes.file"],
                     headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"}, upload="http://127.0.0.1:8000")
             
             elif formType == "Photo":    
-                rows = db(db.Photos.projectNum == str(request.vars.projectNum)).select()          #Get all the Photos for the current project
+                rows = db(db.Photos.projectNum == projNum).select()          #Get all the Photos for the current project
                 #Make the flickrURL a link to open the photo in flickr with a new tab
                 db.Photos.flickrURL.represent = lambda flickrURL: A("View Photo", _href=flickrURL, _target="_blank")
                 #Create a table of the Photos' information
                 table = SQLTABLE(rows, columns=["Photos.title","Photos.description","Photos.flickrURL"], 
                     headers={"Photos.title":"Title", "Photos.description":"Description","Photos.flickrURL":"Photo"})
         
-            if rows == None:
+            if rows == None:                                                 #The url's formType is not valid
                 table = "Not a valid form type"
                 fullTable = False
-            elif len(rows) == 0:
+            elif len(rows) == 0:                                             #There are no db entries for the type
                 table = "There are no documents uploaded for this project section yet."
                 fullTable = False       
                 
@@ -810,51 +841,85 @@ def formtable():
 @auth.requires_login()
 def replyRFI():
     id = request.args(0) #the id of the RFI
-    db.RFI.statusFlag.requires = IS_IN_SET(['Outstanding','Closed']) #Make a dropdown for the status flag
     
-    #Create the SQLFORM, filling in all the previously submitted information
-    replyRfiForm = SQLFORM(db.RFI, id, showid=False, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By', 'reply':'Reply', 'responseDate':'Response Date', 'statusFlag':'Status Flag'}, fields = ['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids', 'sectionPage', 'description', 'suggestion', 'responseBy', 'reply', 'responseDate', 'statusFlag'], _id="replyForm")
+    rfiIds = []                                                              #Get all the rfi's that the user is able to reply to
+    for project in projects:
+        rfis = db(db.RFI.projectNum == str(project.projNum)).select()
+        for rfi in rfis:
+            if rfi.reqRefTo == auth.user.first_name + " " + auth.user.last_name:
+                rfiIds.append(rfi.id)
     
-    if replyRfiForm != None:
-        if replyRfiForm.process().accepted:
-            row = db(db.RFI.id == id).select().first() #Get the RFI we're replying to
-            
-            #Update the RFI's reply and response date (but don't save any of the other fields -- want to keep the other fields read-only for this)
-            row.update_record(reply=str(replyRfiForm.vars.reply), responseDate=str(replyRfiForm.vars.responseDate))     
-            db.commit()   
-            
-            session.flash = T('RFI Reply Accepted')  
-            redirect(URL('default', 'formtable', vars=dict(formType='RFI', projectNum=str(replyRfiForm.vars.projectNum))))  #Redirect to the RFI table                    
+    if int(id) in rfiIds:                                                    #The user is replying to an rfi that they're supposed to reply to
+        db.RFI.statusFlag.requires = IS_IN_SET(['Outstanding','Closed'])     #Make a dropdown for the status flag
+        db.RFI.responseDate.requires = IS_NOT_EMPTY(error_message="Choose the correct date")
         
-        elif replyRfiForm.errors:
-            response.flash = 'Form has errors'
-        else:
-            response.flash = 'Please fill out the form'
+        #Create the SQLFORM, filling in all the previously submitted information
+        replyRfiForm = SQLFORM(db.RFI, id, showid=False, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 
+            'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #',
+            'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':
+            'Contractor\'s Suggestion', 'responseBy':'Need Response By', 'reply':'Reply', 'responseDate':'Response Date', 'statusFlag':'Status Flag'}, 
+            fields = ['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'specSection', 'sheetName', 'grids',
+            'sectionPage', 'description', 'suggestion', 'responseBy', 'reply', 'responseDate', 'statusFlag'], _id="replyForm")
+        
+        if replyRfiForm != None:
+            if replyRfiForm.process().accepted:
+                row = db(db.RFI.id == id).select().first()                     #Get the RFI we're replying to
+                
+                #Update the RFI's reply and response date (but don't save any of the other fields -- want to keep the other fields read-only for this)
+                row.update_record(reply=str(replyRfiForm.vars.reply), responseDate=str(replyRfiForm.vars.responseDate))     
+                db.commit()   
+                
+                session.flash = T('RFI Reply Accepted')  
+                redirect(URL('default', 'formtable', vars=dict(formType='RFI', projectNum=str(replyRfiForm.vars.projectNum)))) #Redirect to the RFI table                    
             
-    return dict(replyRfiForm=replyRfiForm, css=css, header=header, footer=footer)
-
+            elif replyRfiForm.errors:
+                response.flash = 'Form has errors'
+            else:
+                response.flash = 'Please fill out the reply, response date, and status flag'
+                
+        return dict(replyRfiForm=replyRfiForm, css=css, header=header, footer=footer)
+        
+    else:                                                                    #The user is tying to reply to an rfi they're not supposed to reply to
+        return "Access Denied"
+    
 #This is called when a user clicks on "Change Status" when on the Proposal Request's formtable view. It returns a dictionary used by the view default/changePropReq.html
 @auth.requires_login()
 def changePropReq():
     id = request.args(0)  #The id of the Proposal Request
-    db.ProposalRequest.statusFlag.requires = IS_IN_SET(['Open','Closed'])          #Make a dropdown for the status flag  
-    #Create the SQLFORM, filling in all the previously submitted information
-    changePropReqForm = SQLFORM(db.ProposalRequest, id, showid=False, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'statusFlag':'Status', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'}, fields =['reqNum','amendNum','projectNum','subject','propDate','sentTo','cc','description','statusFlag'], _id="changePropReqForm")
+    
+    prIds = []
+    for project in projects:                                                #Get the propReqs that the user created
+        reqs = db(db.ProposalRequest.projectNum == str(project.projNum)).select()
+        for req in reqs:
+            if req.creator == auth.user.id:
+                prIds.append(req.id)
+    
+    if int(id) in prIds:                                                    #If the user is allowed to change the proposal request
+        db.ProposalRequest.statusFlag.requires = IS_IN_SET(['Open','Closed'])     #Make a dropdown for the status flag  
         
-    if changePropReqForm != None:
-        if changePropReqForm.process().accepted:
-            row = db(db.ProposalRequest.id == id).select().first()                 #Get the current Proposal Request
-            row.update_record(statusFlag = str(changePropReqForm.vars.statusFlag)) #Update the Proposal Request with the new status flag      
-            db.commit()   
-            session.flash = T('Status Change Accepted')  
-            #Redirect to the Proposal Request table
-            redirect(URL('default', 'formtable', vars=dict(formType='ProposalRequest', projectNum=str(changePropReqForm.vars.projectNum))))                      
-        elif changePropReqForm.errors:
-            response.flash = 'Form has errors'
-        else:
-            response.flash = 'Please fill out the form'
+        #Create the SQLFORM, filling in all the previously submitted information
+        changePropReqForm = SQLFORM(db.ProposalRequest, id, showid=False, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 
+            'statusFlag':'Status', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 
+            'cc':'CC', 'description':'Description'}, fields =['reqNum','amendNum','projectNum','subject','propDate',
+            'sentTo','cc','description','statusFlag'], _id="changePropReqForm")
             
-    return dict(changePropReqForm=changePropReqForm, css=css, header=header, footer=footer)  
+        if changePropReqForm != None:
+            if changePropReqForm.process().accepted:
+                row = db(db.ProposalRequest.id == id).select().first()      #Get the current Proposal Request
+                row.update_record(statusFlag = str(changePropReqForm.vars.statusFlag)) #Update the Proposal Request with the new status flag      
+                db.commit()   
+                session.flash = T('Status Change Accepted')  
+                #Redirect to the Proposal Request table
+                redirect(URL('default', 'formtable', vars=dict(formType='ProposalRequest', projectNum=str(changePropReqForm.vars.projectNum))))                      
+            elif changePropReqForm.errors:
+                response.flash = 'Form has errors'
+            else:
+                response.flash = 'You may update the status flag'
+                
+        return dict(changePropReqForm=changePropReqForm, css=css, header=header, footer=footer) 
+        
+    else:                                                                   #The user is trying to change a propReq he's not allowed to change
+        return "Access Denied"
 
 def viewPhoto():
     br = mechanize.Browser()

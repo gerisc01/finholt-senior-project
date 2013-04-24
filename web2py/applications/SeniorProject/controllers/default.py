@@ -497,59 +497,10 @@ def showform():
     projNum = request.vars.projectNum
     if type(projNum) is list:
         projNum = projNum[-1]
-<<<<<<< HEAD
-=======
-    
-    if displayForm == "CCD":
-        #Create a form with all the CCD fields
-        form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"}) 
-        rows = db(db.CCD.projectNum == str(projNum)).select()    #Get all the CCD's for the current project
-        form.vars.ccdNum = len(rows) + 1               #Initialize the form's CCD number to be one more than the current number of CCDs               
-        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
-        
-    elif displayForm == "RFI":
-        #Create a dropdown of all the users' names for the Request Referred To field
-        db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
-        #Create a form with the RFI fields specified by the fields parameter
-        form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
-        
-        currentProj = db(db.Project.projNum == str(projNum)).select().first()
-        rows = db(db.RFI.projectNum == str(projNum)).select()    #Get all the RFI's for the current project       
-        form.vars.rfiNum = len(rows) + 1               #Initialize the form's RFI number to be one more than the current number of RFIs
-        form.vars.requestBy = auth.user.first_name + " " + auth.user.last_name #Initialize the form's RequestBy field to be the current user
-        form.vars.statusFlag = "Outstanding"           #Set the status flag (this field isn't displayed on the screen)
-        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number 
-        form.vars.projectName = currentProj.name       #Set the form's project name to be the current project's name (not displayed)
-        form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
-                
-    elif displayForm == "Submittal":
-        #Create a dropdown for the submittal type
-        db.Submittal.subType.requires = IS_IN_SET(['Samples','Shop Drawing','Product Data'])
-        #Create a dropdown of all the users' names for the Assigned To field
-        db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
-        #Create a dropdown for the status flag
-        db.Submittal.statusFlag.requires = IS_IN_SET(['Approved','Resubmit','Approved with Comments','Submitted for Review'])
-        #Create a form with all the submittal fields
-        form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'subType':'Submittal Type', 'sectNum':'Section Number','assignedTo':'Assigned to'}) 
-        form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
-        
-    elif displayForm == "ProposalRequest":  
-        #Create a form with the Proposal Request fields specified by the fields parameter   
-        form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'}, fields =[ 'reqNum','amendNum','projectNum','subject','propDate','sentTo','cc','description'])
-        
-        currentProj = db(db.Project.projNum == str(projNum)).select().first()
-        rows = db(db.ProposalRequest.projectNum == str(projNum)).select() #Get all the ProposalRequests for the current project
-        form.vars.reqNum = len(rows) + 1               #Initialize the request number to be one more than the current number of proposal requests
-        form.vars.statusFlag = "Open"                  #Set the status flag (this field isn't displayed on the screen)       
-        form.vars.creator = auth.user.id               #Initialize the creator to be the current user's id (this field also isn't displayed)
-        form.vars.projectNum = projNum              #Initialize the form's project number to be the current project's number
-        form.vars.projectName = currentProj.name   #Set the form's project name to be the current project's name (not displayed)
-        form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
->>>>>>> 78249e728f9ea07534a31e2fa19b04dcee0241d0
         
     projectNums = []
     for proj in projects:
-        projectNums.append(proj.projNum)
+        projectNums.append(proj.projNum)    
         
     #Check if the project is in the user's projects   
     if int(projNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"): 
@@ -557,7 +508,7 @@ def showform():
         if project != None and project.archived:    #The user is trying to access an archived project
             return "The project you are trying to view has been archived. If you are an admin and would like to view the project, please go back and click \"Archived Projects.\""
             
-        else:   
+        else:       
             displayForm = request.vars.displayForm                                       #Get the type of form we want to display
             form = None                                                                  #The SQLFORM that we will display
         
@@ -675,7 +626,6 @@ def showform():
                         header=header,
                         css=css,
                         projNum=projNum)
-                        
     else:    #the user is trying to access a project he's not a part of   
         return "Access Denied"
 

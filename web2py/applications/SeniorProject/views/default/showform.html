@@ -71,7 +71,7 @@ console.log(data);
    {{=header}}
 
     <ul id = "projecttabs">
-        <li id="Calendar">Calendar</li>
+        <li id="Calendar"><a href='{{=URL('default','viewcalendar',vars=dict(projectNum=request.vars.projectNum))}}'>Calendar</a></li>
         <li id="CCD"><a href='{{=URL('default','showform',vars=dict(displayForm='CCD',projectNum=request.vars.projectNum))}}'>Upload CCD</a></li>
         <li id="RFI"><a href='{{=URL('default','showform',vars=dict(displayForm='RFI',projectNum=request.vars.projectNum))}}'>Generate RFI</a></li>
         <li id="Submittal"><a href='{{=URL('default','showform',vars=dict(displayForm='Submittal',projectNum=request.vars.projectNum))}}'>Upload Submittal</a></li>

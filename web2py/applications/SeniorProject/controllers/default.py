@@ -327,7 +327,7 @@ def deletefromproject():
 def deleteusers():
      #Get all the users on the site in alphabetical order, except the current user (don't want someone to delete himself)
      rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)  
-     db.auth_user.id.represent = lambda id: DIV(id, INPUT (_type='checkbox',_name='%i'%id)) #Create a checkbox for each user
+     db.auth_user.id.represent = lambda id: DIV(INPUT (_type='checkbox',_name='%i'%id)) #Create a checkbox for each user
      #Create a table of the information
      table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}), INPUT(_type='submit'))
      
@@ -406,7 +406,7 @@ def archiveprojects():
     rows = db(db.Project.archived == True).select()                     #Get all the archived projects
     
     if len(rows) == 0:
-        table = "There are no projects that have been achived."
+        table = "There are no projects that have been archived."
         
     else:                                                               #There is at least one archived project
         #This column contains the option to view a project when "View" is clicked. It opens a new tab to display the selected project                                                      
@@ -417,7 +417,9 @@ def archiveprojects():
                         'selected': False #aggregate class selected to this column
                        }]
         #Create a table of the archived projects, with the rightmost column containing the extracolumn
-        table = SQLTABLE(rows, columns=["Project.name","Project.owner","Project.projNum",'Project.openDate',"Project.closedDate"], headers={"Project.name":"Project Name", "Project.owner":"Owner", "Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}, extracolumns=extracolumn)
+        table = SQLTABLE(rows, columns=["Project.name","Project.owner","Project.projNum",'Project.openDate',"Project.closedDate"], 
+            headers={"Project.name":"Project Name", "Project.owner":"Owner", "Project.openDate":"Open Date", "Project.closedDate":"Closed Date", 
+            "Project.projNum":"Project #"}, extracolumns=extracolumn)
     
     return dict(table=table, footer=footer, header=header, css=css)
 
@@ -499,6 +501,9 @@ def newsfeedarchived():
 @auth.requires_login()
 def viewcalendar():
     projectNum = request.vars.projectNum
+    if type(projectNum) is list:                                                #If projNum is a list, get the last number
+        projectNum = projectNum[-1]
+        
     project =  db.executesql('SELECT * FROM project WHERE projNum = %s' % projectNum, as_dict=True)
     projName = project[0]['name']
 
@@ -565,7 +570,8 @@ def viewcalendar():
     form_html = get_delete_list(auth, calID, first_of_month)
 
     return dict(calID = calID, 
-        projNum = projectNum, 
+        projNum = projectNum,
+        myProfileForm=myProfileForm, 
         projects=projects, 
         footer=footer, 
         header=header, 

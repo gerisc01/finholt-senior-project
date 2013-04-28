@@ -116,7 +116,7 @@ $('#document').change(function () {
               {{for item in entries:}}
                 <div id="newsfeed" class={{=T(item.type)}}>
                 <b class='project'>{{=T(project.name)}}</b>
-                <b class='created'>{{=T('written by ' + item.creator + ' on ' + str(item.created_on))}}</b>
+                <b class='created'>{{=T('written by ' + item.creator + ' on ' + item.created_on.strftime("%B %d, %Y %I:%M %p"))}}</b>
                 <hr>
                 <p class="descrip">{{=T(item.description)}}</p>            
                 </div>

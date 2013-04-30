@@ -121,10 +121,9 @@ $('#projectsidebar').bind(
           {{=month_html}}
         </div>
 
-        <br>
-
         <div id='delete_events'>
           <form id='delete_event_form' action='deleteevent.html'>
+            <h4>Delete an Event</h4>
             {{=form_html}}
             <input type="hidden" name="projNum" value="{{=projNum}}"></input>
             <input type="submit" value="Delete Event(s)"></input>

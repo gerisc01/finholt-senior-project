@@ -6,8 +6,9 @@
 <link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
 <link rel="stylesheet" href="{{=URL('static','css/jquery.dataTables.css')}}" type="text/css" media="all" />
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
-<link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
+<link rel="stylesheet" href="{{=URL('static', 'css/viewcalendar.css')}}"/>
 <link rel="stylesheet" href="{{=URL('static', 'js/jquery.timepicker.css')}}"/>
+<link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
 <link rel="icon" type="image/ico" href="{{=URL('static','favicon.png')}}"/>
 
 {{include 'web2py_ajax.html'}}
@@ -19,7 +20,7 @@
   <script src="{{=URL('static','js/jquery.timepicker.js')}}"></script>
   <script>
     $(function() {$('#timepicker').timepicker()});
-    $(function() {$('#timepicker2').timepciker()});
+    $(function() {$('#timepicker2').timepicker()});
   </script>
   <script>
         $(document).ready(function() {
@@ -55,6 +56,7 @@ var data = [];
 
 {{for index  in range(len(projects)):}}
   data.push({label:"Project "+"{{=T(projects[index].name)}}",id:{{=int(projects[index].projNum)}}, children:[
+  {label:"<a href='{{=URL('default','viewcalendar',vars=dict(projectNum=projects[index].projNum))}}'>Calendar</a>"},
   {label:"<a href='{{=URL('default','newsfeed',vars=dict(formType='NewsFeed',projectNum=projects[index].projNum))}}'>News Feed</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].projNum))}}'>RFIs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].projNum))}}'>Submittals</a>"},
@@ -110,9 +112,26 @@ $('#projectsidebar').bind(
 
     </div>
     <div id="content">
-        <div id="calendar">
-            <iframe src="https://www.google.com/calendar/embed?showTitle=0&amp;src={{=calID}}&ctz=America/Chicago{{=embed_date}}" style="border: 0" width="800" height="600" frameborder="0" scrolling="no"></iframe>
+        <span>
+            <iframe src="https://www.google.com/calendar/embed?showTitle=0&amp;src={{=calID}}&ctz=America/Chicago{{=embed_date}}" style="border: 0" width="800" height="600" frameborder="0" scrolling="no" id="gcal_iframe"></iframe>
+        </span>
+
+        <span id="delete_event_list">
+        <div id='month_change'>
+          {{=month_html}}
         </div>
+
+        <br>
+
+        <div id='delete_events'>
+          <form id='delete_event_form' action='deleteevent.html'>
+            {{=form_html}}
+            <input type="hidden" name="projNum" value="{{=projNum}}"></input>
+            <input type="submit" value="Delete Event(s)"></input>
+          </form>
+        </div>
+      </span>
+
 
         <div id="add_event">
             <h4>Add Event<h4>
@@ -141,20 +160,6 @@ $('#projectsidebar').bind(
                 <input type="hidden" name="projNum" value="{{=projNum}}"></input>
             </form>
         </div>
-
-      <div id="delete_event_list">
-        <div id='month_change'>
-          {{=month_html}}
-        </div>
-        <div id='delete_events'>
-          <form id='delete_event_form' action='deleteevent.html'>
-            {{=form_html}}
-            <input type="hidden" name="projNum" value="{{=projNum}}"></input>
-            <input type="submit" value="Delete Event(s)"></input>
-          </form>
-        </div>
-      </div>
-
     </div>
     {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
         {{include "adminSidebar.html"}}

@@ -11,7 +11,7 @@
 
 #Import necessary modules
 import flickrapi
-import appy
+from appy.pod.renderer import Renderer
 from datetime import datetime,date
 from dateutil.relativedelta import relativedelta
 import mechanize
@@ -357,7 +357,39 @@ def createproject():
     form = SQLFORM(db.Project, labels={'projNum':'Project Number', 'openDate':'Open Date', 'closedDate':'Closed Date'})
     
     if form.process().accepted:
-       response.flash = str(request.vars.name) + ' has been created'
+        response.flash = str(request.vars.name) + ' has been created'
+
+
+        url = 'https://accounts.google.com/o/oauth2/token'
+        refTok = '1/BJ7iFL7rY6Kcyg4zAjX7nON2RO1GkBt-uEDefKgFn78'
+
+        params = urllib.urlencode({
+          'client_id': '553030639714.apps.googleusercontent.com',
+          'client_secret': 'ZcZQAPsUOfO9F4Eeo-hZ-G-V',
+          'refresh_token':refTok,
+          'grant_type':'refresh_token'
+        })
+        authresponse = urllib2.urlopen(url, params).read()
+
+        loaded = json.loads(authresponse)
+        auth = "Bearer %s" % str(loaded['access_token'])
+
+        input_params = json.dumps({'summary' : str(request.vars.projNum) + ": " + str(request.vars.name)})
+        url = 'https://www.googleapis.com/calendar/v3/calendars'
+
+        calrequest = urllib2.Request(url,input_params)
+        calrequest.add_header("Authorization",auth)
+        calrequest.add_header("Content-Type",'application/json')
+        calrequest.get_method = lambda: 'POST'
+
+        f = urllib2.urlopen(calrequest)
+        calresponse = f.read()
+        print calresponse
+        f.close()
+
+
+
+       # create calendar request.vars.projNum + ": " + request.vars.name
     elif form.errors:
        response.flash = 'Form has errors'
     else:
@@ -981,6 +1013,7 @@ def formtable():
                              auth.user.last_name == row.reqRefTo else A(" "),  #What actually goes in the column
                         'selected': False #aggregate class selected to this column
                         }]
+                db.RFI.rfiNum.represent=lambda rfiNum: A(str(rfiNum), _href=URL("default","create_odt",args=[int(rfiNum)]),_target="_blank")
                 #Create a table of the RFIs, adding the extra "Reply to RFI" column on the far right
                 table = SQLTABLE(rows,_width="800px", columns=["RFI.rfiNum","RFI.dateSent","RFI.reqRefTo","RFI.responseBy","RFI.responseDate",
                     "RFI.statusFlag"], headers={"RFI.rfiNum":"RFI #","RFI.dateSent":"Date Sent","RFI.reqRefTo":"Request Referred To",
@@ -1180,16 +1213,7 @@ def getUserRole(id):
 
 #This is called by create_odt to get a dictionay of RFI data given the RFI number
 def get_data(row_id):
-    import MySQLdb
-
-    db = MySQLdb.connect(host="10.24.6.23", user="seniorproj", passwd="web2py2012", db="finholt")
-    cur = db.cursor()
-
-    # Getting the rows from the database
-
-    cur.execute("SELECT * FROM RFI WHERE rfiNum = %s;",(row_id))
-    columns = cur.description
-    row = cur.fetchall()
+    dict[0] =  db.executesql("SELECT * FROM RFI WHERE rfiNum = %s;" % row_id, as_dict=True)
 
     dict = {}
 
@@ -1203,7 +1227,6 @@ def create_odt():
     import subprocess
     import os
     import time
-    appy = local_import('appy.pod.renderer')
 
     phpscript = os.path.join(request.folder, 'static', 'php', 'result.odt')
     subprocess.Popen("rm " + phpscript, shell=True)
@@ -1211,7 +1234,7 @@ def create_odt():
     # giving the program enough time to delete the old result.odt
     time.sleep(1)
  
-    dictionary = get_data(request.args[0])
+    dictionary = db.executesql("SELECT * FROM RFI WHERE rfiNum = %s;" % request.args[0], as_dict=True)[0]
 
     appyDict = {}
     appyDict['rfiNumber'] = dictionary['rfiNum']
@@ -1229,12 +1252,6 @@ def create_odt():
         appyDict['DateSent'] = "None"
 
     appyDict['requestReferredTo'] = dictionary['reqRefTo']
-
-    dtRec = dictionary['dateRec']
-    if dtRec != None:
-        appyDict['DateReceived'] = "%s/%s/%s" % (dtRec.month,dtRec.day,dtRec.year)
-    else:
-        appyDict['DateReceived'] = "None"
 
     appyDict['drawingNum'] = dictionary['drawingNum']
 
@@ -1254,16 +1271,17 @@ def create_odt():
 
     appyDict['responseBy'] = dictionary['responseBy']
 
-    dtResp = dictionary['responseDate']
-    if dtResp != None:
-        appyDict['responseDate'] = "%s/%s/%s" % (dtResp.month,dtResp.day,dtResp.year)
-    else:
-        appyDict['responseDate']
+    if dictionary.has_key('responseDate'):
+        dtResp = dictionary['responseDate']
+        if dtResp != None:
+            appyDict['responseDate'] = "%s/%s/%s" % (dtResp.month,dtResp.day,dtResp.year)
+        else:
+            appyDict['responseDate'] = 'None'
 
     myfile = os.path.join(request.folder, 'static','php', 'rfiTemplate.odt')
     newfile = os.path.join(request.folder, 'static','php', 'result.odt')
     
-    renderer = appy.Renderer(myfile, appyDict, newfile)
+    renderer = Renderer(myfile, appyDict, newfile)
     renderer.run()
 
     phpscript = os.path.join(request.folder, 'static', 'php', 'rfi.php')

@@ -246,27 +246,30 @@ def register():
 @auth.requires_membership('Admin')
 def changepermissions():
      #Get all the users in alphabetical order, except the current user (don't want a user to change his own permissions)
-     rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)     
-     #Represent the user's id as a dropdown with the values of Admin or General, with the current value as the user's current group membership
-     db.auth_user.id.represent = lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id) 
-     #Create a table with all the users and their current memberships
-     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
- 
-     if table.accepts(request.vars): 
-        for item in request.vars.keys():               #For each user selected..
-            if item.isdigit():
-                if not auth.has_membership(user_id=int(item), role=request.vars[item]):
-                    if auth.has_membership(user_id=int(item), role=getUserRole(int(item))): #in case they are in their individual user group. We should only delete them from the group we are in if they are switching from General to Admin or vice versa.
-                        auth.del_membership(auth.id_group(role=getUserRole(int(item))),int(item))
-                    auth.add_membership(auth.id_group(role=request.vars[item]),int(item)) #Add the user's membership
-                    
-        session.flash = 'Permissions changed'
-        redirect(URL('default','changepermissions'))    #Redirect to the same screen so the admin can see the current permission level of every user
-        
-     elif table.errors:
-         session.flash = 'An error has occured'
-     else:
-         session.flash = 'Modify user permissions'
+     rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)   
+     if len(rows) == 0:
+         table = "There are currently no other users on the site"
+     else: 
+         #Represent the user's id as a dropdown with the values of Admin or General, with the current value as the user's current group membership
+         db.auth_user.id.represent = lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id) 
+         #Create a table with all the users and their current memberships
+         table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
+     
+         if table.accepts(request.vars): 
+            for item in request.vars.keys():               #For each user selected..
+                if item.isdigit():
+                    if not auth.has_membership(user_id=int(item), role=request.vars[item]):
+                        if auth.has_membership(user_id=int(item), role=getUserRole(int(item))): #in case they are in their individual user group. We should only delete them from the group we are in if they are switching from General to Admin or vice versa.
+                            auth.del_membership(auth.id_group(role=getUserRole(int(item))),int(item))
+                        auth.add_membership(auth.id_group(role=request.vars[item]),int(item)) #Add the user's membership
+                        
+            session.flash = 'Permissions changed'
+            redirect(URL('default','changepermissions'))    #Redirect to the same screen so the admin can see the current permission level of every user
+            
+         elif table.errors:
+             session.flash = 'An error has occured'
+         else:
+             session.flash = 'Modify user permissions'
      
      return dict(table=table, footer=footer, header=header, css=css)
 
@@ -289,9 +292,9 @@ def addtoproject():
                     
                 if type(request.vars[userid]) is list:
                     for item in request.vars[userid]:
-                        projectList.append(int(item))
+                        projectList.append(str(item))
                 else:
-                    projectList.append(int(request.vars[userid]))
+                    projectList.append(str(request.vars[userid]))
                 db(db.auth_user.id == int(userid)).update(projects=projectList)
         redirect(URL('default','addtoproject'))
     return dict(table=table, footer=footer, header=header, css=css)
@@ -314,9 +317,9 @@ def deletefromproject():
                 
                 if type(request.vars[userid]) is list:
                     for item in request.vars[userid]:
-                        projects.remove(int(item))
+                        projects.remove(str(item))
                 else:
-                    projects.remove(int(request.vars[userid]))
+                    projects.remove(str(request.vars[userid]))
                 db(db.auth_user.id ==int(userid)).update(projects=projects)
         redirect(URL('default','deletefromproject'))
     return dict(table=table, footer=footer, header=header, css=css)
@@ -326,26 +329,31 @@ def deletefromproject():
 @auth.requires_membership('Admin')
 def deleteusers():
      #Get all the users on the site in alphabetical order, except the current user (don't want someone to delete himself)
-     rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)  
-     db.auth_user.id.represent = lambda id: DIV(INPUT (_type='checkbox',_name='%i'%id)) #Create a checkbox for each user
-     #Create a table of the information
-     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}), INPUT(_type='submit'))
-     
-     table["_onsubmit"] = "return confirm('Are you sure you want to delete this user?');"
-     if table.process().accepted:
-       response.flash = str(request.vars.first_name) + ' deleted as user'
-     elif table.errors:
-       response.flash = 'Form has errors'
-     else:
-       response.flash = 'Select users to delete'
-     
-     if table.accepts(request.vars): 
-        for item in request.vars.keys():                     #For each user selected..
-            if item.isdigit():
-                db(db.auth_user.id == int(item)).delete()    #Delete the user that was selected
-                
-        session.flash = 'User deleted'
-        redirect(URL('default','deleteusers'))               #Redirect back to the same screen
+     rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)
+     if len(rows) == 0:
+         table = "There are currently no other users on the site"
+     else:   
+         db.auth_user.id.represent = lambda id: DIV(INPUT (_type='checkbox',_name='%i'%id)) #Create a checkbox for each user
+         #Create a table of the information
+         table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={
+             "auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),
+             INPUT(_type='submit'))
+         
+         table["_onsubmit"] = "return confirm('Are you sure you want to delete this user?');"
+         if table.process().accepted:
+           response.flash = str(request.vars.first_name) + ' deleted as user'
+         elif table.errors:
+           response.flash = 'Form has errors'
+         else:
+           response.flash = 'Select users to delete'
+         
+         if table.accepts(request.vars): 
+            for item in request.vars.keys():                     #For each user selected..
+                if item.isdigit():
+                    db(db.auth_user.id == int(item)).delete()    #Delete the user that was selected
+                    
+            session.flash = 'User deleted'
+            redirect(URL('default','deleteusers'))               #Redirect back to the same screen
 
      return dict(table=table, footer=footer, header=header,css=css)
 
@@ -354,7 +362,7 @@ def deleteusers():
 @auth.requires_membership('Admin')
 def createproject():
     #Create a form for inserting a new project into the database
-    form = SQLFORM(db.Project, labels={'projNum':'Project Number', 'openDate':'Open Date', 'closedDate':'Closed Date'})
+    form = SQLFORM(db.Project, labels={'projNum':'Project Number', 'openDate':'Open Date'}, fields=['projNum','name','owner','openDate'])
     
     if form.process().accepted:
        response.flash = str(request.vars.name) + ' has been created'
@@ -377,8 +385,17 @@ def manageprojects():
         
     else:   #There is at least one on-going project
         db.Project.id.represent = lambda id: DIV(INPUT(_type='checkbox',_name='%i'%id)) #Represent the project id as a checkbox
+        extracolumn = [{'label':'Close Project', #label of the entirecolumn
+                        'class': '', #class name of the header
+                        'width': '', #width in pixels or %
+                        'content': lambda row, rc: A("Close", _href=URL('default','closeProject', args=row.id)) if row.closedDate == None else
+                            "Project already closed", #what goes in each row
+                        'selected': False #aggregate class selected to this column
+                       }]
         #Create a table of all the non-archived projects, each with a checkbox for the option to archive
-        table = FORM(SQLTABLE(rows, columns=["Project.id","Project.name","Project.projNum",'Project.openDate',"Project.closedDate"], headers={"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date", "Project.projNum":"Project #"}), INPUT(_type='submit'))
+        table = FORM(SQLTABLE(rows, columns=["Project.id","Project.name","Project.projNum",'Project.openDate',"Project.closedDate"], headers=
+            {"Project.id":"Archive","Project.name":"Project Name","Project.openDate":"Open Date", "Project.closedDate":"Closed Date",
+            "Project.projNum":"Project #"}, extracolumns=extracolumn), INPUT(_type='submit'))
         
         table["_onsubmit"] = "return confirm('Are you sure you want to archive this project?');"
         
@@ -387,7 +404,7 @@ def manageprojects():
         elif table.errors:
            response.flash = 'Form has errors'
         else:
-           response.flash = 'Select a project to archive'
+           response.flash = 'Select a project to archive or click to close a project'
         
         if table.accepts(request.vars):
             for pID in request.vars.keys():                             #For each project that we want to archive..
@@ -397,6 +414,36 @@ def manageprojects():
             redirect(URL('default','manageprojects'))                   #Redirect to the same screen
             
     return dict(table=table, footer=footer, header=header,css=css)
+
+#This is called when a user clicks on "Reply to RFI" when on the RFI's formtable view. It returns a dictionary used by the view default/replyRFI.html
+@auth.requires_login()
+@auth.requires_membership('Admin')
+def closeProject():
+    id = str(request.args(0)) #the projNum of the Project
+    
+    #Create the SQLFORM, filling in all the previously submitted information
+    closeProjectForm = SQLFORM(db.Project, id, showid=False, labels={'projNum':'Project Number', 'openDate':'Open Date', 'closedDate':'Closed Date'}, 
+        _id="closeProjectForm")
+    
+    if closeProjectForm != None:
+        closeProjectForm["_onsubmit"] = "return confirm('Are you sure this is the correct closed date? This action cannot be undone');"
+        
+        if closeProjectForm.process().accepted:
+            row = db(db.Project.id == id).select().first()                     #Get the Project we're closing
+            
+            #Update the project's closedDate (but don't save any of the other fields -- want to keep the other fields read-only for this)
+            row.update_record(closedDate=closeProjectForm.vars.closedDate)     
+            db.commit()   
+            
+            session.flash = 'Project is now closed'
+            redirect(URL('default', 'manageprojects'))                         #Redirect to the manageProjects table                    
+        
+        elif closeProjectForm.errors:
+            response.flash = 'Form has errors'
+        else:
+            response.flash = 'Please select the closed date'
+            
+    return dict(closeProjectForm=closeProjectForm, css=css, header=header, footer=footer)
 
 #This is called when an admin clicks "Archived Projects". It returns a dictionary used by the view default/archiveprojects.html    
 @auth.requires_login()
@@ -722,7 +769,7 @@ def showform():
         projectNums.append(proj.projNum)    
         
     #Check if the project is in the user's projects   
-    if int(projNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"): 
+    if projNum in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"): 
         project = db(db.Project.projNum == projNum).select().first() #Get the current project
         if project != None and project.archived:    #The user is trying to access an archived project
             return "The project you are trying to view has been archived. If you are an admin and would like to view the project, please go back and click \"Archived Projects.\""
@@ -740,7 +787,12 @@ def showform():
                 
             elif displayForm == "RFI":
                 #Create a dropdown of all the users' names for the Request Referred To field
-                db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
+                possibleUsers = []
+                allUsers = db(db.auth_user).select(orderby=db.auth_user.last_name)
+                for aUser in allUsers:                                  #Get a list of all the users associated with the project
+                    if auth.has_membership(user_id=aUser.id, role="Admin") or ((aUser.projects != None) and (projNum in aUser.projects)): 
+                        possibleUsers.append(aUser.first_name + " " + aUser.last_name)      
+                db.RFI.reqRefTo.requires = IS_IN_SET(possibleUsers)
                 #Create a form with the RFI fields specified by the fields parameter
                 form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 
                     'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 
@@ -813,10 +865,6 @@ def showform():
                     response.flash = 'Form accepted'
                     if displayForm == "Photo": #If submitted form is a photo form, need to upload it to flickr and delete the photo from our database
                         uploadPhotoToFlickr(form)
-                    elif displayForm == "RFI": #If submitted form is an RFI form, need to put the name of person the RFI is referred to instead of the id
-                        reqUser = db(db.auth_user.id == form.vars.reqRefTo).select().first()
-                        row = db(db.RFI.id == form.vars.id).select().first()
-                        row.update_record(reqRefTo = reqUser.first_name + " " + reqUser.last_name)
                     elif displayForm == "Submittal": #If submitted form is a Submittal, need to put the name of person it is assigned to instead of the id
                         assignTo = db(db.auth_user.id == form.vars.assignedTo).select().first()
                         row = db(db.Submittal.id == form.vars.id).select().first()
@@ -969,10 +1017,13 @@ def formtable():
                 #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 
                 #    'content': lambda row, rc: IMG(_width="40",_height="40",_src=URL('default','download',args=row.file))}]
                 #Create a table of the CCDs
-                table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'], headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"}, upload="http://127.0.0.1:8000")
+                table = SQLTABLE(rows,columns=["CCD.ccdNum",'CCD.file'], headers={"CCD.ccdNum":"CCD #","CCD.file":"CCD File"}, 
+                    upload="http://127.0.0.1:8000")
             
             elif formType == "RFI":
                 rows = db(db.RFI.projectNum == str(projNum)).select()        #Get all the RFIs for the current project
+                #Represent the RFI number as a link to view the RFI
+                db.RFI.rfiNum.represent = lambda rfiNum: A(str(rfiNum), _href=URL("default","create_odt",args=[int(rfiNum)]),_target="_blank")
                 #Create an extra column. If the user is the one who is supposed to reply to the RFI, then have a link in the column for the user to do so
                 extracolumn = [{'label':'Reply to RFI',
                         'class': '', #class name of the header
@@ -1283,7 +1334,7 @@ def getAllProjectsHtml(id):
     else:
         for row in projects:                              #Find all the projects that the user is not already associated with
             if user.projects != None:
-                if row.projNum not in user.projects:
+                if str(row.projNum) not in user.projects:
                     html +=  '<input value="'+str(row.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(row.projNum)+"</br>"
             else:
                 html +=  '<input value="'+str(row.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(row.projNum)+"</br>"

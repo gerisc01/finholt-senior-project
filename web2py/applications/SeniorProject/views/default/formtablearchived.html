@@ -22,7 +22,6 @@ $(document).ready(function(){
 var data = [];
 {{if project != None:}}
     data.push(
-    {label:"<a href='{{=URL('default','viewcalendar',vars=dict(projectNum=projects[index].projNum))}}'>Calendar</a>"},
     {label:"<a href='{{=URL('default','newsfeedarchived',vars=dict(formType='NewsFeed',projectNum=project.projNum))}}'>News Feed</a>"},
     {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='RFI',projectNum=project.projNum))}}'>RFIs</a>"},
     {label:"<a href='{{=URL('default','formtablearchived',vars=dict(formType='Submittal',projectNum=project.projNum))}}'>Submittals</a>"}, 

@@ -97,20 +97,8 @@ def setUpFlickrStuff():
             br.form["login"]="alyssealyssetest"
             br.form["passwd"]="finholt1"
             br.find_control(".persistent").items[0].selected=True
-<<<<<<< HEAD
-            br.submit()      
-
-    thing =flickr.sign({
-        "api_key":"f8525c74b1f8dcd19791a39cbd947dd0",
-        "photo_id":"8655391465",
-        "auth_token":"72157632878384274-4abc077968f36490"  
-
-    })  
-                            #Redirect to that website
-=======
             br.submit()                                 #Redirect to that website
     return flickr
->>>>>>> 5ccd7b40b98e666ede302d537fede76d89ef02c6
             
             
 #Do all the set-up/initializing that is necessary for using the site (calling the above functions)   
@@ -151,6 +139,7 @@ def uploadPhotoToFlickr(photoForm):
 @auth.requires_login()
 def index():
     response.flash = "Welcome " + auth.user.first_name + "!"    #Welcome the user to the site
+    #response.flash = "Erik Smellz"
     projectNums = []                                            #Get the project numbers of all the projects the user is associated with
     for project in projects:
         projectNums.append(project.projNum) 
@@ -233,29 +222,16 @@ def data():
 @auth.requires_membership('Admin')
 def register():
     form = SQLFORM(db.auth_user)                                            #Create a form with the fields for a user
-<<<<<<< HEAD
     
    # if form.process().accepted:
     #   
    
-=======
-    if form.process().accepted:
-       response.flash = str(request.vars.first_name) + ' created as user'
-    elif form.errors:
-       response.flash = 'Form has errors'
-    else:
-       response.flash = 'Please create a user'
->>>>>>> 5ccd7b40b98e666ede302d537fede76d89ef02c6
        
     if form.validate():                                                     #Add the new user with membership in the General group (rather than Admin)
         admin_user = auth.user
         auth.get_or_create_user(form.vars)
-<<<<<<< HEAD
         db(db.auth_membership.user_id == auth.user_id).delete()
         auth.add_membership(auth.id_group(role="General"),auth.user_id)
-=======
-        auth.add_membership(auth.id_group(role="General"), auth.user_id)
->>>>>>> 5ccd7b40b98e666ede302d537fede76d89ef02c6
         auth.user = admin_user
         response.flash = str(request.vars.first_name) + ' created as user'
         #redirect(URL('default','register'))
@@ -271,30 +247,27 @@ def register():
 @auth.requires_membership('Admin')
 def changepermissions():
      #Get all the users in alphabetical order, except the current user (don't want a user to change his own permissions)
-     rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)    
-     if len(rows) == 0:
-         table = "There are no other users"
-     else: 
-         #Represent the user's id as a dropdown with the values of Admin or General, with the current value as the user's current group membership
-         db.auth_user.id.represent = lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id) 
-         #Create a table with all the users and their current memberships
-         table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email","auth_user.role":"Role"}),INPUT(_type='submit'))
-     
-         if table.accepts(request.vars): 
-            for item in request.vars.keys():               #For each user selected..
-                if item.isdigit():
-                    if not auth.has_membership(user_id=int(item), role=request.vars[item]):
-                        if auth.has_membership(user_id=int(item), role=getUserRole(int(item))): #in case they are in their individual user group. We should only delete them from the group we are in if they are switching from General to Admin or vice versa.
-                            auth.del_membership(auth.id_group(role=getUserRole(int(item))),int(item))
-                        auth.add_membership(auth.id_group(role=request.vars[item]),int(item)) #Add the user's membership
-                        
-            session.flash = 'Permissions changed'
-            redirect(URL('default','changepermissions'))    #Redirect to the same screen so the admin can see the current permission level of every user
-            
-         elif table.errors:
-             session.flash = 'An error has occured'
-         else:
-             session.flash = 'Modify user permissions'
+     rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)     
+     #Represent the user's id as a dropdown with the values of Admin or General, with the current value as the user's current group membership
+     db.auth_user.id.represent = lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id) 
+     #Create a table with all the users and their current memberships
+     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
+ 
+     if table.accepts(request.vars): 
+        for item in request.vars.keys():               #For each user selected..
+            if item.isdigit():
+                if not auth.has_membership(user_id=int(item), role=request.vars[item]):
+                    if auth.has_membership(user_id=int(item), role=getUserRole(int(item))): #in case they are in their individual user group. We should only delete them from the group we are in if they are switching from General to Admin or vice versa.
+                        auth.del_membership(auth.id_group(role=getUserRole(int(item))),int(item))
+                    auth.add_membership(auth.id_group(role=request.vars[item]),int(item)) #Add the user's membership
+                    
+        session.flash = 'Permissions changed'
+        redirect(URL('default','changepermissions'))    #Redirect to the same screen so the admin can see the current permission level of every user
+        
+     elif table.errors:
+         session.flash = 'An error has occured'
+     else:
+         session.flash = 'Modify user permissions'
      
      return dict(table=table, footer=footer, header=header, css=css)
 
@@ -354,27 +327,25 @@ def deletefromproject():
 def deleteusers():
      #Get all the users on the site in alphabetical order, except the current user (don't want someone to delete himself)
      rows = db(db.auth_user.id != auth.user.id).select(orderby=db.auth_user.last_name)  
-     if len(rows) == 0:
-         table = "There are no other users"
+     db.auth_user.id.represent = lambda id: DIV(id, INPUT (_type='checkbox',_name='%i'%id)) #Create a checkbox for each user
+     #Create a table of the information
+     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}), INPUT(_type='submit'))
+     
+     table["_onsubmit"] = "return confirm('Are you sure you want to delete this user?');"
+     if table.process().accepted:
+       response.flash = str(request.vars.first_name) + ' deleted as user'
+     elif table.errors:
+       response.flash = 'Form has errors'
      else:
-         db.auth_user.id.represent = lambda id: DIV(INPUT (_type='checkbox',_name='%i'%id)) #Create a checkbox for each user
-         #Create a table of the information
-         table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email","auth_user.role":"Role"}), INPUT(_type='submit'))
-         
-         if table.process().accepted:
-           response.flash = str(request.vars.first_name) + ' deleted as user'
-         elif table.errors:
-           response.flash = 'Form has errors'
-         else:
-           response.flash = 'Select users to delete'
-         
-         if table.accepts(request.vars): 
-            for item in request.vars.keys():                     #For each user selected..
-                if item.isdigit():
-                    db(db.auth_user.id == int(item)).delete()    #Delete the user that was selected
-                    
-            session.flash = 'User deleted'
-            redirect(URL('default','deleteusers'))               #Redirect back to the same screen
+       response.flash = 'Select users to delete'
+     
+     if table.accepts(request.vars): 
+        for item in request.vars.keys():                     #For each user selected..
+            if item.isdigit():
+                db(db.auth_user.id == int(item)).delete()    #Delete the user that was selected
+                
+        session.flash = 'User deleted'
+        redirect(URL('default','deleteusers'))               #Redirect back to the same screen
 
      return dict(table=table, footer=footer, header=header,css=css)
 
@@ -463,7 +434,13 @@ def viewArchive():
 #This is called when a user clicks on "News Feed" for a project in the sidebar. It returns a dictionary used by the view default/newsfeed.html
 @auth.requires_login()
 def newsfeed():
+    projNum = request.vars.projectNum
+    if type(projNum) is list:
+        projNum = projNum[-1]
     projectNums = []
+    projNum = request.vars.projectNum
+    if type(projNum) is list:
+        projNum = projNum[-1]
     for proj in projects:
         projectNums.append(proj.projNum)
         
@@ -497,8 +474,13 @@ def newsfeed():
             if entries == None or len(entries) == 0:                                     #If there are no entries, set entries to None
                 entries = None
                 
+<<<<<<< HEAD
             return dict(form=form, entries=entries, fullTable=True, project=project, projects=projects, myProfileForm=myProfileForm, header=header, 
+                        footer=footer, css=css,projNum=projNum)
+=======
+            return dict(form=form, projNum=projNum, entries=entries, fullTable=True, project=project, projects=projects, myProfileForm=myProfileForm, header=header, 
                         footer=footer, css=css)
+>>>>>>> 9dba7a9369f99d4caf7857c4fa13ed3cb24572da
         
     else:   #the user is trying to access a project he's not a part of   
         return "Access Denied"
@@ -524,16 +506,18 @@ def newsfeedarchived():
 #This is called when a user clicks on any of the tabs (to upload/generate a new document). It returns a dictionary used by the view default/showform.html
 @auth.requires_login() 
 def showform():
-<<<<<<< HEAD
     
     displayForm = request.vars.displayForm                                       #Get the type of form we want to display
     form = None                                                                  #The SQLFORM that we will display
     projNum = request.vars.projectNum
     if type(projNum) is list:
         projNum = projNum[-1]
-    import tkMessageBox
-    tkMessageBox.showinfo(title="Greetings", message=str(projNum)) 
+<<<<<<< HEAD
+     
 
+=======
+    
+>>>>>>> 9dba7a9369f99d4caf7857c4fa13ed3cb24572da
     if displayForm == "CCD":
         #Create a form with all the CCD fields
         form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"}) 
@@ -638,138 +622,6 @@ def showform():
                 css=css,
                 projNum=projNum)
 
-=======
-    projectNums = []
-    for proj in projects:
-        projectNums.append(proj.projNum)
-        
-    #Check if the project is in the user's projects  
-    if int(request.vars.projectNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"):
-        project = db(db.Project.projNum == request.vars.projectNum).select().first()     #Get the current project
-        if project.archived:    #The user is trying to access an archived project
-            return "The project you are trying to view has been archived. If you are an admin and would like to view the project, please go back and click \"Archived Projects.\""
-            
-        else:    
-            displayForm = request.vars.displayForm                                       #Get the type of form we want to display
-            form = None                                                                  #The SQLFORM that we will display
-            
-            if displayForm == "CCD":
-                #Create a form with all the CCD fields
-                form = SQLFORM(db.CCD, labels={'ccdNum':'CCD #','projectNum': "Project #"}) 
-                rows = db(db.CCD.projectNum == str(request.vars.projectNum)).select()    #Get all the CCD's for the current project
-                form.vars.ccdNum = len(rows) + 1               #Initialize the form's CCD number to be one more than the current number of CCDs               
-                form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
-                
-            elif displayForm == "RFI":
-                #Create a dropdown of all the users' names for the Request Referred To field
-                db.RFI.reqRefTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
-                #Create a form with the RFI fields specified by the fields parameter
-                form = SQLFORM(db.RFI, labels={'rfiNum':'RFI #','projectNum':"Project #", 'requestBy':'Request by', 'dateSent':'Date Sent', 'reqRefTo':'Request Referred to', 'drawingNum':'Drawing #', 'detailNum':'Detail #', 'specSection':'Spec Section #', 'sheetName':'Sheet Name', 'grids':'Grids', 'sectionPage':'Section Page #', 'description':'Description', 'suggestion':'Contractor\'s Suggestion', 'responseBy':'Need Response By'}, fields=['rfiNum','projectNum','requestBy', 'dateSent', 'reqRefTo', 'drawingNum', 'detailNum', 'sheetName', 'grids', 'specSection', 'sectionPage', 'description', 'suggestion', 'responseBy'])
-                
-                currentProj = db(db.Project.projNum == str(request.vars.projectNum)).select().first()
-                rows = db(db.RFI.projectNum == str(request.vars.projectNum)).select()    #Get all the RFI's for the current project       
-                form.vars.rfiNum = len(rows) + 1               #Initialize the form's RFI number to be one more than the current number of RFIs
-                form.vars.requestBy = auth.user.first_name + " " + auth.user.last_name #Initialize the form's RequestBy field to be the current user
-                form.vars.statusFlag = "Outstanding"           #Set the status flag (this field isn't displayed on the screen)
-                form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number 
-                form.vars.projectName = currentProj.name       #Set the form's project name to be the current project's name (not displayed)
-                form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
-                        
-            elif displayForm == "Submittal":
-                #Create a dropdown for the submittal type
-                db.Submittal.subType.requires = IS_IN_SET(['Samples','Shop Drawing','Product Data'])
-                #Create a dropdown of all the users' names for the Assigned To field
-                db.Submittal.assignedTo.requires = IS_IN_DB(db, 'auth_user.id', '%(first_name)s'+' '+'%(last_name)s')
-                #Create a dropdown for the status flag
-                db.Submittal.statusFlag.requires = IS_IN_SET(['Approved','Resubmit','Approved with Comments','Submitted for Review'])
-                #Create a form with all the submittal fields
-                form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project Number', 'subType':'Submittal Type', 'sectNum':'Section Number','assignedTo':'Assigned to'}) 
-                form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
-                
-            elif displayForm == "ProposalRequest":  
-                #Create a form with the Proposal Request fields specified by the fields parameter   
-                form = SQLFORM(db.ProposalRequest, labels={'reqNum':'Request #', 'amendNum':'Amendment #', 'projectNum':'Project #', 'subject':'Subject', 'propDate':'Proposal Date', 'sentTo':'Sent to', 'cc':'CC', 'description':'Description'}, fields =[ 'reqNum','amendNum','projectNum','subject','propDate','sentTo','cc','description'])
-                
-                currentProj = db(db.Project.projNum == str(request.vars.projectNum)).select().first()
-                rows = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select() #Get all the ProposalRequests for the current project
-                form.vars.reqNum = len(rows) + 1               #Initialize the request number to be one more than the current number of proposal requests
-                form.vars.statusFlag = "Open"                  #Set the status flag (this field isn't displayed on the screen)       
-                form.vars.creator = auth.user.id               #Initialize the creator to be the current user's id (this field also isn't displayed)
-                form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
-                form.vars.projectName = currentProj.name   #Set the form's project name to be the current project's name (not displayed)
-                form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
-                
-            elif displayForm == "Proposal":
-                propReqs = db(db.ProposalRequest.projectNum == str(request.vars.projectNum)).select()
-                propNumList = []
-                for propReq in propReqs:
-                    propNumList.append(propReq.reqNum)                   #Get all the Proposal Request numbers for the project
-                db.Proposal.propReqRef.requires = IS_IN_SET(propNumList) #Create a dropdown for the Proposal Request Reference #
-                #Create a form with all the Proposal fields 
-                form = SQLFORM(db.Proposal, labels={'propNum':'Proposal #', 'propReqRef':'Proposal Request Reference #', 'projectNum':'Project Number', 'propDate':'Proposal Date'})
-                
-                rows = db(db.Proposal.projectNum == str(request.vars.projectNum)).select() #Get all the Proposals for the current project
-                form.vars.propNum = len(rows) + 1              #Initialize the proposal number to be one more than the current number of proposals
-                form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
-                
-            elif displayForm == "MeetingMinutes":
-                #Create a form with all the MeetingMinutes fields
-                form = SQLFORM(db.MeetingMinutes, labels={'projectNum':'Project Number','meetDate':'Meeting Date'})
-                form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
-                
-            elif displayForm == "Photo": 
-                #Create a form with the Photo fields specified by the fields parameter                     
-                form = SQLFORM(db.Photos, labels={'projectNum':'Project Number', 'title':'Title', 'description':'Description', 'photo':'Photo'}, fields = ['projectNum','title','description','photo'])
-                form.vars.projectNum = request.vars.projectNum #Initialize the form's project number to be the current project's number
-        
-            if form != None:
-                if form.process().accepted:
-                    response.flash = T('Form accepted')
-                    if displayForm == "Photo":    #If the form submitted is a photo form, we need to upload it to flickr and delete the photo from our database       
-                        uploadPhotoToFlickr(form)
-                    elif displayForm == "RFI":    #If the form submitted is an RFI form, we need to put the name of person the RFI is referred to instead of the id
-                        reqUser = db(db.auth_user.id == form.vars.reqRefTo).select().first()
-                        row = db(db.RFI.id == form.vars.id).select().first()
-                        row.update_record(reqRefTo = reqUser.first_name + " " + reqUser.last_name)
-                    elif displayForm == "Submittal": #If the form submitted is a Submittal, we need to put the name of person it is assigned to instead of the id
-                        assignTo = db(db.auth_user.id == form.vars.assignedTo).select().first()
-                        row = db(db.Submittal.id == form.vars.id).select().first()
-                        row.update_record(assignedTo= assignTo.first_name + " " + assignTo.last_name)
-                        
-                    #Now create a new newsfeed update noting the new submission
-                    if displayForm == "MeetingMinutes":
-                        displayForm = "Meeting Minutes document"
-                    elif displayForm == "ProposalRequest":
-                        displayForm = "Proposal Request"
-                    description = "A new " + displayForm + " has been added."
-                    db.NewsFeed.insert(projectNum=form.vars.projectNum, type="document", created_on=datetime.today(), description=description, creator=auth.user.first_name + " " + auth.user.last_name)
-                    db.commit()
-                    
-                elif form.errors:
-                    response.flash = 'Form has errors'
-                else:
-                    response.flash = 'Please fill out the form'
-                    
-            else:
-                form = "Not a valid form to display"
-                    
-            if myProfileForm.process().accepted:
-               response.flash = "Profile updated successfully!"
-            elif myProfileForm.errors:
-               response.flash = 'Form has errors'
-                    
-            return dict(displayForm=displayForm,
-                        form=form,
-                        myProfileForm=myProfileForm,
-                        projects=projects,
-                        footer=footer,
-                        header=header,
-                        css=css)
-                    
-    else:    #The user is trying to access a project that he's not a part of
-        return "Access Denied"
-    
->>>>>>> 5ccd7b40b98e666ede302d537fede76d89ef02c6
 #This is called when a user clicks on a categry in an archived project's sidebar. It returns a dictionary used by the view default/formtablearchived.html
 @auth.requires_login()
 @auth.requires_membership('Admin') 

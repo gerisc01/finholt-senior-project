@@ -392,12 +392,24 @@ def createproject():
 
         f = urllib2.urlopen(calrequest)
         calresponse = f.read()
-        print calresponse
+        calresponse = json.loads(calresponse)
+        project =  db.executesql("SELECT * FROM project WHERE projNum = '%s'" % request.vars.projNum, as_dict=True)
+        projID = project[0]['id']
+        db(db.Project.id == projID).update(calendarID=str(calresponse['id']))
         f.close()
 
+        acl_input = json.dumps({'role' : 'reader', 'scope' : {'type' : 'default'}})
+        url = 'https://www.googleapis.com/calendar/v3/calendars/%s/acl' % str(calresponse['id'])
 
+        sharerequest = urllib2.Request(url,acl_input)
+        sharerequest.add_header("Authorization",auth)
+        sharerequest.add_header("Content-Type",'application/json')
+        sharerequest.get_method = lambda: 'POST'
 
-       # create calendar request.vars.projNum + ": " + request.vars.name
+        f = urllib2.urlopen(sharerequest)
+        shareresponse = f.read()
+        f.close()
+
     elif form.errors:
        response.flash = 'Form has errors'
     else:
@@ -442,10 +454,39 @@ def manageprojects():
             for pID in request.vars.keys():                             #For each project that we want to archive..
                 if pID.isdigit():
                     db(db.Project.id == int(pID)).update(archived=True) #Set archived=True for the project and update the database
+                    delete_calendar(db(db.Project.id == int(pID)).select(db.Project.calendarID).as_list()[0]['calendarID'])
                     
             redirect(URL('default','manageprojects'))                   #Redirect to the same screen
             
     return dict(table=table, footer=footer, header=header,css=css)
+
+def delete_calendar(calID):
+    url = 'https://accounts.google.com/o/oauth2/token'
+    refTok = '1/BJ7iFL7rY6Kcyg4zAjX7nON2RO1GkBt-uEDefKgFn78'
+
+    params = urllib.urlencode({
+      'client_id': '553030639714.apps.googleusercontent.com',
+      'client_secret': 'ZcZQAPsUOfO9F4Eeo-hZ-G-V',
+      'refresh_token':refTok,
+      'grant_type':'refresh_token'
+    })
+    authresponse = urllib2.urlopen(url, params).read()
+
+    loaded = json.loads(authresponse)
+    auth = "Bearer %s" % str(loaded['access_token'])
+
+    print calID
+
+    url = 'https://www.googleapis.com/calendar/v3/calendars/%s' % calID
+
+    print url
+
+    calrequest = urllib2.Request(url)
+    calrequest.add_header("Authorization",auth)
+    calrequest.get_method = lambda: 'DELETE'
+
+    calendars = urllib2.urlopen(calrequest).read()
+
 
 #This is called when a user clicks on "Reply to RFI" when on the RFI's formtable view. It returns a dictionary used by the view default/replyRFI.html
 @auth.requires_login()
@@ -585,33 +626,7 @@ def viewcalendar():
         
     project =  db.executesql('SELECT * FROM project WHERE projNum = %s' % projectNum, as_dict=True)
     projName = project[0]['name']
-
-    url = 'https://accounts.google.com/o/oauth2/token'
-    refTok = '1/BJ7iFL7rY6Kcyg4zAjX7nON2RO1GkBt-uEDefKgFn78'
-
-    params = urllib.urlencode({
-      'client_id': '553030639714.apps.googleusercontent.com',
-      'client_secret': 'ZcZQAPsUOfO9F4Eeo-hZ-G-V',
-      'refresh_token':refTok,
-      'grant_type':'refresh_token'
-    })
-    response = urllib2.urlopen(url, params).read()
-
-    loaded = json.loads(response)
-    auth = "Bearer %s" % str(loaded['access_token'])
-    
-    url = 'https://www.googleapis.com/calendar/v3/users/me/calendarList'
-    calrequest = urllib2.Request(url)
-    calrequest.add_header("Authorization",auth)
-
-    calendars = urllib2.urlopen(calrequest).read()
-    loaded = json.loads(calendars)
-
-    calID = ''
-    for i in loaded['items']:
-        if i['summary'] == "Sample Project":
-            calID = i['id']
-            break
+    calID = project[0]['calendarid']
 
     today = datetime.today()
     first_of_month = date(today.year,today.month,1)
@@ -646,7 +661,7 @@ def viewcalendar():
 
     month_form += "<input type='hidden' name='projNum' value='%s'/>\n<input type='submit' value='Change Month'/>\n</select>\n</form>" % projectNum
 
-    form_html = get_delete_list(auth, calID, first_of_month)
+    form_html = get_delete_list(calID, first_of_month)
 
     return dict(calID = calID, 
         projNum = projectNum,
@@ -660,7 +675,21 @@ def viewcalendar():
         month_html = HTML('',XML(month_form)))
 
 # A helper function for viewcalendar that gets the list of events for a given month from google
-def get_delete_list(auth,calID,first_of_month):
+def get_delete_list(calID,first_of_month):
+    url = 'https://accounts.google.com/o/oauth2/token'
+    refTok = '1/BJ7iFL7rY6Kcyg4zAjX7nON2RO1GkBt-uEDefKgFn78'
+
+    params = urllib.urlencode({
+      'client_id': '553030639714.apps.googleusercontent.com',
+      'client_secret': 'ZcZQAPsUOfO9F4Eeo-hZ-G-V',
+      'refresh_token':refTok,
+      'grant_type':'refresh_token'
+    })
+    response = urllib2.urlopen(url, params).read()
+
+    loaded = json.loads(response)
+    auth = "Bearer %s" % str(loaded['access_token'])
+
     url = 'https://www.googleapis.com/calendar/v3/calendars/%s/events' % calID
 
     start_month = str(first_of_month) + "T00:00:00.000Z"

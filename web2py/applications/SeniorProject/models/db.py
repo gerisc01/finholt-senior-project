@@ -119,7 +119,7 @@ use_janrain(auth,filename='private/janrain.key')
 uploadTypes = '(pdf|txt|doc|docx)'
 photoTypes = '(jpg|png)'
 
-db.define_table("Project", Field('projNum', 'integer'), Field('name','string'), Field('owner', 'string'), Field('openDate','date'), Field('closedDate','date'), Field('archived','boolean',readable=False, writable=False, default=False))
+db.define_table("Project", Field('projNum', 'string'), Field('name','string'), Field('owner', 'string'), Field('openDate','date'), Field('closedDate','date'), Field('archived','boolean',readable=False, writable=False, default=False), Field('calendarID', 'string'))
 
 db.define_table("NewsFeed", Field('projectNum','string'), Field('type','string'), Field('created_on','datetime'), Field('description','text'), Field('creator','string'))
 

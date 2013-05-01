@@ -27,6 +27,7 @@ var data = [];
 
 {{for index  in range(len(projects)):}}
   data.push({label:"Project "+"{{=T(projects[index].name)}}", children:[
+    {label:"<a href='{{=URL('default','viewcalendar',vars=dict(projectNum=projects[index].projNum))}}'>Calendar</a>"},
   {label:"<a href='{{=URL('default','newsfeed',vars=dict(formType='NewsFeed',projectNum=projects[index].projNum))}}'>News Feed</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].projNum))}}'>RFIs</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].projNum))}}'>Submittals</a>"},
@@ -100,7 +101,7 @@ $('#document').change(function () {
               {{for item in entries:}}
                 <div id="newsfeed" class={{=T(item.type)}}>
                 <b class='project'>{{=T(db(db.Project.projNum == item.projectNum).select().first().name)}}</b>
-                <b class='created'>{{=T('written by ' + item.creator + ' on ' + str(item.created_on))}}</b>
+                <b class='created'>{{=T('written by ' + item.creator + ' on ' + item.created_on.strftime("%B %d, %Y %I:%M %p"))}}</b>
                 <hr>
                 <p class='descrip'>{{=T(item.description)}}</p>            
                 </div>

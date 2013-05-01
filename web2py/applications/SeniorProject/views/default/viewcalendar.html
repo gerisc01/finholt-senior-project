@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Finholt Construction</title>
+<link rel="stylesheet" href="{{=css}}" type="text/css" media="all" />
+<link rel="stylesheet" href="{{=URL('static','css/jquery.dataTables.css')}}" type="text/css" media="all" />
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
+<link rel="stylesheet" href="{{=URL('static', 'css/viewcalendar.css')}}"/>
+<link rel="stylesheet" href="{{=URL('static', 'js/jquery.timepicker.css')}}"/>
+<link rel="stylesheet" href="{{=URL('static','jqTree/jqtree.css')}}"/>
+<link rel="icon" type="image/ico" href="{{=URL('static','favicon.png')}}"/>
+
+{{include 'web2py_ajax.html'}}
+  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" type="text/javascript"></script>
+  <script src="{{=URL('static','js/jquery.js')}}"></script> 
+  <script src="{{=URL('static','js/jquery.dataTables.js')}}"></script> 
+  <script src="{{=URL('static','js/jquery-ui-1.9.0.custom.min.js')}}"></script> 
+  <script src="{{=URL('static','jqTree/tree.jquery.js')}}"></script>
+  <script src="{{=URL('static','js/jquery.timepicker.js')}}"></script>
+  <script>
+    $(function() {$('#timepicker').timepicker()});
+    $(function() {$('#timepicker2').timepicker()});
+  </script>
+  <script>
+        $(document).ready(function() {
+        $("#datepicker").datepicker();
+        $("#datepicker2").datepicker();
+        });
+
+        $(document).ready(function() {
+        $("#timepicker").timepicker();
+        $("#timepicker2").timepicker();
+        });
+  </script>
+
+ <script>
+//  $.ajax({
+//  type:'insert',
+//  url:'https://www.googleapis.com/calendar/v3/calendars/{{=calID}}/events',
+
+//  success:function(data) {
+//      window.location.replace("http://knuth.luther.edu/~gerisc01/newtodo.cgi");
+//  }
+// });
+</script>
+<script type="text/javascript">
+$(document).ready(function(){
+
+$("#MyProfile").click(function(){
+$("#content").html('{{=myProfileForm}}')
+$("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_password')}}'>Change Password</a>")
+})
+
+var data = [];
+
+{{for index  in range(len(projects)):}}
+  data.push({label:"Project "+"{{=T(projects[index].name)}}",id:'{{=projects[index].projNum}}', children:[
+  {label:"<a href='{{=URL('default','viewcalendar',vars=dict(projectNum=projects[index].projNum))}}'>Calendar</a>"},
+  {label:"<a href='{{=URL('default','newsfeed',vars=dict(formType='NewsFeed',projectNum=projects[index].projNum))}}'>News Feed</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].projNum))}}'>RFIs</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Submittal',projectNum=projects[index].projNum))}}'>Submittals</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='CCD',projectNum=projects[index].projNum))}}'>CCDs</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='ProposalRequest',projectNum=projects[index].projNum))}}'>Proposal Requests</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Proposal',projectNum=projects[index].projNum))}}'>Proposals</a>"},
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='MeetingMinutes',projectNum=projects[index].projNum))}}'>Meeting Minutes</a>"}, 
+  {label:"<a href='{{=URL('default','formtable',vars=dict(formType='Photo',projectNum=projects[index].projNum))}}'>Photos</a>"} ]});
+  {{pass}} 
+;
+
+$(function() {
+    $('#projectsidebar').tree({
+        data: data,
+        autoEscape:false
+    });
+    var node = $('#projectsidebar').tree('getNodeById', '{{=request.vars.projectNum}}');
+$('#projectsidebar').tree('openNode', node);
+});
+
+$('#projectsidebar').bind(
+    'tree.click',
+    function(event) {
+        // The clicked node is 'event.node'
+        var node = event.node;
+        $('#projectsidebar').tree('toggle', node);
+    }
+);
+
+});
+</script>
+
+</head>
+
+<body>
+<div class="flash">{{=response.flash or ''}}</div>
+   {{=header}}
+
+    <ul id = "projecttabs">
+        <li id="Calendar"><a href='{{=URL('default','viewcalendar',vars=dict(projectNum=request.vars.projectNum))}}'>Calendar</a></li>
+        <li id="CCD"><a href='{{=URL('default','showform',vars=dict(displayForm='CCD',projectNum=request.vars.projectNum))}}'>Upload CCD</a></li>
+        <li id="RFI"><a href='{{=URL('default','showform',vars=dict(displayForm='RFI',projectNum=request.vars.projectNum))}}'>Generate RFI</a></li>
+        <li id="Submittal"><a href='{{=URL('default','showform',vars=dict(displayForm='Submittal',projectNum=request.vars.projectNum))}}'>Upload Submittal</a></li>
+        <li id="ProposalRequest"><a href='{{=URL('default','showform',vars=dict(displayForm='ProposalRequest',projectNum=request.vars.projectNum))}}'>Generate Proposal Request</a></li>
+        <li id="Proposal"><a href='{{=URL('default','showform',vars=dict(displayForm='Proposal',projectNum=request.vars.projectNum))}}'>Upload Proposal</a></li>
+        <li id="MeetingMinutes"><a href='{{=URL('default','showform',vars=dict(displayForm='MeetingMinutes',projectNum=request.vars.projectNum))}}'>Meeting Minutes</a></li>
+        <li id="Photo"><a href='{{=URL('default','showform',vars=dict(displayForm='Photo',projectNum=request.vars.projectNum))}}'>Upload Photo</a></li>
+        <li id="MyProfile">My Profile</li>
+    </ul>
+    <hr>
+    <div id="projectsidebar">
+    
+
+    </div>
+    <div id="content">
+        <span>
+            <iframe src="https://www.google.com/calendar/embed?showTitle=0&amp;src={{=calID}}&ctz=America/Chicago{{=embed_date}}" style="border: 0" width="800" height="600" frameborder="0" scrolling="no" id="gcal_iframe"></iframe>
+        </span>
+
+        <span id="delete_event_list">
+        <div id='month_change'>
+          {{=month_html}}
+        </div>
+
+        <div id='delete_events'>
+          <form id='delete_event_form' action='deleteevent.html'>
+            <h4>Delete an Event</h4>
+            {{=form_html}}
+            <input type="hidden" name="projNum" value="{{=projNum}}"></input>
+            <input type="submit" value="Delete Event(s)"></input>
+          </form>
+        </div>
+      </span>
+
+
+        <div id="add_event">
+            <h4>Add Event<h4>
+            <form id="add_event_form" method="get" action="addevent.html">
+                <table style="width:800px;border:0px;">
+                    <tr>
+                        <td>Title:</td> <td><input type="text" name="title"</input></td>
+                        <td>Start Date:</td> <td><input type="text" id="datepicker" name="start_date"></input></td>
+                        <td>End Date:</td> <td><input type="text"  id="datepicker2" name="end_date"></input></td>
+                    </tr>
+                    <tr>
+                        <td>Location:</td> <td><input type="text" name="location"></input></td>
+                        <td>Start Time:</td> <td><input type="text" id = "timepicker" name="start_time"></input></td>
+                        <td>End Time:</td> <td><input type="text" id= "timepicker2" name="end_time"></input></td>
+                    </tr>
+                </table>
+                <table style="width:800px;border:0px;">
+                    <tr>
+                        <td>Description: <input type="text" size="75" name="description"></input></td>
+                    </tr>
+                    <tr>
+                        <td><input type="submit" value="Add Event"></input></td>
+                    </tr>
+                </table>
+                <input type="hidden" name="calID" value="{{=calID}}"></input>
+                <input type="hidden" name="projNum" value="{{=projNum}}"></input>
+            </form>
+        </div>
+    </div>
+    {{if auth.has_membership(user_id=auth.user_id, role="Admin"): }}
+        {{include "adminSidebar.html"}}
+    {{pass}}
+
+    {{=footer}}
+</body>
+</html>

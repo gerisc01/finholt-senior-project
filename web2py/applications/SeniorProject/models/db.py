@@ -59,7 +59,7 @@ db.define_table(
     Field('registration_id', length=512,                 # required
           writable=False, readable=False, default=''),
     Field('role', length=512, label="Role"),
-    Field('projects','list:integer',writable=False,readable=False))
+    Field('projects','list:string',writable=False,readable=False))
 
 custom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table
 custom_auth_table.first_name.requires = \
@@ -119,7 +119,7 @@ use_janrain(auth,filename='private/janrain.key')
 uploadTypes = '(pdf|txt|doc|docx)'
 photoTypes = '(jpg|png)'
 
-db.define_table("Project", Field('projNum', 'integer'), Field('name','string'), Field('owner', 'string'), Field('openDate','date'), Field('closedDate','date'), Field('archived','boolean',readable=False, writable=False, default=False))
+db.define_table("Project", Field('projNum', 'string'), Field('name','string'), Field('owner', 'string'), Field('openDate','date'), Field('closedDate','date'), Field('archived','boolean',readable=False, writable=False, default=False), Field('calendarID', 'string'))
 
 db.define_table("NewsFeed", Field('projectNum','string'), Field('type','string'), Field('created_on','datetime'), Field('description','text'), Field('creator','string'))
 

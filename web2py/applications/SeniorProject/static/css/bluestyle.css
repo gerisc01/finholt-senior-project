@@ -3,6 +3,12 @@ html{
     height: 100%;
 }
 
+body{
+     margin-left: auto;
+     margin-right: auto;
+     width: 1200px;
+}
+
 #filter {
     max-width: 500px;
     margin:2px;
@@ -158,20 +164,19 @@ p.descrip {
 #tablearea{
     display: inline-block;
     float: left;
-    width: 900px;
 }
 
-#tablearea, table a:link{
+#tablearea a:link{
     color: #104E8B;
 }
 
-#tablearea table a:visited{
+#tablearea a:visited{
     color: #104E8B;
 }
 
 table{
     border:2px solid black;
-    width:100%;
+    width:800px;
 }
 tr.odd {
     background-color: #c1cdc1;

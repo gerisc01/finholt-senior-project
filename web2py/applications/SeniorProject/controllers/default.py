@@ -408,7 +408,6 @@ def createproject():
     if form.process().accepted:
         response.flash = str(request.vars.name) + ' has been created'
 
-
         url = 'https://accounts.google.com/o/oauth2/token'
         refTok = '1/BJ7iFL7rY6Kcyg4zAjX7nON2RO1GkBt-uEDefKgFn78'
 
@@ -451,6 +450,7 @@ def createproject():
         shareresponse = f.read()
         f.close()
 
+       # create calendar request.vars.projNum + ": " + request.vars.name
     elif form.errors:
        response.flash = 'Form has errors'
     else:
@@ -533,32 +533,37 @@ def delete_calendar(calID):
 @auth.requires_login()
 @auth.requires_membership('Admin')
 def closeProject():
-    id = str(request.args(0)) #the projNum of the Project
+    id = int(request.args(0)) #the id of the Project    
+    proj = db(db.Project.id == id).select().first()
     
-    #Create the SQLFORM, filling in all the previously submitted information
-    closeProjectForm = SQLFORM(db.Project, id, showid=False, labels={'projNum':'Project Number', 'openDate':'Open Date', 'closedDate':'Closed Date'}, 
-        _id="closeProjectForm")
+    if (not proj.archived) and (proj.closedDate == None):    #Make sure the project they want to view isn't already closed or archived
+        #Create the SQLFORM, filling in all the previously submitted information
+        closeProjectForm = SQLFORM(db.Project, id, showid=False, labels={'projNum':'Project Number', 'openDate':'Open Date', 'closedDate':'Closed Date'}, 
+            fields=['projNum','name','owner','openDate','closedDate'], _id="closeProjectForm")
+        
+        if closeProjectForm != None:
+            closeProjectForm["_onsubmit"] = "return confirm('Are you sure this is the correct closed date? This action cannot be undone');"
+            
+            if closeProjectForm.process().accepted:
+                row = db(db.Project.id == id).select().first()                     #Get the Project we're closing
+                
+                #Update the project's closedDate (but don't save any of the other fields -- want to keep the other fields read-only for this)
+                row.update_record(closedDate=closeProjectForm.vars.closedDate)     
+                db.commit()   
+                
+                session.flash = 'Project is now closed'
+                redirect(URL('default', 'manageprojects'))                         #Redirect to the manageProjects table                    
+            
+            elif closeProjectForm.errors:
+                response.flash = 'Form has errors'
+            else:
+                response.flash = 'Please select the closed date'
+                
+        return dict(closeProjectForm=closeProjectForm, css=css, header=header, footer=footer)
+        
+    else:
+        return "The project you are trying to access is already closed and/or archived"
     
-    if closeProjectForm != None:
-        closeProjectForm["_onsubmit"] = "return confirm('Are you sure this is the correct closed date? This action cannot be undone');"
-        
-        if closeProjectForm.process().accepted:
-            row = db(db.Project.id == id).select().first()                     #Get the Project we're closing
-            
-            #Update the project's closedDate (but don't save any of the other fields -- want to keep the other fields read-only for this)
-            row.update_record(closedDate=closeProjectForm.vars.closedDate)     
-            db.commit()   
-            
-            session.flash = 'Project is now closed'
-            redirect(URL('default', 'manageprojects'))                         #Redirect to the manageProjects table                    
-        
-        elif closeProjectForm.errors:
-            response.flash = 'Form has errors'
-        else:
-            response.flash = 'Please select the closed date'
-            
-    return dict(closeProjectForm=closeProjectForm, css=css, header=header, footer=footer)
-
 #This is called when an admin clicks "Archived Projects". It returns a dictionary used by the view default/archiveprojects.html    
 @auth.requires_login()
 @auth.requires_membership('Admin')
@@ -600,20 +605,22 @@ def newsfeed():
     projNum = request.vars.projectNum
     if type(projNum) is list:
         projNum = projNum[-1]
+    projNum = str(projNum)
+        
     projectNums = []
     for proj in projects:
         projectNums.append(proj.projNum)
         
     #Check if the project is in the user's projects   
-    if int(request.vars.projectNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"): 
-        project = db(db.Project.projNum == request.vars.projectNum).select().first() #Get the current project
+    if projNum in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"): 
+        project = db(db.Project.projNum == projNum).select().first() #Get the current project
         if project != None and  project.archived:    #The user is trying to access an archived project
             return "The project you are trying to view has been archived. If you are an admin and would like to view the project, please go back and click \"Archived Projects.\""
             
         else:       
             #Create an SQLFORM for the user to make a new status update
             form = SQLFORM(db.NewsFeed, labels={'description':'New Status Update'}, fields=['description'])
-            form.vars.projectNum = request.vars.projectNum                        #Initialize the project number to be the current project's number
+            form.vars.projectNum = projNum                                        #Initialize the project number to be the current project's number
             form.vars.type = "human"                                              #Initialize the type to be" human"
             form.vars.created_on = datetime.today()                               #Initialize the time created to be the current date and time
             form.vars.creator = auth.user.first_name + " " + auth.user.last_name  #Initiaize the creator to be the current user
@@ -630,7 +637,7 @@ def newsfeed():
                response.flash = 'Form has errors'    
                        
             #Get all the newsfeed entries, in order, with the most recent entry first
-            entries = db(db.NewsFeed.projectNum == request.vars.projectNum).select(orderby=~db.NewsFeed.created_on) 
+            entries = db(db.NewsFeed.projectNum == projNum).select(orderby=~db.NewsFeed.created_on) 
             if entries == None or len(entries) == 0:                              #If there are no entries, set entries to None
                 entries = None
                 
@@ -664,56 +671,65 @@ def viewcalendar():
     projectNum = request.vars.projectNum
     if type(projectNum) is list:                                                #If projNum is a list, get the last number
         projectNum = projectNum[-1]
-        
-    project =  db.executesql('SELECT * FROM project WHERE projNum = %s' % projectNum, as_dict=True)
-    projName = project[0]['name']
-    calID = project[0]['calendarid']
-
-    today = datetime.today()
-    first_of_month = date(today.year,today.month,1)
-
-    months = {'1' : "Jan", '2' : "Feb", '3' : "Mar", '4' : "Apr", '5' : "May", "6" : "Jun", '7' : "Jul", '8' : "Aug", '9' : "Sep", '10' : "Oct", "11" : "Nov", "12" : "Dec"}
-    year = today.year
-    current_month = today.month
-    month_form = "<form id='delete_months' action='changemonth.html'>\n<select name='month'>\n"
-
-    embed_date = ''
-    selected_month = str(current_month)+ "-" + str(year)
-    if request.vars.has_key("month"):
-        selected_month = request.vars.month
-        tmpSplit = selected_month.split('-')
-        first_of_month = date(int(tmpSplit[1]),int(tmpSplit[0]),1)
-        if int(tmpSplit[0]) < 10:
-            date_month = "%s0%s01" % (tmpSplit[1],tmpSplit[0]) 
-        else:
-            date_month = "%s%s01" % (tmpSplit[1],tmpSplit[0])
-        embed_date = "&dates=" + date_month + '%2F' + date_month
-    for i in range(20):
-        month_value = str(current_month) + "-" + str(year)
-        if selected_month == month_value:
-            month_form += "<option value='%s' selected>" % (month_value)
-        else:
-            month_form += "<option value='%s'>" % (month_value)
-        month_form += "%s %s</option>\n" % (months[str(current_month)],str(year))
-        current_month = current_month + 1
-        if current_month > 12:
-            current_month = 1
-            year += 1
-
-    month_form += "<input type='hidden' name='projNum' value='%s'/>\n<input type='submit' value='Change Month'/>\n</select>\n</form>" % projectNum
-
-    form_html = get_delete_list(calID, first_of_month)
-
-    return dict(calID = calID, 
-        projNum = projectNum,
-        myProfileForm=myProfileForm, 
-        projects=projects, 
-        footer=footer, 
-        header=header, 
-        css=css, 
-        embed_date = embed_date,
-        form_html = HTML('',XML(form_html)),
-        month_html = HTML('',XML(month_form)))
+    projectNum = str(projectNum)
+    
+    projectNums = []
+    for proj in projects:
+        projectNums.append(proj.projNum) 
+            
+    if projectNum in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"):      #check if the user is associated with the project
+        project =  db.executesql('SELECT * FROM project WHERE projNum = %s' % projectNum, as_dict=True)
+        projName = project[0]['name']
+        calID = project[0]['calendarid']
+    
+        today = datetime.today()
+        first_of_month = date(today.year,today.month,1)
+    
+        months = {'1' : "Jan", '2' : "Feb", '3' : "Mar", '4' : "Apr", '5' : "May", "6" : "Jun", '7' : "Jul", '8' : "Aug", '9' : "Sep", '10' : "Oct", "11" : "Nov", "12" : "Dec"}
+        year = today.year
+        current_month = today.month
+        month_form = "<form id='delete_months' action='changemonth.html'>\n<select name='month'>\n"
+    
+        embed_date = ''
+        selected_month = str(current_month)+ "-" + str(year)
+        if request.vars.has_key("month"):
+            selected_month = request.vars.month
+            tmpSplit = selected_month.split('-')
+            first_of_month = date(int(tmpSplit[1]),int(tmpSplit[0]),1)
+            if int(tmpSplit[0]) < 10:
+                date_month = "%s0%s01" % (tmpSplit[1],tmpSplit[0]) 
+            else:
+                date_month = "%s%s01" % (tmpSplit[1],tmpSplit[0])
+            embed_date = "&dates=" + date_month + '%2F' + date_month
+        for i in range(20):
+            month_value = str(current_month) + "-" + str(year)
+            if selected_month == month_value:
+                month_form += "<option value='%s' selected>" % (month_value)
+            else:
+                month_form += "<option value='%s'>" % (month_value)
+            month_form += "%s %s</option>\n" % (months[str(current_month)],str(year))
+            current_month = current_month + 1
+            if current_month > 12:
+                current_month = 1
+                year += 1
+    
+        month_form += "<input type='hidden' name='projNum' value='%s'/>\n<input type='submit' value='Change Month'/>\n</select>\n</form>" % projectNum
+    
+        form_html = get_delete_list(calID, first_of_month)
+    
+        return dict(calID = calID, 
+            projNum = projectNum,
+            myProfileForm=myProfileForm, 
+            projects=projects, 
+            footer=footer, 
+            header=header, 
+            css=css, 
+            embed_date = embed_date,
+            form_html = HTML('',XML(form_html)),
+            month_html = HTML('',XML(month_form)))
+            
+    else: #the user is trying to access a project he's not a part of   
+        return "Access Denied"     
 
 # A helper function for viewcalendar that gets the list of events for a given month from google
 def get_delete_list(calID,first_of_month):
@@ -808,8 +824,6 @@ def deleteevent():
 
     redirect(URL(viewcalendar, vars = dict(projectNum = projNum)))
 
-
-
 @auth.requires_login()
 def addevent():
     summary = request.vars.title
@@ -871,8 +885,8 @@ def showform():
         projectNums.append(proj.projNum)    
         
     #Check if the project is in the user's projects   
-    if projNum in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"): 
-        project = db(db.Project.projNum == projNum).select().first() #Get the current project
+    if str(projNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"): 
+        project = db(db.Project.projNum == str(projNum)).select().first() #Get the current project
         if project != None and project.archived:    #The user is trying to access an archived project
             return "The project you are trying to view has been archived. If you are an admin and would like to view the project, please go back and click \"Archived Projects.\""
             
@@ -1003,7 +1017,7 @@ def checkValidProjNum(form):
     projectNums = []
     for proj in projects:
         projectNums.append(proj.projNum)
-    if not int(form.vars.projectNum) in projectNums:    #The user is trying to submit a form to a projct he's not a part of
+    if not str(form.vars.projectNum) in projectNums:    #The user is trying to submit a form to a projct he's not a part of
         form.errors.projectNum = "You do not have access to this project"  
     
 #This is called when a user clicks on a categry in an archived project's sidebar. It returns a dictionary used by the view default/formtablearchived.html
@@ -1011,7 +1025,7 @@ def checkValidProjNum(form):
 @auth.requires_membership('Admin') 
 def formtablearchived():
     formType = request.vars.formType                                              #Get the type of table to display
-    project =  db(db.Project.projNum == request.vars.projectNum).select().first() #Get the archived project that is currently being viewed
+    project =  db(db.Project.projNum == str(request.vars.projectNum)).select().first() #Get the archived project that is currently being viewed
     table = None                                                                  #The SQLTABLE we will be displaying - set depending on the formType
     fullTable = True                                                              #Keeps track if there are entries for the category or not
     rows = None
@@ -1101,8 +1115,8 @@ def formtable():
         projectNums.append(proj.projNum)
         
     #Check if the project is in the user's projects  
-    if int(projNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"):
-        project = db(db.Project.projNum == projNum).select().first()         #Get the current project
+    if str(projNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"):
+        project = db(db.Project.projNum == str(projNum)).select().first()         #Get the current project
         if project != None and project.archived:                             #The user is trying to access an archived project
             return "The project you are trying to view has been archived. If you are an admin and would like to view the project, please go back and click \"Archived Projects.\""
             
@@ -1113,7 +1127,7 @@ def formtable():
             rows = None
             
             if formType == "CCD":
-                rows = db(db.CCD.projectNum == projNum).select()             #Get all the CCDs for the current project
+                rows = db(db.CCD.projectNum == str(projNum)).select()             #Get all the CCDs for the current project
                 for row in rows:
                     row.file = str(URL('default','download',args=row.file))[1:]  #Set the CCD file's URL
                 #myextracolumns = [{'label': 'CCD Thumbnail(for testing)','class':'','selected':False, 'width':'', 
@@ -1141,7 +1155,7 @@ def formtable():
                     "RFI.responseDate":"Response Date","RFI.responseBy":"Need Response By","RFI.statusFlag":"Status Flag"}, extracolumns=extracolumn)
             
             elif formType == "Submittal":
-                rows = db(db.Submittal.projectNum == projNum).select()       #Get all the Submittals for the current project
+                rows = db(db.Submittal.projectNum == str(projNum)).select()       #Get all the Submittals for the current project
                 for row in rows:
                     row.submittal = str(URL('default','download',args=row.submittal))[1:]  #Set the Submittals' file URL
                 #Create a table of the Submittals
@@ -1150,7 +1164,7 @@ def formtable():
                     "Submittal.sectNum":"Section Number","Submittal.submittal":"Submitted File"}, upload="http://127.0.0.1:8000")
             
             elif formType == "ProposalRequest":
-                rows = db(db.ProposalRequest.projectNum == projNum).select() #Get all the Proposal Requests for the current project
+                rows = db(db.ProposalRequest.projectNum == str(projNum)).select() #Get all the Proposal Requests for the current project
                 #Create an extra column. If the user is the creator of the request, include a link with the option to change the status of the document 
                 extracolumn = [{'label':'Change Status',
                         'class': '', #class name of the header
@@ -1165,7 +1179,7 @@ def formtable():
                     "ProposalRequest.propDate":"Proposal Request Date"}, extracolumns=extracolumn)
             
             elif formType == "Proposal":
-                rows = db(db.Proposal.projectNum == projNum).select()        #Get all the Proposals for the current project
+                rows = db(db.Proposal.projectNum == str(projNum)).select()        #Get all the Proposals for the current project
                 for row in rows:
                     row.file = str(URL('default','download',args=row.file))[1:]   #Set the Proposals' file URL
                 #Create a table of the Proposals
@@ -1174,7 +1188,7 @@ def formtable():
                     "Proposal.propDate":"Proposal Date","Proposal.file":"File Submitted"}, upload="http://127.0.0.1:8000")
             
             elif formType == "MeetingMinutes":
-                rows = db(db.MeetingMinutes.projectNum == projNum).select()  #Get all the Meeting Minutes for the current project
+                rows = db(db.MeetingMinutes.projectNum == str(projNum)).select()  #Get all the Meeting Minutes for the current project
                 for row in rows:
                     row.file = str(URL('default','download',args=row.file))[1:]   #Set the Meeting Minutes' file URL
                 #Create a table of the Meeting Minutes
@@ -1182,7 +1196,7 @@ def formtable():
                     headers={"MeetingMinutes.meetDate":"Meeting Date","MeetingMinutes.file":"Submitted File"}, upload="http://127.0.0.1:8000")
             
             elif formType == "Photo":    
-                rows = db(db.Photos.projectNum == projNum).select()          #Get all the Photos for the current project
+                rows = db(db.Photos.projectNum == str(projNum)).select()          #Get all the Photos for the current project
                 #Make the flickrURL a link to open the photo in flickr with a new tab
                 db.Photos.flickrURL.represent = lambda flickrURL: A("View Photo", _href=flickrURL, _target="_blank")
                 #Create a table of the Photos' information

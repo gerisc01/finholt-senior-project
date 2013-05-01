@@ -59,7 +59,7 @@ db.define_table(
     Field('registration_id', length=512,                 # required
           writable=False, readable=False, default=''),
     Field('role', length=512, label="Role"),
-    Field('projects','list:integer',writable=False,readable=False))
+    Field('projects','list:string',writable=False,readable=False))
 
 custom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table
 custom_auth_table.first_name.requires = \

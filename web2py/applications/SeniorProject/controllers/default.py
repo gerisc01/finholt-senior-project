@@ -18,6 +18,7 @@ import mechanize
 import cookielib
 import urllib
 import urllib2
+import hashlib
 import json
 
 #Flickr API keys
@@ -126,7 +127,8 @@ def uploadPhotoToFlickr(photoForm):
         idElement = flickr.upload(filename=name, title=title, description=descr)
         
         id = idElement.find('photoid').text
-        flickrUrl =  "http://www.flickr.com/photos/"+USER_ID+"/"+str(id)+"/"  
+        create_static_url(str(id))
+        flickrUrl = create_static_url(str(id)) 
     
         #Delete the corresponding row in our database (because we don't want to store the actual photo no our server)
         db(db.Photos.id == photoWeb2pyId).delete()        
@@ -137,6 +139,45 @@ def uploadPhotoToFlickr(photoForm):
     except:
         db(db.Photos.id == photoWeb2pyId).delete()
         response.flash = "Upload failed"
+
+def create_static_url(photo_id):
+    params_dict = {
+        'photo_id' : photo_id,
+        'secret' : SECRET_KEY,
+        'api_key' : KEY,
+        'method' : 'flickr.photos.getInfo',
+        'auth_token' : (db.PhotoToken(db.PhotoToken.id > 0)).token,
+        'format' : 'json'
+    }
+
+    l = list(params_dict.viewkeys())
+    l.sort()
+
+    pre_hash = SECRET_KEY
+    for i in l:
+        pre_hash += i
+        pre_hash += params_dict[i]
+
+    params = urllib.urlencode(params_dict)
+
+    m = hashlib.md5()
+    m.update(pre_hash)
+    api_sig =  m.hexdigest()
+
+    url = 'http://api.flickr.com/services/rest/?' + params + '&api_sig=' + api_sig
+
+    resp = urllib2.urlopen(url).read()
+
+    photo_info = json.loads(resp[14:][:-1])
+
+    farm = photo_info['photo']['farm']
+    server = photo_info['photo']['server']
+    photo_id = photo_info['photo']['id']
+    photo_secret = photo_info['photo']['secret']
+
+    static_url = 'http://farm%s.staticflickr.com/%s/%s_%s.jpg' % (farm,server,photo_id,photo_secret)
+
+    return static_url
  
 
 #Returns a dictionary used by the view default/index.html (which is the home screen)
@@ -1257,24 +1298,6 @@ def changePropReq():
         return "Access Denied"
 
 def viewPhoto():
-    br = mechanize.Browser()
-    # Browser options
-    br.set_handle_equiv(True)
-    br.set_handle_gzip(True)
-    br.set_handle_redirect(True)
-    br.set_handle_referer(True)
-    br.set_handle_robots(False)
-
-    # Follows refresh 0 but not hangs on refresh > 0
-    br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
-    r = br.open(request.vars["url"])
-    br.select_form("login_form")
-    br.form["passwd"]="finholt1"
-    #import tkMessageBox
-    #tkMessageBox.showinfo(title="Greetings", message=str(br.form))
-    r = br.submit()
-    br.open(request.vars["url"])
-   
     redirect(request.vars["url"])        
 
 #This returns a string of the opposite of the user's role (either Admin or General)

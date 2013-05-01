@@ -26,7 +26,7 @@ $("#profileForm").after("<a href='{{=URL('SeniorProject/default','user','change_
 var data = [];
 
 {{for index  in range(len(projects)):}}
-  data.push({label:"Project "+"{{=T(projects[index].name)}}",id:{{=int(projects[index].projNum)}}, children:[
+  data.push({label:"Project "+"{{=T(projects[index].name)}}",id:'{{=projects[index].projNum}}', children:[
   {label:"<a href='{{=URL('default','viewcalendar',vars=dict(projectNum=projects[index].projNum))}}'>Calendar</a>"},
   {label:"<a href='{{=URL('default','newsfeed',vars=dict(formType='NewsFeed',projectNum=projects[index].projNum))}}'>News Feed</a>"},
   {label:"<a href='{{=URL('default','formtable',vars=dict(formType='RFI',projectNum=projects[index].projNum))}}'>RFIs</a>"},
@@ -45,7 +45,7 @@ $(function() {
         data: data,
         autoEscape:false
     });
-    var node = $('#projectsidebar').tree('getNodeById', {{=int(projNum)}});
+    var node = $('#projectsidebar').tree('getNodeById', '{{=projNum}}');
 $('#projectsidebar').tree('openNode', node);
 });
 

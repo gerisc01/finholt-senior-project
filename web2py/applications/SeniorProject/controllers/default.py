@@ -1017,6 +1017,7 @@ def checkValidProjNum(form):
     projectNums = []
     for proj in projects:
         projectNums.append(proj.projNum)
+    print projectNums
     if not str(form.vars.projectNum) in projectNums:    #The user is trying to submit a form to a projct he's not a part of
         form.errors.projectNum = "You do not have access to this project"  
     
@@ -1148,8 +1149,7 @@ def formtable():
                              auth.user.last_name == row.reqRefTo else A(" "),  #What actually goes in the column
                         'selected': False #aggregate class selected to this column
                         }]
-                db.RFI.rfiNum.represent=lambda rfiNum: A(str(rfiNum), _href=URL("default","create_odt",args=[int(rfiNum)]),_target="_blank")
-                #Create a table of the RFIs, adding the extra "Reply to RFI" column on the far right
+              #Create a table of the RFIs, adding the extra "Reply to RFI" column on the far right
                 table = SQLTABLE(rows,_width="800px", columns=["RFI.rfiNum","RFI.dateSent","RFI.reqRefTo","RFI.responseBy","RFI.responseDate",
                     "RFI.statusFlag"], headers={"RFI.rfiNum":"RFI #","RFI.dateSent":"Date Sent","RFI.reqRefTo":"Request Referred To",
                     "RFI.responseDate":"Response Date","RFI.responseBy":"Need Response By","RFI.statusFlag":"Status Flag"}, extracolumns=extracolumn)

@@ -56,7 +56,7 @@ def getProjectsForUser(user):
             projects = db(db.Project.archived == False).select()
         else:
             for projNum in user.projects:
-                rows = db((db.Project.archived == False) & (db.Project.projNum == str(projNum))).select()
+                rows = db((db.Project.archived == False) & (db.Project.projNum == projNum)).select()
                 if len(projects) == 0:
                     projects = rows
                 else:
@@ -187,7 +187,7 @@ def index():
     #response.flash = "Erik Smellz"
     projectNums = []                                            #Get the project numbers of all the projects the user is associated with
     for project in projects:
-        projectNums.append(str(project.projNum))
+        projectNums.append(project.projNum) 
     
     #Get all the newsfeed entries for the user's projects, ordering by time created (most recent entry listed first)
     entries = db(db.NewsFeed.projectNum.belongs(projectNums)).select(orderby=~db.NewsFeed.created_on)
@@ -294,9 +294,7 @@ def changepermissions():
          #Represent the user's id as a dropdown with the values of Admin or General, with the current value as the user's current group membership
          db.auth_user.id.represent = lambda id: SELECT(getUserRole(id), XML(getOtherRoles(id)), _name='%i'%id) 
          #Create a table with all the users and their current memberships
-         table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.phone',
-             'auth_user.role'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name",
-             "auth_user.email":"Email","auth_user.phone":"Phone Number","auth_user.role":"Role"}),INPUT(_type='submit'))
+         table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),INPUT(_type='submit'))
      
          if table.accepts(request.vars): 
             for item in request.vars.keys():               #For each user selected..
@@ -378,9 +376,9 @@ def deleteusers():
      else:   
          db.auth_user.id.represent = lambda id: DIV(INPUT (_type='checkbox',_name='%i'%id)) #Create a checkbox for each user
          #Create a table of the information
-         table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], 
-             headers={"auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email",
-             "auth_user.role":"Role"}),INPUT(_type='submit'))
+         table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email'], headers={
+             "auth_user.id":"Remove User","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email"}),
+             INPUT(_type='submit'))
          
          table["_onsubmit"] = "return confirm('Are you sure you want to delete this user?');"
          if table.process().accepted:
@@ -611,7 +609,7 @@ def newsfeed():
         
     projectNums = []
     for proj in projects:
-        projectNums.append(str(proj.projNum))
+        projectNums.append(proj.projNum)
         
     #Check if the project is in the user's projects   
     if projNum in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"): 
@@ -677,7 +675,7 @@ def viewcalendar():
     
     projectNums = []
     for proj in projects:
-        projectNums.append(str(proj.projNum)) 
+        projectNums.append(proj.projNum) 
             
     if projectNum in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"):      #check if the user is associated with the project
         project =  db.executesql('SELECT * FROM project WHERE projNum = %s' % projectNum, as_dict=True)
@@ -884,7 +882,7 @@ def showform():
         
     projectNums = []
     for proj in projects:
-        projectNums.append(str(proj.projNum)) 
+        projectNums.append(proj.projNum)    
         
     #Check if the project is in the user's projects   
     if str(projNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"): 
@@ -901,14 +899,14 @@ def showform():
                 form = SQLFORM(db.CCD, labels={'projectNum': "Project #", 'ccdNum':'CCD #'}, fields=['projectNum', 'ccdNum', 'file']) 
                 rows = db(db.CCD.projectNum == str(projNum)).select()    #Get all the CCD's for the current project
                 form.vars.ccdNum = len(rows) + 1               #Initialize the form's CCD number to be one more than the current number of CCDs               
-                form.vars.projectNum = str(projNum) #Initialize the form's project number to be the current project's number
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
                 
             elif displayForm == "RFI":
                 #Create a dropdown of all the users' names for the Request Referred To field
                 possibleUsers = []
                 allUsers = db(db.auth_user).select(orderby=db.auth_user.last_name)
                 for aUser in allUsers:                                  #Get a list of all the users associated with the project
-                    if auth.has_membership(user_id=aUser.id, role="Admin") or ((aUser.projects != None) and (str(projNum) in aUser.projects)): 
+                    if auth.has_membership(user_id=aUser.id, role="Admin") or ((aUser.projects != None) and (projNum in aUser.projects)): 
                         possibleUsers.append(aUser.first_name + " " + aUser.last_name)      
                 db.RFI.reqRefTo.requires = IS_IN_SET(possibleUsers)
                 #Create a form with the RFI fields specified by the fields parameter
@@ -923,7 +921,7 @@ def showform():
                 form.vars.rfiNum = len(rows) + 1               #Initialize the form's RFI number to be one more than the current number of RFIs
                 form.vars.requestBy = auth.user.first_name + " " + auth.user.last_name #Initialize the form's RequestBy field to be the current user
                 form.vars.statusFlag = "Outstanding"           #Set the status flag (this field isn't displayed on the screen)
-                form.vars.projectNum = str(projNum) #Initialize the form's project number to be the current project's number 
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number 
                 form.vars.projectName = currentProj.name       #Set the form's project name to be the current project's name (not displayed)
                 form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
                         
@@ -936,7 +934,7 @@ def showform():
                 db.Submittal.statusFlag.requires = IS_IN_SET(['Approved','Resubmit','Approved with Comments','Submitted for Review'])
                 #Create a form with all the submittal fields
                 form = SQLFORM(db.Submittal, labels={'statusFlag':'Status Flag', 'projectNum':'Project #', 'subType':'Submittal Type', 'sectNum':'Section Number','assignedTo':'Assigned to'}, fields=['projectNum', 'subType', 'assignedTo', 'statusFlag', 'sectNum', 'submittal']) 
-                form.vars.projectNum = str(projNum) #Initialize the form's project number to be the current project's number
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
                 
             elif displayForm == "ProposalRequest":  
                 #Create a form with the Proposal Request fields specified by the fields parameter   
@@ -949,7 +947,7 @@ def showform():
                 form.vars.reqNum = len(rows) + 1               #Initialize the request number to be one more than the current number of proposal requests
                 form.vars.statusFlag = "Open"                  #Set the status flag (this field isn't displayed on the screen)       
                 form.vars.creator = auth.user.id               #Initialize the creator to be the current user's id (this field also isn't displayed)
-                form.vars.projectNum = str(projNum)            #Initialize the form's project number to be the current project's number
+                form.vars.projectNum = projNum                 #Initialize the form's project number to be the current project's number
                 form.vars.projectName = currentProj.name       #Set the form's project name to be the current project's name (not displayed)
                 form.vars.owner = currentProj.owner            #Set the form's project owner to be the current project's owner (not displayed)
                 
@@ -965,18 +963,18 @@ def showform():
                 
                 rows = db(db.Proposal.projectNum == str(projNum)).select() #Get all the Proposals for the current project
                 form.vars.propNum = len(rows) + 1              #Initialize the proposal number to be one more than the current number of proposals
-                form.vars.projectNum = str(projNum)    #Initialize the form's project number to be the current project's number
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
                 
             elif displayForm == "MeetingMinutes":
                 #Create a form with all the MeetingMinutes fields
                 form = SQLFORM(db.MeetingMinutes, labels={'projectNum':'Project #','meetDate':'Meeting Date'})
-                form.vars.projectNum = str(projNum)    #Initialize the form's project number to be the current project's number
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
                 
             elif displayForm == "Photo": 
                 #Create a form with the Photo fields specified by the fields parameter                     
                 form = SQLFORM(db.Photos, labels={'projectNum':'Project #', 'title':'Title', 'description':'Description', 'photo':'Photo'}, 
                     fields = ['projectNum','title','description','photo'])
-                form.vars.projectNum = str(projNum)    #Initialize the form's project number to be the current project's number
+                form.vars.projectNum = projNum #Initialize the form's project number to be the current project's number
                 
             if form != None:                      
                 if form.process(onvalidation=checkValidProjNum).accepted:  #The projNum the user entered in the form is a project they are a part of
@@ -1018,7 +1016,7 @@ def showform():
 def checkValidProjNum(form):
     projectNums = []
     for proj in projects:
-        projectNums.append(str(proj.projNum))
+        projectNums.append(proj.projNum)
     print projectNums
     if not str(form.vars.projectNum) in projectNums:    #The user is trying to submit a form to a projct he's not a part of
         form.errors.projectNum = "You do not have access to this project"  
@@ -1115,7 +1113,7 @@ def formtable():
         
     projectNums = []
     for proj in projects:                                                    #Get the project numbers for the user's projects
-        projectNums.append(str(proj.projNum))
+        projectNums.append(proj.projNum)
         
     #Check if the project is in the user's projects  
     if str(projNum) in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"):
@@ -1440,7 +1438,7 @@ def getUsersProjectsHtml(id):
     else:
         if user.projects != None and len(user.projects) >= 1: #Make a checkbox for all the projects that the user is associatewith
             for projId in user.projects:
-                project = db((db.Project.archived == False) & (db.Project.projNum == str(projId))).select().first()
+                project = db((db.Project.archived == False) & (db.Project.projNum == projId)).select().first()
                 html +=  '<input value="'+str(project.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(project.projNum)+"</br>"
         else:
             html = "<p>Not on any projects</p>"

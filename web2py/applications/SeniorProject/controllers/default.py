@@ -639,85 +639,7 @@ def viewcalendar():
     if projectNum in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"):      #check if the user is associated with the project
         project =  db.executesql('SELECT * FROM project WHERE projNum = %s' % projectNum, as_dict=True)
         projName = project[0]['name']
-    
-        url = 'https://accounts.google.com/o/oauth2/token'
-        refTok = '1/BJ7iFL7rY6Kcyg4zAjX7nON2RO1GkBt-uEDefKgFn78'
-    
-        params = urllib.urlencode({
-          'client_id': '553030639714.apps.googleusercontent.com',
-          'client_secret': 'ZcZQAPsUOfO9F4Eeo-hZ-G-V',
-          'refresh_token':refTok,
-          'grant_type':'refresh_token'
-        })
-        response = urllib2.urlopen(url, params).read()
-    
-        loaded = json.loads(response)
-        auth = "Bearer %s" % str(loaded['access_token'])
-        
-<<<<<<< HEAD
-    project =  db.executesql('SELECT * FROM project WHERE projNum = %s' % projectNum, as_dict=True)
-    projName = project[0]['name']
-    calID = project[0]['calendarid']
-
-    today = datetime.today()
-    first_of_month = date(today.year,today.month,1)
-
-    months = {'1' : "Jan", '2' : "Feb", '3' : "Mar", '4' : "Apr", '5' : "May", "6" : "Jun", '7' : "Jul", '8' : "Aug", '9' : "Sep", '10' : "Oct", "11" : "Nov", "12" : "Dec"}
-    year = today.year
-    current_month = today.month
-    month_form = "<form id='delete_months' action='changemonth.html'>\n<select name='month'>\n"
-
-    embed_date = ''
-    selected_month = str(current_month)+ "-" + str(year)
-    if request.vars.has_key("month"):
-        selected_month = request.vars.month
-        tmpSplit = selected_month.split('-')
-        first_of_month = date(int(tmpSplit[1]),int(tmpSplit[0]),1)
-        if int(tmpSplit[0]) < 10:
-            date_month = "%s0%s01" % (tmpSplit[1],tmpSplit[0]) 
-        else:
-            date_month = "%s%s01" % (tmpSplit[1],tmpSplit[0])
-        embed_date = "&dates=" + date_month + '%2F' + date_month
-    for i in range(20):
-        month_value = str(current_month) + "-" + str(year)
-        if selected_month == month_value:
-            month_form += "<option value='%s' selected>" % (month_value)
-        else:
-            month_form += "<option value='%s'>" % (month_value)
-        month_form += "%s %s</option>\n" % (months[str(current_month)],str(year))
-        current_month = current_month + 1
-        if current_month > 12:
-            current_month = 1
-            year += 1
-
-    month_form += "<input type='hidden' name='projNum' value='%s'/>\n<input type='submit' value='Change Month'/>\n</select>\n</form>" % projectNum
-
-    form_html = get_delete_list(calID, first_of_month)
-
-    return dict(calID = calID, 
-        projNum = projectNum,
-        myProfileForm=myProfileForm, 
-        projects=projects, 
-        footer=footer, 
-        header=header, 
-        css=css, 
-        embed_date = embed_date,
-        form_html = HTML('',XML(form_html)),
-        month_html = HTML('',XML(month_form)))
-
-=======
-        url = 'https://www.googleapis.com/calendar/v3/users/me/calendarList'
-        calrequest = urllib2.Request(url)
-        calrequest.add_header("Authorization",auth)
-    
-        calendars = urllib2.urlopen(calrequest).read()
-        loaded = json.loads(calendars)
-    
-        calID = ''
-        for i in loaded['items']:
-            if i['summary'] == "Sample Project":
-                calID = i['id']
-                break
+        calID = project[0]['calendarid']
     
         today = datetime.today()
         first_of_month = date(today.year,today.month,1)
@@ -752,7 +674,7 @@ def viewcalendar():
     
         month_form += "<input type='hidden' name='projNum' value='%s'/>\n<input type='submit' value='Change Month'/>\n</select>\n</form>" % projectNum
     
-        form_html = get_delete_list(auth, calID, first_of_month)
+        form_html = get_delete_list(calID, first_of_month)
     
         return dict(calID = calID, 
             projNum = projectNum,
@@ -766,8 +688,7 @@ def viewcalendar():
             month_html = HTML('',XML(month_form)))
             
     else: #the user is trying to access a project he's not a part of   
-        return "Access Denied"        
-    
+        return "Access Denied"     
 
 # A helper function for viewcalendar that gets the list of events for a given month from google
 def get_delete_list(calID,first_of_month):

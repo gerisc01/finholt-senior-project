@@ -2,13 +2,13 @@ html{
     background: #AAB6A2;
     height: 100%;
 }
-
+/**
 body{
      margin-left: auto;
      margin-right: auto;
      width: 1200px;
 }
-
+**/
 #filter {
     max-width: 500px;
     margin:2px;
@@ -176,7 +176,7 @@ p.descrip {
 
 table{
     border:2px solid black;
-    width:800px;
+    width: auto; /** change from 800px **/
 }
 tr.odd {
     background-color: #c1cdc1;

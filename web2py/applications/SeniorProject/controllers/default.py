@@ -297,7 +297,12 @@ def changepermissions():
          table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.phone',
              'auth_user.role'], headers={"auth_user.id":"Change Permission","auth_user.first_name":"First Name","auth_user.last_name":"Last Name",
              "auth_user.email":"Email","auth_user.phone":"Phone Number","auth_user.role":"Role"}),INPUT(_type='submit'))
-     
+         if table.process().accepted:
+             response.flash = 'Permissions Changed'
+         elif table.errors:
+             response.flash = 'Error has occured'
+         else:
+             response.flash = 'Select Permissions to Change'
          if table.accepts(request.vars): 
             for item in request.vars.keys():               #For each user selected..
                 if item.isdigit():
@@ -326,6 +331,13 @@ def addtoproject():
     #Create a table of the information
     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], headers={"auth_user.id":"Add To","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email","auth_user.role":"Role"}), INPUT(_type='submit')) 
     
+    if table.process().accepted:
+        response.flash = 'User Added to Project'
+    elif table.errors:
+        response.flash = 'Error has occured'
+    else:
+        response.flash = 'Select Users to Add'
+        
     if table.accepts(request.vars):
         for userid in request.vars.keys():               #For each user selected..
             if userid.isdigit():
@@ -340,6 +352,7 @@ def addtoproject():
                     projectList.append(str(request.vars[userid]))
                 db(db.auth_user.id == int(userid)).update(projects=projectList)
         redirect(URL('default','addtoproject'))
+        
     return dict(table=table, footer=footer, header=header, css=css)
 
 #This is called when an admin clicks "Delete Users from Projects". It returns a dictionary used by the view default/deletefromproject.html
@@ -351,7 +364,12 @@ def deletefromproject():
     db.auth_user.id.represent = lambda id: DIV('', XML(getUsersProjectsHtml(id)), _name='%i'%id) 
     #Create a table of the information
     table = FORM(SQLTABLE(rows, columns=["auth_user.id",'auth_user.last_name','auth_user.first_name','auth_user.email','auth_user.role'], headers={"auth_user.id":"Remove From","auth_user.first_name":"First Name","auth_user.last_name":"Last Name","auth_user.email":"Email","auth_user.role":"Role"}),INPUT(_type='submit')) 
-   
+    if table.process().accepted:
+        response.flash = 'User Removed From Project'
+    elif table.errors:
+        response.flash = 'Error has occured'
+    else:
+        response.flash = 'Select Users to Remove'
     if table.accepts(request.vars): 
         for userid in request.vars.keys():                                    #For each user selected..
             if userid.isdigit():
@@ -588,6 +606,7 @@ def archiveprojects():
         table = SQLTABLE(rows, columns=["Project.name","Project.owner","Project.projNum",'Project.openDate',"Project.closedDate"], 
             headers={"Project.name":"Project Name", "Project.owner":"Owner", "Project.openDate":"Open Date", "Project.closedDate":"Closed Date", 
             "Project.projNum":"Project #"}, extracolumns=extracolumn)
+        response.flash = 'Click \'View\' to open'
     
     return dict(table=table, footer=footer, header=header, css=css)
 
@@ -978,7 +997,8 @@ def showform():
                     fields = ['projectNum','title','description','photo'])
                 form.vars.projectNum = str(projNum)    #Initialize the form's project number to be the current project's number
                 
-            if form != None:                      
+            if form != None:
+                response.flash = 'Please fill out the form'                  
                 if form.process(onvalidation=checkValidProjNum).accepted:  #The projNum the user entered in the form is a project they are a part of
                     response.flash = 'Form accepted'
                     if displayForm == "Photo": #If submitted form is a photo form, need to upload it to flickr and delete the photo from our database

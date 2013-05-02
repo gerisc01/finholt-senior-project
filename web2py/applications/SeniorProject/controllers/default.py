@@ -1022,6 +1022,11 @@ def showform():
                 response.flash = 'Form has errors'
             else:
                 response.flash = 'Please fill out the form'
+                
+            if myProfileForm.process().accepted:
+               response.flash = "Profile updated successfully!"
+            elif myProfileForm.errors:
+               response.flash = 'Form has errors'
                     
             return dict(displayForm=displayForm,
                         form=form,

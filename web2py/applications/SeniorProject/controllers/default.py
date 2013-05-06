@@ -701,7 +701,7 @@ def viewcalendar():
     if projectNum in projectNums or auth.has_membership(user_id=auth.user.id, role="Admin"):      #check if the user is associated with the project
         project =  db.executesql('SELECT * FROM project WHERE projNum = %s' % projectNum, as_dict=True)
         projName = project[0]['name']
-        calID = project[0]['calendarid']
+        calID = project[0]['calendarID']
     
         today = datetime.today()
         first_of_month = date(today.year,today.month,1)
@@ -1466,7 +1466,8 @@ def getUsersProjectsHtml(id):
         if user.projects != None and len(user.projects) >= 1: #Make a checkbox for all the projects that the user is associatewith
             for projId in user.projects:
                 project = db((db.Project.archived == False) & (db.Project.projNum == str(projId))).select().first()
-                html +=  '<input value="'+str(project.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(project.projNum)+"</br>"
+                if project != None:
+                    html +=  '<input value="'+str(project.projNum)+'" type="checkbox" name="'+str(user.id)+'"/>'+str(project.projNum)+"</br>"
         else:
             html = "<p>Not on any projects</p>"
         

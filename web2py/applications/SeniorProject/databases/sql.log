@@ -1,4 +1,4 @@
-timestamp: 2013-04-18T12:23:37.473823
+timestamp: 2013-05-01T23:37:38.770000
 CREATE TABLE auth_user(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     first_name CHAR(128),
@@ -13,21 +13,21 @@ CREATE TABLE auth_user(
     projects TEXT
 );
 success!
-timestamp: 2013-04-18T12:23:37.498065
+timestamp: 2013-05-01T23:37:38.784000
 CREATE TABLE auth_group(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     role CHAR(512),
     description TEXT
 );
 success!
-timestamp: 2013-04-18T12:23:37.500932
+timestamp: 2013-05-01T23:37:38.790000
 CREATE TABLE auth_membership(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER REFERENCES auth_user(id) ON DELETE CASCADE,
     group_id INTEGER REFERENCES auth_group(id) ON DELETE CASCADE
 );
 success!
-timestamp: 2013-04-18T12:23:37.504027
+timestamp: 2013-05-01T23:37:38.797000
 CREATE TABLE auth_permission(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     group_id INTEGER REFERENCES auth_group(id) ON DELETE CASCADE,
@@ -36,7 +36,7 @@ CREATE TABLE auth_permission(
     record_id INTEGER
 );
 success!
-timestamp: 2013-04-18T12:23:37.507293
+timestamp: 2013-05-01T23:37:38.803000
 CREATE TABLE auth_event(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     time_stamp TIMESTAMP,
@@ -46,7 +46,7 @@ CREATE TABLE auth_event(
     description TEXT
 );
 success!
-timestamp: 2013-04-18T12:23:37.510494
+timestamp: 2013-05-01T23:37:38.809000
 CREATE TABLE auth_cas(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER REFERENCES auth_user(id) ON DELETE CASCADE,
@@ -56,18 +56,19 @@ CREATE TABLE auth_cas(
     renew CHAR(1)
 );
 success!
-timestamp: 2013-04-18T12:23:37.518041
+timestamp: 2013-05-01T23:37:38.817000
 CREATE TABLE Project(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    projNum INTEGER,
+    projNum CHAR(512),
     name CHAR(512),
     owner CHAR(512),
     openDate DATE,
     closedDate DATE,
-    archived CHAR(1)
+    archived CHAR(1),
+    calendarID CHAR(512)
 );
 success!
-timestamp: 2013-04-18T12:23:37.523648
+timestamp: 2013-05-01T23:37:38.827000
 CREATE TABLE NewsFeed(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     projectNum CHAR(512),
@@ -77,7 +78,7 @@ CREATE TABLE NewsFeed(
     creator CHAR(512)
 );
 success!
-timestamp: 2013-04-18T12:23:37.527690
+timestamp: 2013-05-01T23:37:38.834000
 CREATE TABLE CCD(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ccdNum CHAR(512),
@@ -85,7 +86,7 @@ CREATE TABLE CCD(
     file CHAR(512)
 );
 success!
-timestamp: 2013-04-18T12:23:37.533544
+timestamp: 2013-05-01T23:37:38.840000
 CREATE TABLE Submittal(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     statusFlag CHAR(512),
@@ -96,7 +97,7 @@ CREATE TABLE Submittal(
     sectNum INTEGER
 );
 success!
-timestamp: 2013-04-18T12:23:37.539087
+timestamp: 2013-05-01T23:37:38.847000
 CREATE TABLE RFI(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     rfiNum CHAR(512),
@@ -120,7 +121,7 @@ CREATE TABLE RFI(
     owner CHAR(512)
 );
 success!
-timestamp: 2013-04-18T12:23:37.542656
+timestamp: 2013-05-01T23:37:38.856000
 CREATE TABLE ProposalRequest(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     reqNum CHAR(512),
@@ -137,7 +138,7 @@ CREATE TABLE ProposalRequest(
     owner CHAR(512)
 );
 success!
-timestamp: 2013-04-18T12:23:37.545323
+timestamp: 2013-05-01T23:37:38.861000
 CREATE TABLE Proposal(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     propNum INTEGER,
@@ -147,7 +148,7 @@ CREATE TABLE Proposal(
     projectNum CHAR(512)
 );
 success!
-timestamp: 2013-04-18T12:23:37.567884
+timestamp: 2013-05-01T23:37:38.868000
 CREATE TABLE MeetingMinutes(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     projectNum CHAR(512),
@@ -155,13 +156,13 @@ CREATE TABLE MeetingMinutes(
     file CHAR(512)
 );
 success!
-timestamp: 2013-04-18T12:23:37.570405
+timestamp: 2013-05-01T23:37:38.874000
 CREATE TABLE PhotoToken(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     token CHAR(512)
 );
 success!
-timestamp: 2013-04-18T12:23:37.573134
+timestamp: 2013-05-01T23:37:38.880000
 CREATE TABLE Photos(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     projectNum CHAR(512),

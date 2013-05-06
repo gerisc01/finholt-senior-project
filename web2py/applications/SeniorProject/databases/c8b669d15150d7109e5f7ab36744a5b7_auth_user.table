@@ -107,7 +107,7 @@ ssS'projects'
 p36
 (dp37
 g4
-S'list:integer'
+S'list:string'
 p38
 sg6
 I11
